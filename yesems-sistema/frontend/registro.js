@@ -1,4 +1,4 @@
-const API_URL = 'http://127.0.0.1:4000/api';
+const API_URL = 'https://yesems-sistema.onrender.com/api';
 const params = new URLSearchParams(window.location.search);
 const courseId = params.get('curso');
 const form = document.querySelector('#registration-form');

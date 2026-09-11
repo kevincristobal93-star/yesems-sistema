@@ -1,4 +1,4 @@
-const API_URL = 'http://127.0.0.1:4000/api';
+const API_URL = 'https://yesems-sistema.onrender.com/api';
 
 const form = document.querySelector('#login-form');
 const message = document.querySelector('#form-message');
@@ -61,7 +61,7 @@ form.addEventListener('submit', async (event) => {
     }
   } catch (error) {
     const isOffline = error instanceof TypeError;
-    showMessage(isOffline ? 'No se pudo conectar con el servidor. Verifica que el backend esté en http://localhost:4000.' : error.message);
+    showMessage(isOffline ? 'No se pudo conectar con el servidor. Verifica que la API esté disponible.' : error.message);
   } finally {
     submitButton.disabled = false;
     submitButton.textContent = 'Ingresar';

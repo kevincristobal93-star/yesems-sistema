@@ -1,4 +1,4 @@
-const API_URL = 'http://127.0.0.1:4000/api';
+const API_URL = 'https://yesems-sistema.onrender.com/api';
 const token = localStorage.getItem('yesems_admin_token');
 const admin = JSON.parse(localStorage.getItem('yesems_administrador') || 'null');
 const message = document.querySelector('#dashboard-message');

@@ -1,4 +1,4 @@
-const API_URL = 'http://127.0.0.1:4000/api';
+const API_URL = 'https://yesems-sistema.onrender.com/api';
 const grid = document.querySelector('#course-grid');
 const message = document.querySelector('#catalog-message');
 const count = document.querySelector('#course-count');
@@ -49,7 +49,7 @@ async function loadCourses() {
     renderCourses();
   } catch (error) {
     message.textContent = error instanceof TypeError
-      ? 'No fue posible conectar con el servidor. Inicia el backend en http://localhost:4000.'
+      ? 'No fue posible conectar con el servidor. Verifica que la API esté disponible.'
       : error.message;
     count.textContent = '';
   }
