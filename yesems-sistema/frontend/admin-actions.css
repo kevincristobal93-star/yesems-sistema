@@ -1,0 +1,8 @@
+.payments-section { margin-top: 24px; }
+.pending-count { padding: 6px 10px; border-radius: 99px; color: #8a6100; background: #fff3d7; font-size: .76rem; font-weight: 700; }
+.action-group { display: flex; gap: 7px; flex-wrap: wrap; }
+.table-action { padding: 7px 9px; border: 0; border-radius: 6px; font: 700 .72rem "Montserrat",sans-serif; cursor: pointer; }
+.table-action.approve { color: #fff; background: #178360; }.table-action.approve:hover { background: #106848; }
+.table-action.cancel { color: #a22922; background: #fdeaea; }.table-action.cancel:hover { background: #f9d4d1; }
+td small { color: #8090a3; font-size: .75rem; }
+@media(max-width:600px){.payments-section{padding:22px}.action-group{min-width:120px}}

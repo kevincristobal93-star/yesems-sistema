@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="es-MX">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>YES EMS | Completar inscripción</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./inscripcion.css" />
+    <style>.folio-note { padding: 13px 15px; margin: 22px 0 0; border-left: 3px solid #f5b942; color: #4b5c71; background: #fff9e9; font-size: .86rem; line-height: 1.55; }.form-message.success { padding: 13px 15px; border-left: 3px solid #1c8a4c; color: #137333; background: #ecfdf3; line-height: 1.55; }</style>
+    <style>.site-footer{padding:52px clamp(24px,5vw,78px) 22px;color:#aebbd0;background:#06152d}.footer-grid{display:grid;grid-template-columns:1.45fr 1fr 1.08fr 1fr;gap:42px;max-width:1450px;margin:auto}.footer-grid section{display:flex;gap:14px;align-items:flex-start;flex-direction:column}.footer-grid h3{margin:0 0 4px;color:#fff;font:700 1rem Montserrat,sans-serif}.footer-grid a,.footer-grid p{margin:0;color:#b9c4d4;font-size:.92rem;line-height:1.55;text-decoration:none}.footer-grid a:hover{color:#f5b942}.footer-brand>a{display:inline-flex;width:105px}.footer-brand img{width:100%;height:auto}.footer-brand>p{max-width:270px;color:#c5cedc;font-size:.95rem}.social-links{display:flex;gap:12px;margin-top:4px}.social-links a{display:grid;width:48px;height:48px;border-radius:50%;place-items:center;color:#c8d1df;background:#26334a;font:700 1.45rem Montserrat,sans-serif}.social-links a:hover{color:#06152d;background:#f5b942}.footer-bottom{display:flex;gap:20px;max-width:1450px;padding-top:25px;margin:48px auto 0;border-top:1px solid rgba(174,187,208,.18);align-items:center;justify-content:space-between;color:#8f9bb0;font-size:.82rem}.footer-bottom p{margin:0}@media(max-width:680px){.site-footer{padding:42px 24px 20px}.footer-grid{grid-template-columns:1fr;gap:32px}.footer-bottom{align-items:flex-start;flex-direction:column;gap:8px;margin-top:34px}}</style>
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="./cursos.html" aria-label="YES EMS, cursos disponibles"><img src="./assets/yesems-logo.png" alt="YES EMS" width="1254" height="1254" /></a>
+      <div class="user-area"><span id="user-name"></span><button id="logout-button" type="button">Cerrar sesión</button></div>
+    </header>
+    <main class="page-content">
+      <div class="page-heading"><p class="eyebrow">Inscripción</p><h1>Completa tus datos para continuar.</h1><p>Revisaremos tu información antes de confirmar tu lugar.</p></div>
+      <div class="steps" aria-label="Progreso de inscripción"><span class="active">1. Datos personales</span><span>2. Confirmación</span><span>3. Pago</span></div>
+      <div class="enrollment-layout">
+        <form id="enrollment-form" class="details-card" novalidate>
+          <h2>Datos del alumno</h2>
+          <p class="card-intro">Estos datos son necesarios para formalizar la inscripción.</p>
+          <div class="two-columns">
+            <div><label for="telefono">Teléfono</label><input id="telefono" name="telefono" type="tel" autocomplete="tel" required /></div>
+            <div><label for="fecha-nacimiento">Fecha de nacimiento</label><input id="fecha-nacimiento" name="fecha-nacimiento" type="date" autocomplete="bday" required /></div>
+          </div>
+          <label for="curp">CURP</label><input id="curp" name="curp" type="text" minlength="18" maxlength="18" placeholder="18 caracteres" required />
+          <p class="folio-note"><strong>Tu folio de alumno se generará automáticamente</strong> al confirmar tus datos.</p>
+          <label class="check-label"><input id="terms" type="checkbox" required /><span>Confirmo que mis datos son correctos.</span></label>
+          <p id="form-message" class="form-message" role="alert" aria-live="polite"></p>
+          <button id="submit-button" class="primary-button" type="submit">Confirmar inscripción</button>
+        </form>
+        <aside class="course-summary" aria-labelledby="course-title">
+          <p class="eyebrow">Curso seleccionado</p>
+          <div id="course-loading">Cargando información del curso...</div>
+          <div id="course-content" hidden>
+            <h2 id="course-title"></h2><p id="course-category" class="category"></p><p id="course-description"></p>
+            <dl><div><dt>Duración</dt><dd id="course-duration"></dd></div><div><dt>Cupo disponible</dt><dd id="course-capacity"></dd></div><div><dt>Precio</dt><dd id="course-price"></dd></div></dl>
+          </div>
+          <a class="change-course" href="./cursos.html">Cambiar curso</a>
+        </aside>
+      </div>
+    </main>
+    <footer id="contacto" class="site-footer"><div class="footer-grid"><section class="footer-brand" aria-label="YES EMS"><a href="./cursos.html"><img src="./assets/yesems-logo.png" alt="YES EMS" width="1254" height="1254" /></a><p>Capacitación, certificación y tecnología para transformar tu futuro.</p><div class="social-links" aria-label="Redes sociales"><a href="https://www.facebook.com/people/Servicios-educativos-YES-EMS/100089649237869/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">f</a><a href="https://www.instagram.com/yesems022/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">◎</a><a href="https://www.youtube.com/@servicioseducativosyesems" target="_blank" rel="noopener noreferrer" aria-label="YouTube">▶</a></div></section><section><h3>Oferta</h3><a href="https://plataformayesems.com/" target="_blank" rel="noopener noreferrer">Acredita-Bach</a><a href="https://plataformayesems.com/tecnologia-educativa.html" target="_blank" rel="noopener noreferrer">Tecnología Educativa</a><a href="https://plataformayesems.com/plataforma.html" target="_blank" rel="noopener noreferrer">Plataforma Digital</a></section><section><h3>Institución</h3><a href="https://www.servicioseducativosyesems.com/" target="_blank" rel="noopener noreferrer">Sobre nosotros</a><a href="https://api.whatsapp.com/send/?phone=5215648666596" target="_blank" rel="noopener noreferrer">Contacto</a><a href="https://www.servicioseducativosyesems.com/aviso-de-privacidad/" target="_blank" rel="noopener noreferrer">Aviso de privacidad</a></section><section><h3>Contáctanos</h3><a href="https://api.whatsapp.com/send/?phone=5215648666596" target="_blank" rel="noopener noreferrer">WhatsApp</a><a href="mailto:planeacionesyesems@gmail.com">planeacionesyesems@gmail.com</a><p>Lun – Vie · 9:00 – 18:00</p></section></div><div class="footer-bottom"><p>© <span id="footer-year"></span> YES EMS · Servicios Educativos. Todos los derechos reservados.</p><p>Hecho con dedicación para tu desarrollo.</p></div></footer><script src="./inscripcion.js"></script>
+  </body>
+</html>

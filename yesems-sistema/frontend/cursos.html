@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="es-MX">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Cursos disponibles de YES EMS" />
+    <title>YES EMS | Cursos disponibles</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./cursos.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="./cursos.html" aria-label="YES EMS, cursos disponibles">
+        <img src="./assets/yesems-logo.png" alt="YES EMS" width="1254" height="1254" />
+      </a>
+      <nav aria-label="Navegación principal">
+        <a class="active" href="./cursos.html">Cursos</a>
+        <a href="#contacto">Contacto</a>
+        <a class="login-link" href="./index.html">Iniciar sesión</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Capacitación YES EMS</p>
+          <h1>Prepárate hoy para alcanzar tus metas.</h1>
+          <p>Conoce nuestros programas de preparación y la oferta de cursos disponible para ti.</p>
+        </div>
+      </section>
+
+      <section class="featured-program" aria-labelledby="featured-title">
+        <div class="featured-copy">
+          <p class="eyebrow">Programa destacado</p>
+          <h2 id="featured-title">Preparación Acredita-Bach CENEVAL</h2>
+          <p>Te preparamos con clases, material de estudio, ejercicios, simulacros y asesoría para presentar tu examen en la sede oficial que elijas.</p>
+          <ul>
+            <li>Acceso a clases y material de las áreas del examen</li>
+            <li>Exámenes de práctica y simulacro tipo CENEVAL</li>
+            <li>Asesorías grupales en vivo y acompañamiento</li>
+          </ul>
+          <a class="outline-button" href="https://plataformayesems.com/" target="_blank" rel="noopener noreferrer">Conocer el programa</a>
+        </div>
+        <div class="featured-price" aria-label="Costo mensual">
+          <span>Plan de suscripción</span>
+          <strong>$150</strong>
+          <small>MXN / mensual</small>
+        </div>
+      </section>
+
+      <section class="catalog" aria-labelledby="catalog-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">Cursos disponibles</p>
+            <h2 id="catalog-title">Más cursos disponibles</h2>
+          </div>
+          <p id="course-count" class="course-count" aria-live="polite"></p>
+        </div>
+
+        <div class="filters" aria-label="Filtros del catálogo">
+          <label class="search-field" for="search">
+            <span class="sr-only">Buscar curso</span>
+            <input id="search" type="search" placeholder="Buscar por nombre o descripción" />
+          </label>
+          <label class="category-field" for="category">
+            <span class="sr-only">Filtrar por categoría</span>
+            <select id="category">
+              <option value="">Todas las categorías</option>
+            </select>
+          </label>
+        </div>
+
+        <p id="catalog-message" class="catalog-message" role="status" aria-live="polite">Cargando cursos...</p>
+        <div id="course-grid" class="course-grid" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <footer id="contacto" class="site-footer">
+      <div class="footer-grid">
+        <section class="footer-brand" aria-label="YES EMS">
+          <a href="./cursos.html"><img src="./assets/yesems-logo.png" alt="YES EMS" width="1254" height="1254" /></a>
+          <p>Capacitación, certificación y tecnología para transformar tu futuro.</p>
+          <div class="social-links" aria-label="Redes sociales">
+            <a href="https://www.facebook.com/people/Servicios-educativos-YES-EMS/100089649237869/?rdid=LHrjrrSG8RHkYBts&amp;share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F19SyRsxak9%2F" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.8 21v-8h2.7l.4-3.1h-3.1V7.92c0-.9.25-1.51 1.55-1.51H17V3.64c-.29-.04-1.27-.12-2.42-.12-2.4 0-4.04 1.46-4.04 4.15V9.9H7.82V13h2.72v8h3.26Z" /></svg>
+            </a>
+            <a href="https://www.instagram.com/yesems022?igsh=MWI0ZnRpenQxMWwwYg%3D%3D" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.2 2h9.6A5.2 5.2 0 0 1 22 7.2v9.6a5.2 5.2 0 0 1-5.2 5.2H7.2A5.2 5.2 0 0 1 2 16.8V7.2A5.2 5.2 0 0 1 7.2 2Zm-.17 2A3.03 3.03 0 0 0 4 7.03v9.94A3.03 3.03 0 0 0 7.03 20h9.94A3.03 3.03 0 0 0 20 16.97V7.03A3.03 3.03 0 0 0 16.97 4H7.03ZM12 7.25A4.75 4.75 0 1 1 7.25 12 4.75 4.75 0 0 1 12 7.25Zm0 2A2.75 2.75 0 1 0 14.75 12 2.75 2.75 0 0 0 12 9.25ZM17.7 6.1a1.14 1.14 0 1 1-1.14 1.14A1.14 1.14 0 0 1 17.7 6.1Z" /></svg>
+            </a>
+            <a href="https://www.youtube.com/@servicioseducativosyesems" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21.58 7.19a2.99 2.99 0 0 0-2.1-2.12C17.63 4.5 12 4.5 12 4.5s-5.63 0-7.48.57a2.99 2.99 0 0 0-2.1 2.12C1.85 9.05 1.85 12 1.85 12s0 2.95.57 4.81a2.99 2.99 0 0 0 2.1 2.12c1.85.57 7.48.57 7.48.57s5.63 0 7.48-.57a2.99 2.99 0 0 0 2.1-2.12c.57-1.86.57-4.81.57-4.81s0-2.95-.57-4.81ZM10.16 14.94V9.06L15.3 12l-5.14 2.94Z" /></svg>
+            </a>
+          </div>
+        </section>
+
+        <section>
+          <h3>Oferta</h3>
+          <a href="https://plataformayesems.com/" target="_blank" rel="noopener noreferrer">Acredita-Bach</a>
+          <a href="https://plataformayesems.com/tecnologia-educativa.html" target="_blank" rel="noopener noreferrer">Tecnología Educativa</a>
+          <a href="https://plataformayesems.com/plataforma.html" target="_blank" rel="noopener noreferrer">Plataforma Digital</a>
+        </section>
+
+        <section>
+          <h3>Institución</h3>
+          <a href="https://www.servicioseducativosyesems.com/" target="_blank" rel="noopener noreferrer">Sobre nosotros</a>
+          <a href="https://api.whatsapp.com/send/?phone=5215648666596&amp;text=%21Hola%21+Vengo+de+la+web+y+requiero+mas+informaci%C3%B3n+de+sus+productos&amp;type=phone_number&amp;app_absent=0" target="_blank" rel="noopener noreferrer">Contacto</a>
+          <a href="https://www.servicioseducativosyesems.com/aviso-de-privacidad/" target="_blank" rel="noopener noreferrer">Aviso de privacidad</a>
+        </section>
+
+        <section>
+          <h3>Contáctanos</h3>
+          <a href="https://api.whatsapp.com/send/?phone=5215648666596&amp;text=%21Hola%21+Vengo+de+la+web+y+requiero+mas+informaci%C3%B3n+de+sus+productos&amp;type=phone_number&amp;app_absent=0" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+          <a href="mailto:planeacionesyesems@gmail.com">planeacionesyesems@gmail.com</a>
+          <p>Lun – Vie · 9:00 – 18:00</p>
+        </section>
+      </div>
+      <div class="footer-bottom">
+        <p>© <span id="current-year"></span> YES EMS · Servicios Educativos. Todos los derechos reservados.</p>
+        <p>Hecho con dedicación para tu desarrollo.</p>
+      </div>
+    </footer>
+    <script src="./cursos.js"></script>
+  </body>
+</html>
