@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const horarioController = require('../controllers/horario.controller');
-const verificarToken = require('../middlewares/auth.middleware');
+const verificarAdministrador = require('../middlewares/admin.middleware');
 
-router.use(verificarToken);
+router.use(verificarAdministrador);
 
 router.get('/', horarioController.listarHorarios);
 router.get('/:id', horarioController.obtenerHorario);

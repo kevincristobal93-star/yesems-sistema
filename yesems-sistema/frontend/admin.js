@@ -7,6 +7,13 @@ const menuButton = document.querySelector('#menu-button');
 const closeMenuButton = document.querySelector('#close-menu-button');
 const drawer = document.querySelector('#admin-menu');
 const overlay = document.querySelector('#menu-overlay');
+const coursesMessage = document.querySelector('#courses-message');
+const coursesList = document.querySelector('#courses-admin-list');
+const courseDialog = document.querySelector('#course-dialog');
+const courseForm = document.querySelector('#course-form');
+const courseFormMessage = document.querySelector('#course-form-message');
+let adminCourses = [];
+let categories = [];
 
 function toggleMenu(open) {
   drawer.classList.toggle('open', open);
@@ -29,7 +36,94 @@ if (!token || !admin) {
   loadDashboard();
   loadPendingPayments();
   loadReports();
+  loadCourseManagement();
 }
+
+function escapeHtml(value = '') {
+  return String(value).replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character]));
+}
+
+function renderCategoryOptions(selectedId = '') {
+  const select = document.querySelector('#course-category');
+  select.innerHTML = '<option value="">Selecciona una categoría</option>' + categories.map((category) => `<option value="${category.id_categoria}" ${String(category.id_categoria) === String(selectedId) ? 'selected' : ''}>${escapeHtml(category.nombre)}</option>`).join('');
+}
+
+async function loadCourseManagement() {
+  try {
+    const [coursesData, categoriesData] = await Promise.all([request('/cursos'), request('/categorias')]);
+    adminCourses = coursesData.cursos || [];
+    categories = categoriesData.categorias || [];
+    coursesMessage.hidden = true;
+    coursesList.innerHTML = adminCourses.length ? adminCourses.map((course) => `<article class="course-admin-card"><div><h3>${escapeHtml(course.nombre)}</h3><p>${escapeHtml(course.descripcion || 'Sin descripción disponible.')}</p></div><div class="course-admin-meta"><span>${escapeHtml(course.categoria || 'Sin categoría')}</span><span>${Number(course.duracion_horas)} horas</span><span>${Number(course.cupo)} lugares</span><span>${money.format(Number(course.precio || 0))}</span></div><div class="course-admin-actions"><button type="button" data-edit-course="${course.id_curso}">Editar</button><button type="button" data-delete-course="${course.id_curso}">Desactivar</button></div></article>`).join('') : '<p class="empty-state">Aún no hay cursos activos. Crea el primero para mostrarlo en el catálogo público.</p>';
+  } catch (error) {
+    coursesMessage.hidden = false;
+    coursesMessage.textContent = error.message;
+  }
+}
+
+function openCourseDialog(course = null) {
+  courseForm.reset();
+  courseFormMessage.textContent = '';
+  document.querySelector('#course-id').value = course?.id_curso || '';
+  document.querySelector('#course-dialog-label').textContent = course ? 'Editar oferta' : 'Nueva oferta';
+  document.querySelector('#course-dialog-title').textContent = course ? 'Actualizar curso' : 'Crear curso';
+  document.querySelector('#save-course-button').textContent = course ? 'Guardar cambios' : 'Guardar curso';
+  document.querySelector('#course-name').value = course?.nombre || '';
+  document.querySelector('#course-duration').value = course?.duracion_horas || '';
+  document.querySelector('#course-capacity').value = course?.cupo || '';
+  document.querySelector('#course-price').value = course?.precio || 0;
+  document.querySelector('#course-description').value = course?.descripcion || '';
+  renderCategoryOptions(course?.id_categoria);
+  courseDialog.showModal();
+}
+
+document.querySelector('#new-course-button').addEventListener('click', () => openCourseDialog());
+document.querySelectorAll('[data-close-course-dialog]').forEach((button) => button.addEventListener('click', () => courseDialog.close()));
+
+coursesList.addEventListener('click', async (event) => {
+  const editButton = event.target.closest('[data-edit-course]');
+  const deleteButton = event.target.closest('[data-delete-course]');
+  if (editButton) {
+    openCourseDialog(adminCourses.find((course) => String(course.id_curso) === editButton.dataset.editCourse));
+    return;
+  }
+  if (!deleteButton || !window.confirm('¿Desactivar este curso? Dejará de mostrarse al público, sin borrar sus inscripciones.')) return;
+  deleteButton.disabled = true;
+  try {
+    await request(`/cursos/${deleteButton.dataset.deleteCourse}`, { method: 'DELETE' });
+    await loadCourseManagement();
+    loadDashboard();
+  } catch (error) {
+    deleteButton.disabled = false;
+    alert(error.message);
+  }
+});
+
+courseForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const id = document.querySelector('#course-id').value;
+  const saveButton = document.querySelector('#save-course-button');
+  const payload = {
+    id_categoria: Number(document.querySelector('#course-category').value),
+    nombre: document.querySelector('#course-name').value.trim(),
+    descripcion: document.querySelector('#course-description').value.trim(),
+    duracion_horas: Number(document.querySelector('#course-duration').value),
+    cupo: Number(document.querySelector('#course-capacity').value),
+    precio: Number(document.querySelector('#course-price').value)
+  };
+  saveButton.disabled = true;
+  courseFormMessage.textContent = '';
+  try {
+    await request(`/cursos${id ? `/${id}` : ''}`, { method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    courseDialog.close();
+    await loadCourseManagement();
+    loadDashboard();
+  } catch (error) {
+    courseFormMessage.textContent = error.message;
+  } finally {
+    saveButton.disabled = false;
+  }
+});
 
 async function loadReports() {
   try {

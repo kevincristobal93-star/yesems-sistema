@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
 const categoriaController = require('../controllers/categoria.controller');
-const verificarToken = require('../middlewares/auth.middleware');
+const verificarAdministrador = require('../middlewares/admin.middleware');
 
-router.use(verificarToken);
+router.use(verificarAdministrador);
 
 router.get('/', categoriaController.listarCategorias);
 router.get('/:id', categoriaController.obtenerCategoria);
