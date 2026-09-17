@@ -14,6 +14,12 @@ const courseForm = document.querySelector('#course-form');
 const courseFormMessage = document.querySelector('#course-form-message');
 let adminCourses = [];
 let categories = [];
+const availabilityMessage = document.querySelector('#availability-message');
+const availabilityList = document.querySelector('#availability-list');
+const availabilityDialog = document.querySelector('#availability-dialog');
+const availabilityForm = document.querySelector('#availability-form');
+const availabilityFormMessage = document.querySelector('#availability-form-message');
+let availabilities = [];
 
 function toggleMenu(open) {
   drawer.classList.toggle('open', open);
@@ -37,6 +43,7 @@ if (!token || !admin) {
   loadPendingPayments();
   loadReports();
   loadCourseManagement();
+  loadAvailabilityManagement();
 }
 
 function escapeHtml(value = '') {
@@ -77,8 +84,58 @@ function openCourseDialog(course = null) {
   courseDialog.showModal();
 }
 
+function availabilityText(availability) {
+  const mode = { en_linea: 'En línea', presencial: 'Presencial', hibrida: 'Híbrida', por_definir: 'Por definir' }[availability.modalidad] || 'Por definir';
+  const dates = [availability.fecha_inicio && `Inicio: ${new Date(`${availability.fecha_inicio}T00:00:00`).toLocaleDateString('es-MX')}`, availability.fecha_fin && `Término: ${new Date(`${availability.fecha_fin}T00:00:00`).toLocaleDateString('es-MX')}`].filter(Boolean);
+  const time = availability.hora_inicio && availability.hora_fin ? `${availability.hora_inicio.slice(0, 5)} – ${availability.hora_fin.slice(0, 5)}` : 'Horario por confirmar';
+  return { mode, dates, time };
+}
+
+function renderAvailabilityCourseOptions(selectedId = '') {
+  const select = document.querySelector('#availability-course');
+  select.innerHTML = '<option value="">Selecciona un curso</option>' + adminCourses.map((course) => `<option value="${course.id_curso}" ${String(course.id_curso) === String(selectedId) ? 'selected' : ''}>${escapeHtml(course.nombre)}</option>`).join('');
+}
+
+async function loadAvailabilityManagement() {
+  try {
+    const data = await request('/horarios');
+    availabilities = data.horarios || [];
+    availabilityMessage.hidden = true;
+    availabilityList.innerHTML = availabilities.length ? availabilities.map((availability) => {
+      const info = availabilityText(availability);
+      const details = [availability.dia_semana, info.time, ...info.dates, availability.informacion_adicional].filter(Boolean).map(escapeHtml).join(' · ');
+      return `<article class="availability-card"><div><h4>${escapeHtml(availability.curso_nombre || 'Curso')}</h4><p>${details || 'Disponibilidad por confirmar.'}${availability.notas ? `<br>${escapeHtml(availability.notas)}` : ''}</p><div class="availability-tags"><span>${info.mode}</span>${availability.enlace ? '<span>Enlace configurado</span>' : ''}</div></div><div class="availability-actions"><button type="button" data-edit-availability="${availability.id_horario}">Editar</button><button type="button" data-delete-availability="${availability.id_horario}">Eliminar</button></div></article>`;
+    }).join('') : '<p class="empty-state">Aún no se ha definido disponibilidad. Puedes crear una y comunicar los detalles al alumno.</p>';
+  } catch (error) {
+    availabilityMessage.hidden = false;
+    availabilityMessage.textContent = error.message;
+  }
+}
+
+function openAvailabilityDialog(availability = null, courseId = '') {
+  availabilityForm.reset();
+  availabilityFormMessage.textContent = '';
+  document.querySelector('#availability-id').value = availability?.id_horario || '';
+  document.querySelector('#availability-dialog-label').textContent = availability ? 'Editar disponibilidad' : 'Nueva disponibilidad';
+  document.querySelector('#availability-dialog-title').textContent = availability ? 'Actualizar servicio' : 'Configurar servicio';
+  document.querySelector('#save-availability-button').textContent = availability ? 'Guardar cambios' : 'Guardar disponibilidad';
+  renderAvailabilityCourseOptions(availability?.id_curso || courseId);
+  document.querySelector('#availability-mode').value = availability?.modalidad || 'por_definir';
+  document.querySelector('#availability-day').value = availability?.dia_semana || '';
+  document.querySelector('#availability-details').value = availability?.informacion_adicional || '';
+  document.querySelector('#availability-start-date').value = availability?.fecha_inicio ? String(availability.fecha_inicio).slice(0, 10) : '';
+  document.querySelector('#availability-end-date').value = availability?.fecha_fin ? String(availability.fecha_fin).slice(0, 10) : '';
+  document.querySelector('#availability-start-time').value = availability?.hora_inicio ? String(availability.hora_inicio).slice(0, 5) : '';
+  document.querySelector('#availability-end-time').value = availability?.hora_fin ? String(availability.hora_fin).slice(0, 5) : '';
+  document.querySelector('#availability-link').value = availability?.enlace || '';
+  document.querySelector('#availability-notes').value = availability?.notas || '';
+  availabilityDialog.showModal();
+}
+
 document.querySelector('#new-course-button').addEventListener('click', () => openCourseDialog());
 document.querySelectorAll('[data-close-course-dialog]').forEach((button) => button.addEventListener('click', () => courseDialog.close()));
+document.querySelector('#new-availability-button').addEventListener('click', () => openAvailabilityDialog());
+document.querySelectorAll('[data-close-availability-dialog]').forEach((button) => button.addEventListener('click', () => availabilityDialog.close()));
 
 coursesList.addEventListener('click', async (event) => {
   const editButton = event.target.closest('[data-edit-course]');
@@ -96,6 +153,54 @@ coursesList.addEventListener('click', async (event) => {
   } catch (error) {
     deleteButton.disabled = false;
     alert(error.message);
+  }
+});
+
+availabilityList.addEventListener('click', async (event) => {
+  const editButton = event.target.closest('[data-edit-availability]');
+  const deleteButton = event.target.closest('[data-delete-availability]');
+  if (editButton) {
+    openAvailabilityDialog(availabilities.find((availability) => String(availability.id_horario) === editButton.dataset.editAvailability));
+    return;
+  }
+  if (!deleteButton || !window.confirm('¿Eliminar esta disponibilidad? Si tiene inscripciones asociadas, el sistema la conservará para proteger el historial.')) return;
+  deleteButton.disabled = true;
+  try {
+    await request(`/horarios/${deleteButton.dataset.deleteAvailability}`, { method: 'DELETE' });
+    await loadAvailabilityManagement();
+  } catch (error) {
+    deleteButton.disabled = false;
+    alert(error.message);
+  }
+});
+
+availabilityForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const id = document.querySelector('#availability-id').value;
+  const saveButton = document.querySelector('#save-availability-button');
+  const valueOrNull = (selector) => document.querySelector(selector).value.trim() || null;
+  const payload = {
+    id_curso: Number(document.querySelector('#availability-course').value),
+    modalidad: document.querySelector('#availability-mode').value,
+    dia_semana: valueOrNull('#availability-day'),
+    informacion_adicional: valueOrNull('#availability-details'),
+    fecha_inicio: valueOrNull('#availability-start-date'),
+    fecha_fin: valueOrNull('#availability-end-date'),
+    hora_inicio: valueOrNull('#availability-start-time'),
+    hora_fin: valueOrNull('#availability-end-time'),
+    enlace: valueOrNull('#availability-link'),
+    notas: valueOrNull('#availability-notes'),
+  };
+  saveButton.disabled = true;
+  availabilityFormMessage.textContent = '';
+  try {
+    await request(`/horarios${id ? `/${id}` : ''}`, { method: id ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+    availabilityDialog.close();
+    await loadAvailabilityManagement();
+  } catch (error) {
+    availabilityFormMessage.textContent = error.message;
+  } finally {
+    saveButton.disabled = false;
   }
 });
 

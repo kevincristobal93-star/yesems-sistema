@@ -27,22 +27,22 @@ const obtenerHorarioPorId = async (id) => {
 };
 
 const crearHorario = async (datos) => {
-  const { id_curso, dia_semana, hora_inicio, hora_fin, fecha_inicio, fecha_fin, aula } = datos;
+  const { id_curso, modalidad, dia_semana, hora_inicio, hora_fin, fecha_inicio, fecha_fin, enlace, notas, informacion_adicional } = datos;
   const resultado = await pool.query(
-    `INSERT INTO horarios (id_curso, dia_semana, hora_inicio, hora_fin, fecha_inicio, fecha_fin, aula)
-     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
-    [id_curso, dia_semana, hora_inicio, hora_fin, fecha_inicio ?? null, fecha_fin ?? null, aula ?? null]
+    `INSERT INTO horarios (id_curso, modalidad, dia_semana, hora_inicio, hora_fin, fecha_inicio, fecha_fin, enlace, notas, informacion_adicional)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10) RETURNING *`,
+    [id_curso, modalidad, dia_semana ?? null, hora_inicio ?? null, hora_fin ?? null, fecha_inicio ?? null, fecha_fin ?? null, enlace ?? null, notas ?? null, informacion_adicional ?? null]
   );
   return resultado.rows[0];
 };
 
 const actualizarHorario = async (id, datos) => {
-  const { id_curso, dia_semana, hora_inicio, hora_fin, fecha_inicio, fecha_fin, aula } = datos;
+  const { id_curso, modalidad, dia_semana, hora_inicio, hora_fin, fecha_inicio, fecha_fin, enlace, notas, informacion_adicional } = datos;
   const resultado = await pool.query(
-    `UPDATE horarios SET id_curso = $1, dia_semana = $2, hora_inicio = $3,
-     hora_fin = $4, fecha_inicio = $5, fecha_fin = $6, aula = $7
-     WHERE id_horario = $8 RETURNING *`,
-    [id_curso, dia_semana, hora_inicio, hora_fin, fecha_inicio ?? null, fecha_fin ?? null, aula ?? null, id]
+    `UPDATE horarios SET id_curso = $1, modalidad = $2, dia_semana = $3, hora_inicio = $4,
+     hora_fin = $5, fecha_inicio = $6, fecha_fin = $7, enlace = $8, notas = $9, informacion_adicional = $10
+     WHERE id_horario = $11 RETURNING *`,
+    [id_curso, modalidad, dia_semana ?? null, hora_inicio ?? null, hora_fin ?? null, fecha_inicio ?? null, fecha_fin ?? null, enlace ?? null, notas ?? null, informacion_adicional ?? null, id]
   );
   return resultado.rows[0];
 };
