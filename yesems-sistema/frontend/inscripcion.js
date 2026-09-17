@@ -17,6 +17,18 @@ if (!courseId || !/^\d+$/.test(courseId)) {
 }
 
 function setText(selector, value) { document.querySelector(selector).textContent = value; }
+const delay = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
+
+async function postWithRetry(url, options) {
+  try {
+    return await fetch(url, options);
+  } catch (error) {
+    // Render puede tardar unos segundos en despertar el backend gratuito.
+    await delay(2500);
+    return fetch(url, options);
+  }
+}
+
 async function loadCourse() {
   try {
     const response = await fetch(`${API_URL}/cursos/${encodeURIComponent(courseId)}`);
@@ -41,7 +53,7 @@ document.querySelector('#enrollment-form').addEventListener('submit', async (eve
   submitButton.textContent = 'Registrando inscripción...';
   let completed = false;
   try {
-    const response = await fetch(`${API_URL}/inscripciones/mia`, {
+    const response = await postWithRetry(`${API_URL}/inscripciones/mia`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({
@@ -61,7 +73,7 @@ document.querySelector('#enrollment-form').addEventListener('submit', async (eve
     window.location.href = `./pago.html?inscripcion=${encodeURIComponent(data.inscripcion.id_inscripcion)}`;
   } catch (error) {
     message.classList.remove('success');
-    message.textContent = error instanceof TypeError ? 'No se pudo conectar con el servidor. Verifica que el backend esté activo.' : error.message;
+    message.textContent = error instanceof TypeError ? 'El servidor está iniciando. Espera unos segundos y vuelve a intentarlo.' : error.message;
   } finally {
     if (!completed) {
       submitButton.disabled = false;
