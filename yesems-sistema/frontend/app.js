@@ -57,7 +57,7 @@ form.addEventListener('submit', async (event) => {
     if (selectedCourseId) {
       window.location.href = `./inscripcion.html?curso=${encodeURIComponent(selectedCourseId)}`;
     } else {
-      window.location.href = './cursos.html';
+      window.location.href = './panel.html';
     }
   } catch (error) {
     const isOffline = error instanceof TypeError;
