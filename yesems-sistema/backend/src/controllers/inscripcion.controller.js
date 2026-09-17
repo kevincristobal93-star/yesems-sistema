@@ -6,7 +6,7 @@ const pool = require('../config/db');
 const crearInscripcionPropia = async (req, res) => {
 	const client = await pool.connect();
 	try {
-		const { id_curso, telefono, fecha_nacimiento, curp } = req.body;
+		const { id_curso, id_horario, telefono, fecha_nacimiento, curp } = req.body;
 		const idUsuario = req.admin.id_usuario;
 
 		if (!id_curso || !telefono || !fecha_nacimiento || !curp) {
@@ -21,6 +21,17 @@ const crearInscripcionPropia = async (req, res) => {
 		if (!cursoResult.rows[0]) {
 			await client.query('ROLLBACK');
 			return res.status(404).json({ ok: false, mensaje: 'El curso seleccionado no está disponible' });
+		}
+
+		if (id_horario) {
+			const disponibilidad = await client.query(
+				'SELECT id_horario FROM horarios WHERE id_horario = $1 AND id_curso = $2',
+				[id_horario, id_curso]
+			);
+			if (!disponibilidad.rows[0]) {
+				await client.query('ROLLBACK');
+				return res.status(400).json({ ok: false, mensaje: 'La disponibilidad seleccionada no pertenece a este curso' });
+			}
 		}
 
 		const usuarioResult = await client.query(
@@ -46,9 +57,9 @@ const crearInscripcionPropia = async (req, res) => {
 		}
 
 		const inscripcionResult = await client.query(
-			`INSERT INTO inscripciones (id_usuario, id_curso, monto_total)
-			 VALUES ($1, $2, $3) RETURNING *`,
-			[idUsuario, id_curso, cursoResult.rows[0].precio ?? 0]
+			`INSERT INTO inscripciones (id_usuario, id_curso, id_horario, monto_total)
+			 VALUES ($1, $2, $3, $4) RETURNING *`,
+			[idUsuario, id_curso, id_horario || null, cursoResult.rows[0].precio ?? 0]
 		);
 		await client.query('COMMIT');
 		res.status(201).json({ ok: true, usuario: usuarioResult.rows[0], inscripcion: inscripcionResult.rows[0] });

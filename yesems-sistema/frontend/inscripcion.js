@@ -4,6 +4,8 @@ const user = JSON.parse(localStorage.getItem('yesems_usuario') || 'null');
 const courseId = new URLSearchParams(window.location.search).get('curso');
 const message = document.querySelector('#form-message');
 const submitButton = document.querySelector('#submit-button');
+const availabilityField = document.querySelector('#availability-field');
+const availabilitySelect = document.querySelector('#availability-select');
 document.querySelector('#footer-year').textContent = new Date().getFullYear();
 
 if (!courseId || !/^\d+$/.test(courseId)) {
@@ -43,7 +45,36 @@ async function loadCourse() {
     setText('#course-price', course.precio === null || course.precio === undefined ? 'Por confirmar' : new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(Number(course.precio)));
     document.querySelector('#course-loading').hidden = true;
     document.querySelector('#course-content').hidden = false;
+    loadAvailabilities();
   } catch (error) { document.querySelector('#course-loading').textContent = error.message; }
+}
+
+function availabilityLabel(item) {
+  const modality = { en_linea: 'En línea', presencial: 'Presencial', hibrida: 'Híbrida', por_definir: 'Por definir' }[item.modalidad] || 'Por definir';
+  const time = item.hora_inicio && item.hora_fin ? ` · ${String(item.hora_inicio).slice(0, 5)} – ${String(item.hora_fin).slice(0, 5)}` : '';
+  return [modality, item.dia_semana, time, item.informacion_adicional].filter(Boolean).join(' · ');
+}
+
+async function loadAvailabilities() {
+  try {
+    const response = await fetch(`${API_URL}/cursos/${encodeURIComponent(courseId)}/disponibilidades`);
+    const data = await response.json();
+    if (!response.ok || !data.ok) return;
+    const options = data.disponibilidades || [];
+    if (!options.length) return;
+    availabilitySelect.innerHTML = '<option value="">Selecciona una opción</option>';
+    options.forEach((item) => {
+      const option = document.createElement('option');
+      option.value = item.id_horario;
+      option.textContent = availabilityLabel(item);
+      availabilitySelect.appendChild(option);
+    });
+    availabilitySelect.disabled = false;
+    availabilitySelect.required = true;
+    availabilityField.hidden = false;
+  } catch (_) {
+    // Si no se logra consultar la disponibilidad, la inscripción puede continuar.
+  }
 }
 document.querySelector('#enrollment-form').addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -58,6 +89,7 @@ document.querySelector('#enrollment-form').addEventListener('submit', async (eve
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({
         id_curso: courseId,
+        id_horario: availabilitySelect.disabled ? null : Number(availabilitySelect.value),
         telefono: document.querySelector('#telefono').value.trim(),
         fecha_nacimiento: document.querySelector('#fecha-nacimiento').value,
         curp: document.querySelector('#curp').value.trim(),

@@ -5,6 +5,7 @@ const verificarAdministrador = require('../middlewares/admin.middleware');
 
 // Catálogo público: permite mostrar los cursos antes del registro.
 router.get('/', cursoController.listarCursos);
+router.get('/:id/disponibilidades', cursoController.listarDisponibilidadesPublicas);
 router.get('/:id', cursoController.obtenerCurso);
 
 // Operaciones de administración: requieren sesión autenticada.

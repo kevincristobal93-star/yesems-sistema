@@ -26,6 +26,24 @@ const obtenerCurso = async (req, res) => {
   }
 };
 
+// GET /api/cursos/:id/disponibilidades
+// No expone enlaces internos; solo permite al alumno elegir la opción adecuada.
+const listarDisponibilidadesPublicas = async (req, res) => {
+  try {
+    const curso = await cursoModel.obtenerCursoPorId(req.params.id);
+    if (!curso || !curso.activo) {
+      return res.status(404).json({ ok: false, mensaje: 'Curso no encontrado' });
+    }
+    const horarioModel = require('../models/horario.model');
+    const horarios = await horarioModel.obtenerHorariosPorCurso(req.params.id);
+    const disponibilidades = horarios.map(({ enlace, ...horario }) => horario);
+    res.json({ ok: true, disponibilidades });
+  } catch (error) {
+    console.error('Error al listar disponibilidades públicas:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+};
+
 // POST /api/cursos
 const crearCurso = async (req, res) => {
   try {
@@ -86,6 +104,7 @@ const eliminarCurso = async (req, res) => {
 module.exports = {
   listarCursos,
   obtenerCurso,
+  listarDisponibilidadesPublicas,
   crearCurso,
   actualizarCurso,
   eliminarCurso,
