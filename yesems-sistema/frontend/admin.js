@@ -3,14 +3,48 @@ const token = localStorage.getItem('yesems_admin_token');
 const admin = JSON.parse(localStorage.getItem('yesems_administrador') || 'null');
 const message = document.querySelector('#dashboard-message');
 const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+const menuButton = document.querySelector('#menu-button');
+const closeMenuButton = document.querySelector('#close-menu-button');
+const drawer = document.querySelector('#admin-menu');
+const overlay = document.querySelector('#menu-overlay');
+
+function toggleMenu(open) {
+  drawer.classList.toggle('open', open);
+  drawer.setAttribute('aria-hidden', String(!open));
+  menuButton.setAttribute('aria-expanded', String(open));
+  overlay.hidden = !open;
+  document.body.classList.toggle('menu-open', open);
+}
+menuButton.addEventListener('click', () => toggleMenu(true));
+closeMenuButton.addEventListener('click', () => toggleMenu(false));
+overlay.addEventListener('click', () => toggleMenu(false));
+drawer.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => toggleMenu(false)));
 
 if (!token || !admin) {
   window.location.replace('./admin-login.html');
 } else {
   document.querySelector('#admin-name').textContent = admin.nombre;
   document.querySelector('#current-date').textContent = new Intl.DateTimeFormat('es-MX', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
+  document.querySelector('#footer-year').textContent = new Date().getFullYear();
   loadDashboard();
   loadPendingPayments();
+  loadReports();
+}
+
+async function loadReports() {
+  try {
+    const data = await request('/administradores/reportes');
+    const report = data.reportes;
+    document.querySelector('#report-active-enrollments').textContent = report.generales.inscripciones_activas;
+    document.querySelector('#report-confirmed-income').textContent = money.format(Number(report.generales.ingresos_confirmados));
+    document.querySelector('#report-pending-income').textContent = money.format(Number(report.generales.ingresos_pendientes));
+    const courses = report.por_curso || [];
+    const maxCourses = Math.max(1, ...courses.map((item) => Number(item.inscripciones)));
+    document.querySelector('#course-report').innerHTML = courses.length ? courses.map((item) => `<div class="bar-item"><span>${item.nombre}</span><div class="bar-track"><div class="bar-fill" style="width:${(Number(item.inscripciones) / maxCourses) * 100}%"></div></div><strong>${item.inscripciones}</strong></div>`).join('') : '<span>Sin información disponible.</span>';
+    const months = report.por_mes || [];
+    const maxMonths = Math.max(1, ...months.map((item) => Number(item.inscripciones)));
+    document.querySelector('#month-report').innerHTML = months.length ? months.map((item) => `<div class="trend-item"><strong>${item.inscripciones}</strong><div class="trend-bar" style="height:${Math.max(8, (Number(item.inscripciones) / maxMonths) * 95)}px"></div><span>${item.periodo}</span></div>`).join('') : '<span>Sin información disponible.</span>';
+  } catch (error) { console.error('No se pudieron cargar los reportes:', error); }
 }
 
 async function request(path, options = {}) {

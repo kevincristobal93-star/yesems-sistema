@@ -50,6 +50,16 @@ const obtenerResumen = async (req, res) => {
   }
 };
 
+const obtenerReportes = async (req, res) => {
+  try {
+    const reportes = await adminModel.obtenerReportesIniciales();
+    res.json({ ok: true, reportes });
+  } catch (error) {
+    console.error('Error al obtener reportes:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+};
+
 const listarAdministradores = async (req, res) => {
   try {
     const administradores = await adminModel.obtenerAdministradores();
@@ -146,6 +156,7 @@ module.exports = {
   validarPago,
   cancelarInscripcionAdmin,
   obtenerResumen,
+  obtenerReportes,
   listarAdministradores,
   registrarAdmin,
   login,

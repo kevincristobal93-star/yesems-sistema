@@ -120,6 +120,27 @@ const cancelarInscripcionAdmin = async (idInscripcion) => {
   } finally { client.release(); }
 };
 
+const obtenerReportesIniciales = async () => {
+  const [generales, porCurso, porMes] = await Promise.all([
+    pool.query(`SELECT
+      COUNT(i.id_inscripcion)::int AS inscripciones_totales,
+      COUNT(i.id_inscripcion) FILTER (WHERE i.estado <> 'cancelada')::int AS inscripciones_activas,
+      COALESCE(SUM(p.monto) FILTER (WHERE p.estado = 'completado'), 0) AS ingresos_confirmados,
+      COALESCE(SUM(p.monto) FILTER (WHERE p.estado = 'pendiente'), 0) AS ingresos_pendientes
+      FROM inscripciones i LEFT JOIN pagos p ON p.id_inscripcion = i.id_inscripcion`),
+    pool.query(`SELECT c.nombre, COUNT(i.id_inscripcion)::int AS inscripciones,
+      COALESCE(SUM(p.monto) FILTER (WHERE p.estado = 'completado'), 0) AS ingresos
+      FROM cursos c LEFT JOIN inscripciones i ON i.id_curso = c.id_curso AND i.estado <> 'cancelada'
+      LEFT JOIN pagos p ON p.id_inscripcion = i.id_inscripcion
+      WHERE c.activo = true GROUP BY c.id_curso, c.nombre ORDER BY inscripciones DESC, c.nombre ASC`),
+    pool.query(`SELECT TO_CHAR(DATE_TRUNC('month', fecha_inscripcion), 'YYYY-MM') AS periodo,
+      COUNT(*)::int AS inscripciones
+      FROM inscripciones WHERE estado <> 'cancelada'
+      GROUP BY DATE_TRUNC('month', fecha_inscripcion) ORDER BY periodo DESC LIMIT 6`),
+  ]);
+  return { generales: generales.rows[0], por_curso: porCurso.rows, por_mes: porMes.rows.reverse() };
+};
+
 module.exports = {
   obtenerAdministradores,
   obtenerAdminPorEmail,
@@ -130,4 +151,5 @@ module.exports = {
   obtenerPagosPendientes,
   validarPago,
   cancelarInscripcionAdmin,
+  obtenerReportesIniciales,
 };

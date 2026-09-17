@@ -8,6 +8,7 @@ const verificarAdministrador = require('../middlewares/admin.middleware');
 router.post('/registrar', adminController.registrarAdmin);
 router.post('/login', adminController.login);
 router.get('/resumen', verificarAdministrador, adminController.obtenerResumen);
+router.get('/reportes', verificarAdministrador, adminController.obtenerReportes);
 router.get('/pagos-pendientes', verificarAdministrador, adminController.listarPagosPendientes);
 router.patch('/pagos/:id/validar', verificarAdministrador, adminController.validarPago);
 router.patch('/inscripciones/:id/cancelar', verificarAdministrador, adminController.cancelarInscripcionAdmin);

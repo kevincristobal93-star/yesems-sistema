@@ -1,0 +1,13 @@
+.admin-footer { display: grid; grid-template-columns: 1.45fr 1fr 1.1fr 1fr; gap: 35px; padding: 48px clamp(25px,4vw,58px) 22px; margin: 56px calc(clamp(32px,5vw,82px) * -1) -52px; color: #b8c5d7; background: #06152d; }
+.admin-footer section { display: grid; gap: 13px; align-content: start; }
+.admin-footer h3 { margin: 0 0 3px; color: #fff; font: 700 1rem "Montserrat",sans-serif; }
+.admin-footer a,.admin-footer p { margin: 0; color: #bac6d6; font-size: .87rem; line-height: 1.5; text-decoration: none; }
+.admin-footer a:hover { color: #f5b942; }
+.footer-company img { width: 92px; height: auto; }
+.footer-company p { max-width: 260px; color: #d1d9e4; font-size: .9rem; }
+.footer-social { display: flex; gap: 10px; margin-top: 4px; }
+.footer-social a { display: grid; width: 37px; height: 37px; border-radius: 50%; place-items: center; color: #dce5f0; background: #29374e; font: 700 1rem Arial,sans-serif; }
+.footer-social a:hover { color: #06152d; background: #f5b942; }
+.admin-footer-bottom { display: flex; grid-column: 1 / -1; padding-top: 22px; margin-top: 20px; border-top: 1px solid rgba(186,198,214,.18); justify-content: space-between; color: #8d9db4; font-size: .78rem; }
+@media(max-width:850px){.admin-footer{grid-template-columns:repeat(2,1fr);margin-right:-20px;margin-bottom:-36px;margin-left:-20px}.admin-footer-bottom{gap:9px;align-items:flex-start;flex-direction:column}}
+@media(max-width:520px){.admin-footer{grid-template-columns:1fr;padding:38px 25px 20px}}
