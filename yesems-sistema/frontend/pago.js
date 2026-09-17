@@ -13,6 +13,12 @@ if (!token || !inscriptionId || !/^\d+$/.test(inscriptionId)) {
 
 const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
 function setText(id, value) { document.querySelector(id).textContent = value || '—'; }
+function availabilityLabel(item) {
+  if (!item.disponibilidad_modalidad) return 'Por confirmar';
+  const mode = { en_linea: 'En línea', presencial: 'Presencial', hibrida: 'Híbrida', por_definir: 'Por definir' }[item.disponibilidad_modalidad] || 'Por definir';
+  const time = item.disponibilidad_hora_inicio && item.disponibilidad_hora_fin ? `${String(item.disponibilidad_hora_inicio).slice(0, 5)} – ${String(item.disponibilidad_hora_fin).slice(0, 5)}` : '';
+  return [mode, item.disponibilidad_dia, time, item.disponibilidad_informacion].filter(Boolean).join(' · ');
+}
 async function loadPayment() {
   try {
     const response = await fetch(`${API_URL}/pagos/mio/${encodeURIComponent(inscriptionId)}`, { headers: { Authorization: `Bearer ${token}` } });
@@ -22,6 +28,7 @@ async function loadPayment() {
     setText('#course-name', enrollment.curso_nombre);
     setText('#course-description', enrollment.curso_descripcion);
     setText('#student-folio', enrollment.folio);
+    setText('#service-availability', availabilityLabel(enrollment));
     setText('#payment-amount', money.format(Number(enrollment.monto_total)));
     pageMessage.hidden = true;
     document.querySelector('#payment-layout').hidden = false;

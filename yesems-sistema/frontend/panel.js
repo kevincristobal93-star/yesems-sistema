@@ -20,6 +20,12 @@ else {
 function paymentLabel(item) { if (item.tiene_pago_pendiente) return 'Pago en validación'; if (Number(item.total_pagado) >= Number(item.monto_total)) return 'Pago confirmado'; return 'Pago pendiente'; }
 function statusLabel(value) { return value ? value.replaceAll('_', ' ') : 'pendiente'; }
 function formatDate(value) { return value ? new Date(value).toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Fecha pendiente'; }
+function availabilityLabel(item) {
+  if (!item.id_horario) return 'Disponibilidad por confirmar';
+  const mode = { en_linea: 'En línea', presencial: 'Presencial', hibrida: 'Híbrida', por_definir: 'Por definir' }[item.disponibilidad_modalidad] || 'Por definir';
+  const time = item.disponibilidad_hora_inicio && item.disponibilidad_hora_fin ? `${String(item.disponibilidad_hora_inicio).slice(0, 5)} – ${String(item.disponibilidad_hora_fin).slice(0, 5)}` : '';
+  return [mode, item.disponibilidad_dia, time, item.disponibilidad_informacion].filter(Boolean).join(' · ');
+}
 function renderFeaturedCourse(item) {
   const paid = Number(item.total_pagado) >= Number(item.monto_total);
   const featured = document.querySelector('#featured-course');
@@ -59,7 +65,7 @@ async function loadPanel() {
     renderActivity(items);
     if (!items.length) { list.innerHTML = '<div class="empty">Aún no tienes inscripciones. Explora los cursos disponibles para comenzar.</div>'; return; }
     renderFeaturedCourse(items[0]);
-    list.innerHTML = items.map((item) => `<article class="enrollment-card"><div><h3>${item.curso_nombre}</h3><p>${item.curso_descripcion || 'Curso YES EMS'}</p><div class="enrollment-info"><span>Inscripción: ${new Date(item.fecha_inscripcion).toLocaleDateString('es-MX')}</span><span>Monto: ${money.format(Number(item.monto_total))}</span><span>${paymentLabel(item)}</span></div></div><div class="enrollment-side"><span class="badge">${item.estado}</span><div class="constancia-actions">${constanciaAction(item)}</div><a class="payment-button" href="./pago.html?inscripcion=${encodeURIComponent(item.id_inscripcion)}">Ver pago</a></div></article>`).join('');
+    list.innerHTML = items.map((item) => `<article class="enrollment-card"><div><h3>${item.curso_nombre}</h3><p>${item.curso_descripcion || 'Curso YES EMS'}</p><div class="enrollment-info"><span>Inscripción: ${new Date(item.fecha_inscripcion).toLocaleDateString('es-MX')}</span><span>Disponibilidad: ${availabilityLabel(item)}</span><span>Monto: ${money.format(Number(item.monto_total))}</span><span>${paymentLabel(item)}</span></div></div><div class="enrollment-side"><span class="badge">${item.estado}</span><div class="constancia-actions">${constanciaAction(item)}</div><a class="payment-button" href="./pago.html?inscripcion=${encodeURIComponent(item.id_inscripcion)}">Ver pago</a></div></article>`).join('');
   } catch (error) { panelMessage.textContent = error instanceof TypeError ? 'No se pudo conectar con el servidor.' : error.message; }
 }
 list.addEventListener('click', async (event) => {

@@ -10,6 +10,9 @@ const obtenerPagoPropio = async (req, res) => {
     const resultado = await pool.query(
       `SELECT i.id_inscripcion, i.monto_total, i.estado AS estado_inscripcion,
               c.nombre AS curso_nombre, c.descripcion AS curso_descripcion,
+              h.modalidad AS disponibilidad_modalidad, h.dia_semana AS disponibilidad_dia,
+              h.hora_inicio AS disponibilidad_hora_inicio, h.hora_fin AS disponibilidad_hora_fin,
+              h.informacion_adicional AS disponibilidad_informacion, h.notas AS disponibilidad_notas,
               u.folio,
               COALESCE(json_agg(json_build_object(
                 'id_pago', p.id_pago, 'monto', p.monto, 'metodo_pago', p.metodo_pago,
@@ -18,9 +21,11 @@ const obtenerPagoPropio = async (req, res) => {
        FROM inscripciones i
        JOIN cursos c ON c.id_curso = i.id_curso
        JOIN usuarios u ON u.id_usuario = i.id_usuario
+       LEFT JOIN horarios h ON h.id_horario = i.id_horario
        LEFT JOIN pagos p ON p.id_inscripcion = i.id_inscripcion
        WHERE i.id_inscripcion = $1 AND i.id_usuario = $2
-       GROUP BY i.id_inscripcion, c.nombre, c.descripcion, u.folio`,
+       GROUP BY i.id_inscripcion, c.nombre, c.descripcion, h.modalidad, h.dia_semana, h.hora_inicio,
+                h.hora_fin, h.informacion_adicional, h.notas, u.folio`,
       [id_inscripcion, req.admin.id_usuario]
     );
     if (!resultado.rows[0]) return res.status(404).json({ ok: false, mensaje: 'Inscripción no encontrada' });

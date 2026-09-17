@@ -82,15 +82,22 @@ const listarInscripcionesPropias = async (req, res) => {
 		const resultado = await pool.query(
 			`SELECT i.id_inscripcion, i.fecha_inscripcion, i.estado, i.monto_total,
 			        c.nombre AS curso_nombre, c.descripcion AS curso_descripcion,
+			        h.id_horario, h.modalidad AS disponibilidad_modalidad, h.dia_semana AS disponibilidad_dia,
+			        h.hora_inicio AS disponibilidad_hora_inicio, h.hora_fin AS disponibilidad_hora_fin,
+			        h.fecha_inicio AS disponibilidad_fecha_inicio, h.fecha_fin AS disponibilidad_fecha_fin,
+			        h.informacion_adicional AS disponibilidad_informacion, h.notas AS disponibilidad_notas,
 			        COALESCE(SUM(p.monto) FILTER (WHERE p.estado = 'completado'), 0) AS total_pagado,
 			        BOOL_OR(p.estado = 'pendiente') AS tiene_pago_pendiente,
 			        co.id_constancia, co.estado AS estado_constancia, co.folio AS folio_constancia
 			 FROM inscripciones i
 			 JOIN cursos c ON c.id_curso = i.id_curso
+			 LEFT JOIN horarios h ON h.id_horario = i.id_horario
 			 LEFT JOIN pagos p ON p.id_inscripcion = i.id_inscripcion
 			 LEFT JOIN constancias co ON co.id_inscripcion = i.id_inscripcion
 			 WHERE i.id_usuario = $1
-			 GROUP BY i.id_inscripcion, c.nombre, c.descripcion, co.id_constancia, co.estado, co.folio
+			 GROUP BY i.id_inscripcion, c.nombre, c.descripcion, h.id_horario, h.modalidad, h.dia_semana,
+			          h.hora_inicio, h.hora_fin, h.fecha_inicio, h.fecha_fin, h.informacion_adicional, h.notas,
+			          co.id_constancia, co.estado, co.folio
 			 ORDER BY i.fecha_inscripcion DESC`,
 			[req.admin.id_usuario]
 		);
