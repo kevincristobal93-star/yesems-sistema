@@ -8,6 +8,10 @@ const registrationDialog = document.querySelector('#registration-dialog');
 const registrationForm = document.querySelector('#quick-registration-form');
 const registrationMessage = document.querySelector('#quick-registration-message');
 const registrationSubmit = document.querySelector('#quick-registration-submit');
+const loginDialog = document.querySelector('#login-dialog');
+const loginForm = document.querySelector('#quick-login-form');
+const loginMessage = document.querySelector('#quick-login-message');
+const loginSubmit = document.querySelector('#quick-login-submit');
 let selectedCourse = null;
 let courses = [];
 
@@ -48,9 +52,19 @@ function openRegistration(course) {
   registrationMessage.textContent = '';
   registrationMessage.classList.remove('success');
   document.querySelector('#dialog-course-name').textContent = course?.nombre ? `Curso seleccionado: ${course.nombre}` : '';
-  document.querySelector('#dialog-login-link').href = `./index.html?curso=${encodeURIComponent(course.id_curso)}`;
+  document.querySelector('#dialog-login-link').href = course ? `./index.html?curso=${encodeURIComponent(course.id_curso)}` : './index.html';
   registrationDialog.showModal();
   document.querySelector('#quick-full-name').focus();
+}
+
+function openLogin(course = selectedCourse) {
+  selectedCourse = course || null;
+  loginForm.reset();
+  loginMessage.textContent = '';
+  loginMessage.classList.remove('success');
+  document.querySelector('#login-dialog-course-name').textContent = selectedCourse?.nombre ? `Curso seleccionado: ${selectedCourse.nombre}` : '';
+  loginDialog.showModal();
+  document.querySelector('#quick-login-email').focus();
 }
 
 grid.addEventListener('click', (event) => {
@@ -66,6 +80,10 @@ grid.addEventListener('click', (event) => {
 });
 
 document.querySelector('#close-registration-dialog').addEventListener('click', () => registrationDialog.close());
+document.querySelector('#close-login-dialog').addEventListener('click', () => loginDialog.close());
+document.querySelector('#open-login-dialog').addEventListener('click', (event) => { event.preventDefault(); openLogin(null); });
+document.querySelector('#dialog-login-link').addEventListener('click', (event) => { event.preventDefault(); registrationDialog.close(); openLogin(selectedCourse); });
+document.querySelector('#open-registration-from-login').addEventListener('click', (event) => { event.preventDefault(); loginDialog.close(); openRegistration(selectedCourse); });
 
 registrationForm.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -105,11 +123,41 @@ registrationForm.addEventListener('submit', async (event) => {
     localStorage.setItem('yesems_usuario', JSON.stringify(loginData.usuario));
     registrationMessage.classList.add('success');
     registrationMessage.textContent = 'Cuenta creada. Continuando con tu inscripción...';
-    window.location.href = `./inscripcion.html?curso=${encodeURIComponent(selectedCourse.id_curso)}`;
+    window.location.href = selectedCourse ? `./inscripcion.html?curso=${encodeURIComponent(selectedCourse.id_curso)}` : './panel.html';
   } catch (error) {
     registrationMessage.textContent = error instanceof TypeError ? 'No se pudo conectar con el servidor. Intenta de nuevo en unos segundos.' : error.message;
     registrationSubmit.disabled = false;
     registrationSubmit.textContent = 'Crear cuenta';
+  }
+});
+
+loginForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  loginMessage.textContent = '';
+  const email = document.querySelector('#quick-login-email').value.trim();
+  const password = document.querySelector('#quick-login-password').value;
+  if (!loginForm.checkValidity()) {
+    loginMessage.textContent = 'Completa tu correo y contraseña para continuar.';
+    loginForm.reportValidity();
+    return;
+  }
+  loginSubmit.disabled = true;
+  loginSubmit.textContent = 'Ingresando...';
+  try {
+    const response = await fetch(`${API_URL}/usuarios/login`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }),
+    });
+    const data = await response.json();
+    if (!response.ok || !data.ok) throw new Error(data.mensaje || 'No fue posible iniciar sesión.');
+    localStorage.setItem('yesems_token', data.token);
+    localStorage.setItem('yesems_usuario', JSON.stringify(data.usuario));
+    loginMessage.classList.add('success');
+    loginMessage.textContent = `Bienvenido(a), ${data.usuario.nombre}.`;
+    window.location.href = selectedCourse ? `./inscripcion.html?curso=${encodeURIComponent(selectedCourse.id_curso)}` : './panel.html';
+  } catch (error) {
+    loginMessage.textContent = error instanceof TypeError ? 'No se pudo conectar con el servidor. Intenta de nuevo en unos segundos.' : error.message;
+    loginSubmit.disabled = false;
+    loginSubmit.textContent = 'Ingresar';
   }
 });
 
