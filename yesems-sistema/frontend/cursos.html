@@ -77,6 +77,25 @@
       </section>
     </main>
 
+    <dialog id="registration-dialog" class="registration-dialog" aria-labelledby="quick-registration-title">
+      <form id="quick-registration-form" class="quick-registration-form" novalidate>
+        <button id="close-registration-dialog" class="dialog-close" type="button" aria-label="Cerrar registro">×</button>
+        <img class="dialog-brand" src="./assets/yesems-logo.png" alt="YES EMS" width="1254" height="1254" />
+        <h2 id="quick-registration-title">Crea tu cuenta</h2>
+        <p class="dialog-intro">Regístrate para comenzar tu inscripción.</p>
+        <p id="dialog-course-name" class="dialog-course-name"></p>
+        <label for="quick-full-name">Nombre completo</label>
+        <input id="quick-full-name" name="full-name" type="text" autocomplete="name" placeholder="Tu nombre completo" required />
+        <label for="quick-email">Correo electrónico</label>
+        <input id="quick-email" name="email" type="email" autocomplete="email" placeholder="tucorreo@ejemplo.com" required />
+        <label for="quick-password">Contraseña</label>
+        <input id="quick-password" name="password" type="password" autocomplete="new-password" minlength="8" placeholder="Mínimo 8 caracteres" required />
+        <p id="quick-registration-message" class="quick-registration-message" role="alert" aria-live="polite"></p>
+        <button id="quick-registration-submit" class="quick-registration-submit" type="submit">Crear cuenta</button>
+        <p class="dialog-login">¿Ya tienes cuenta? <a id="dialog-login-link" href="./index.html">Inicia sesión</a></p>
+      </form>
+    </dialog>
+
     <footer id="contacto" class="site-footer">
       <div class="footer-grid">
         <section class="footer-brand" aria-label="YES EMS">

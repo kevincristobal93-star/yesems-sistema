@@ -4,6 +4,11 @@ const message = document.querySelector('#catalog-message');
 const count = document.querySelector('#course-count');
 const search = document.querySelector('#search');
 const category = document.querySelector('#category');
+const registrationDialog = document.querySelector('#registration-dialog');
+const registrationForm = document.querySelector('#quick-registration-form');
+const registrationMessage = document.querySelector('#quick-registration-message');
+const registrationSubmit = document.querySelector('#quick-registration-submit');
+let selectedCourse = null;
 let courses = [];
 
 const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
@@ -32,10 +37,81 @@ function renderCourses() {
         <span>${valueOr(course.cupo, '—')} lugares</span>
       </div>
       <p class="course-price">${course.precio === null || course.precio === undefined ? 'Costo por confirmar' : money.format(Number(course.precio))}</p>
-      <a class="enroll-button" href="./registro.html?curso=${encodeURIComponent(course.id_curso)}">Quiero inscribirme</a>
+      <button class="enroll-button" type="button" data-enroll-course="${course.id_curso}">Quiero inscribirme</button>
     </article>
   `).join('');
 }
+
+function openRegistration(course) {
+  selectedCourse = course;
+  registrationForm.reset();
+  registrationMessage.textContent = '';
+  registrationMessage.classList.remove('success');
+  document.querySelector('#dialog-course-name').textContent = course?.nombre ? `Curso seleccionado: ${course.nombre}` : '';
+  document.querySelector('#dialog-login-link').href = `./index.html?curso=${encodeURIComponent(course.id_curso)}`;
+  registrationDialog.showModal();
+  document.querySelector('#quick-full-name').focus();
+}
+
+grid.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-enroll-course]');
+  if (!button) return;
+  const course = courses.find((item) => String(item.id_curso) === button.dataset.enrollCourse);
+  if (!course) return;
+  if (localStorage.getItem('yesems_token') && localStorage.getItem('yesems_usuario')) {
+    window.location.href = `./inscripcion.html?curso=${encodeURIComponent(course.id_curso)}`;
+    return;
+  }
+  openRegistration(course);
+});
+
+document.querySelector('#close-registration-dialog').addEventListener('click', () => registrationDialog.close());
+
+registrationForm.addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const fullName = document.querySelector('#quick-full-name').value.trim().replace(/\s+/g, ' ');
+  const [nombre, ...apellidos] = fullName.split(' ');
+  const apellido = apellidos.join(' ');
+  const email = document.querySelector('#quick-email').value.trim();
+  const password = document.querySelector('#quick-password').value;
+  registrationMessage.textContent = '';
+  registrationMessage.classList.remove('success');
+  if (!registrationForm.checkValidity()) {
+    registrationMessage.textContent = 'Completa todos los campos y usa una contraseña de al menos 8 caracteres.';
+    registrationForm.reportValidity();
+    return;
+  }
+  if (!apellido) {
+    registrationMessage.textContent = 'Escribe tu nombre y al menos un apellido.';
+    document.querySelector('#quick-full-name').focus();
+    return;
+  }
+  registrationSubmit.disabled = true;
+  registrationSubmit.textContent = 'Creando cuenta...';
+  try {
+    const registerResponse = await fetch(`${API_URL}/usuarios/registrar`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ nombre, apellido, email, password }),
+    });
+    const registerData = await registerResponse.json();
+    if (!registerResponse.ok || !registerData.ok) throw new Error(registerData.mensaje || 'No fue posible crear tu cuenta.');
+    const loginResponse = await fetch(`${API_URL}/usuarios/login`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
+    });
+    const loginData = await loginResponse.json();
+    if (!loginResponse.ok || !loginData.ok) throw new Error('La cuenta fue creada, pero debes iniciar sesión para continuar.');
+    localStorage.setItem('yesems_token', loginData.token);
+    localStorage.setItem('yesems_usuario', JSON.stringify(loginData.usuario));
+    registrationMessage.classList.add('success');
+    registrationMessage.textContent = 'Cuenta creada. Continuando con tu inscripción...';
+    window.location.href = `./inscripcion.html?curso=${encodeURIComponent(selectedCourse.id_curso)}`;
+  } catch (error) {
+    registrationMessage.textContent = error instanceof TypeError ? 'No se pudo conectar con el servidor. Intenta de nuevo en unos segundos.' : error.message;
+    registrationSubmit.disabled = false;
+    registrationSubmit.textContent = 'Crear cuenta';
+  }
+});
 
 async function loadCourses() {
   try {
