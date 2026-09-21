@@ -1,4 +1,6 @@
 .payments-section { margin-top: 24px; }
+.certificates-section { margin-top: 24px; scroll-margin-top: 90px; }
+.certificate-download { display: inline-block; color: #176b87; background: #e7f4f8; text-decoration: none; }
 .pending-count { padding: 6px 10px; border-radius: 99px; color: #8a6100; background: #fff3d7; font-size: .76rem; font-weight: 700; }
 .action-group { display: flex; gap: 7px; flex-wrap: wrap; }
 .table-action { padding: 7px 9px; border: 0; border-radius: 6px; font: 700 .72rem "Montserrat",sans-serif; cursor: pointer; }

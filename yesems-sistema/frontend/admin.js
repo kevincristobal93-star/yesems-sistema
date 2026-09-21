@@ -44,6 +44,7 @@ if (!token || !admin) {
   loadReports();
   loadCourseManagement();
   loadAvailabilityManagement();
+  loadCertificates();
 }
 
 function escapeHtml(value = '') {
@@ -277,6 +278,21 @@ async function loadPendingPayments() {
   } catch (error) { paymentMessage.textContent = error.message; }
 }
 
+async function loadCertificates() {
+  const certificatesMessage = document.querySelector('#certificates-message');
+  try {
+    const data = await request('/constancias');
+    const certificates = data.constancias || [];
+    const pending = certificates.filter((item) => item.estado === 'pendiente').length;
+    document.querySelector('#pending-certificate-count').textContent = `${pending} pendientes`;
+    certificatesMessage.hidden = true;
+    document.querySelector('#certificate-table').innerHTML = certificates.length ? certificates.map((item) => `<tr><td>${escapeHtml(item.usuario_nombre)} ${escapeHtml(item.usuario_apellido)}</td><td>${escapeHtml(item.curso_nombre)}</td><td>${escapeHtml(item.folio)}</td><td>${new Date(item.fecha_emision).toLocaleDateString('es-MX')}</td><td><span class="badge">${escapeHtml(item.estado)}</span></td><td class="action-group">${item.estado === 'pendiente' ? `<button class="table-action approve" data-certificate="${item.id_constancia}" data-certificate-action="autorizar">Autorizar</button><button class="table-action cancel" data-certificate="${item.id_constancia}" data-certificate-action="rechazar">Rechazar</button>` : item.estado === 'autorizada' ? `<a class="table-action certificate-download" href="${API_URL}/constancias/${item.id_constancia}/descargar" data-certificate-download="${item.id_constancia}">Descargar</a>` : '<span>Sin acciones</span>'}</td></tr>`).join('') : '<tr><td colspan="6">No hay solicitudes de constancia.</td></tr>';
+  } catch (error) {
+    certificatesMessage.hidden = false;
+    certificatesMessage.textContent = error.message;
+  }
+}
+
 document.querySelector('#payment-table').addEventListener('click', async (event) => {
   const button = event.target.closest('[data-payment]');
   if (!button || !window.confirm(`¿Deseas ${button.dataset.state === 'completado' ? 'aprobar' : 'cancelar'} este pago?`)) return;
@@ -285,6 +301,27 @@ document.querySelector('#payment-table').addEventListener('click', async (event)
     await request(`/administradores/pagos/${button.dataset.payment}/validar`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: button.dataset.state }) });
     loadDashboard(); loadPendingPayments();
   } catch (error) { button.disabled = false; alert(error.message); }
+});
+
+document.querySelector('#certificate-table').addEventListener('click', async (event) => {
+  const actionButton = event.target.closest('[data-certificate-action]');
+  const downloadLink = event.target.closest('[data-certificate-download]');
+  if (downloadLink) {
+    event.preventDefault();
+    try {
+      const response = await fetch(downloadLink.href, { headers: { Authorization: `Bearer ${token}` } });
+      if (!response.ok) { const data = await response.json(); throw new Error(data.mensaje || 'No se pudo descargar la constancia.'); }
+      const blob = await response.blob(); const url = URL.createObjectURL(blob); const download = document.createElement('a'); download.href = url; download.download = 'constancia.pdf'; download.click(); URL.revokeObjectURL(url);
+    } catch (error) { alert(error.message); }
+    return;
+  }
+  if (!actionButton || !window.confirm(`¿Deseas ${actionButton.dataset.certificateAction === 'autorizar' ? 'autorizar y generar' : 'rechazar'} esta constancia?`)) return;
+  actionButton.disabled = true;
+  try {
+    await request(`/constancias/${actionButton.dataset.certificate}/${actionButton.dataset.certificateAction}`, { method: 'PATCH' });
+    loadCertificates();
+    loadDashboard();
+  } catch (error) { actionButton.disabled = false; alert(error.message); }
 });
 
 document.querySelector('#inscription-table').addEventListener('click', async (event) => {

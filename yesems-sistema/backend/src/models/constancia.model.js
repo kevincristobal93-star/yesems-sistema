@@ -31,7 +31,7 @@ const obtenerConstanciaPorInscripcion = async (idInscripcion) => {
 // Trae los datos completos (usuario/alumno, curso) necesarios para generar el PDF
 const obtenerDatosParaPdf = async (idInscripcion) => {
   const resultado = await pool.query(`
-    SELECT u.nombre AS usuario_nombre, u.apellido AS usuario_apellido,
+    SELECT u.nombre AS alumno_nombre, u.apellido AS alumno_apellido,
            c.nombre AS curso_nombre, c.duracion_horas,
            i.fecha_inscripcion, i.estado AS estado_inscripcion
     FROM inscripciones i

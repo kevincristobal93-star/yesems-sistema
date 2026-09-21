@@ -5,7 +5,9 @@ const path = require('path');
 const generarPdfConstancia = (datos, folio) => {
   return new Promise((resolve, reject) => {
     const nombreArchivo = `constancia_${folio}.pdf`;
-    const rutaCompleta = path.join(__dirname, '../../uploads/constancias', nombreArchivo);
+    const directorioConstancias = path.join(__dirname, '../../uploads/constancias');
+    fs.mkdirSync(directorioConstancias, { recursive: true });
+    const rutaCompleta = path.join(directorioConstancias, nombreArchivo);
 
     const doc = new PDFDocument({ size: 'letter', margin: 50 });
     const stream = fs.createWriteStream(rutaCompleta);

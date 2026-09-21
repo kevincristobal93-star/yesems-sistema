@@ -2,11 +2,12 @@ const express = require('express');
 const router = express.Router();
 const constanciaController = require('../controllers/constancia.controller');
 const verificarToken = require('../middlewares/auth.middleware');
+const verificarAdministrador = require('../middlewares/admin.middleware');
 
-router.use(verificarToken);
+router.post('/mia', verificarToken, constanciaController.solicitarConstanciaPropia);
+router.get('/mia/:id/descargar', verificarToken, constanciaController.descargarConstanciaPropia);
 
-router.post('/mia', constanciaController.solicitarConstanciaPropia);
-router.get('/mia/:id/descargar', constanciaController.descargarConstanciaPropia);
+router.use(verificarAdministrador);
 router.get('/', constanciaController.listarConstancias);
 router.post('/', constanciaController.solicitarConstancia);
 router.patch('/:id/autorizar', constanciaController.autorizarConstancia);
