@@ -138,15 +138,36 @@ const login = async (req, res) => {
 
 const desactivarAdmin = async (req, res) => {
   try {
-    const { id } = req.params;
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || id <= 0) {
+      return res.status(400).json({ ok: false, error: 'ID inválido' });
+    }
+
+    const idAdministradorActual = Number(req.admin?.id_administrador);
+    if (!Number.isInteger(idAdministradorActual)) {
+      return res.status(401).json({ ok: false, error: 'Sesión administrativa inválida' });
+    }
+    if (id === idAdministradorActual) {
+      return res.status(400).json({ ok: false, mensaje: 'No puedes desactivar tu propia cuenta' });
+    }
+
     const existente = await adminModel.obtenerAdminPorId(id);
     if (!existente) {
       return res.status(404).json({ ok: false, mensaje: 'Administrador no encontrado' });
     }
+    if (!existente.activo) {
+      return res.status(400).json({ ok: false, mensaje: 'La cuenta administrativa ya está desactivada' });
+    }
+
+    const totalActivos = await adminModel.contarAdministradoresActivos();
+    if (totalActivos <= 1) {
+      return res.status(400).json({ ok: false, mensaje: 'No se puede desactivar la última cuenta de administrador activa' });
+    }
+
     const desactivado = await adminModel.desactivarAdmin(id);
     res.json({ ok: true, mensaje: 'Administrador desactivado', administrador: desactivado });
   } catch (error) {
-    console.error('Error al desactivar administrador:', error);
+    console.error(error);
     res.status(500).json({ ok: false, error: error.message });
   }
 };
