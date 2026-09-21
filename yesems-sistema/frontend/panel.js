@@ -4,9 +4,19 @@ const user = JSON.parse(localStorage.getItem('yesems_usuario') || 'null');
 const panelMessage = document.querySelector('#panel-message');
 const list = document.querySelector('#inscription-list');
 const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+function setupPanelMotion() {
+  document.body.classList.add('motion-ready');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) { entry.target.classList.add('is-visible'); observer.unobserve(entry.target); }
+    });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.quick-summary, .dashboard-grid, .featured-section, .activity-section, #mis-inscripciones').forEach((section) => observer.observe(section));
+}
 document.querySelector('#footer-year').textContent = new Date().getFullYear();
 if (!token || !user) window.location.replace('./index.html');
 else {
+  setupPanelMotion();
   const fullName = `${user.nombre || ''} ${user.apellido || ''}`.trim() || 'Alumno';
   document.querySelector('#user-name').textContent = user.nombre || 'alumno';
   document.querySelector('#student-folio').textContent = user.folio || 'Pendiente de completar';
