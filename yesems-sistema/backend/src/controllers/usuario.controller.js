@@ -112,6 +112,30 @@ const ascenderAAlumno = async (req, res) => {
   }
 };
 
+const obtenerPerfilPropio = async (req, res) => {
+  try {
+    const usuario = await usuarioModel.obtenerUsuarioPorId(req.admin.id_usuario);
+    if (!usuario || !usuario.activo) return res.status(404).json({ ok: false, mensaje: 'Cuenta no encontrada' });
+    res.json({ ok: true, usuario });
+  } catch (error) {
+    console.error('Error al obtener perfil propio:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+};
+
+const actualizarPerfilPropio = async (req, res) => {
+  try {
+    const { nombre, apellido, telefono } = req.body;
+    if (!nombre || !apellido) return res.status(400).json({ ok: false, mensaje: 'nombre y apellido son obligatorios' });
+    const usuario = await usuarioModel.actualizarPerfilPropio(req.admin.id_usuario, { nombre: nombre.trim(), apellido: apellido.trim(), telefono: telefono?.trim() });
+    if (!usuario) return res.status(404).json({ ok: false, mensaje: 'Cuenta no encontrada' });
+    res.json({ ok: true, usuario });
+  } catch (error) {
+    console.error('Error al actualizar perfil propio:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+};
+
 const actualizarUsuario = async (req, res) => {
   try {
     const { id } = req.params;
@@ -150,6 +174,8 @@ module.exports = {
   obtenerUsuario,
   registrarCliente,
   login,
+  obtenerPerfilPropio,
+  actualizarPerfilPropio,
   ascenderAAlumno,
   actualizarUsuario,
   eliminarUsuario,

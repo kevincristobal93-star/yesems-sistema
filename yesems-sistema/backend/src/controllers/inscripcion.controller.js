@@ -34,6 +34,16 @@ const crearInscripcionPropia = async (req, res) => {
 			}
 		}
 
+		const existente = await client.query(
+			`SELECT id_inscripcion FROM inscripciones
+			 WHERE id_usuario = $1 AND id_curso = $2 AND estado <> 'cancelada'`,
+			[idUsuario, id_curso]
+		);
+		if (existente.rows[0]) {
+			await client.query('ROLLBACK');
+			return res.json({ ok: true, existente: true, mensaje: 'Ya cuentas con una inscripción activa para este curso.', inscripcion: existente.rows[0] });
+		}
+
 		const usuarioResult = await client.query(
 			`UPDATE usuarios
 			 SET telefono = $1,
@@ -45,16 +55,6 @@ const crearInscripcionPropia = async (req, res) => {
 			 RETURNING id_usuario, nombre, apellido, email, folio, rol`,
 			[telefono, fecha_nacimiento, curp.toUpperCase(), idUsuario]
 		);
-
-		const existente = await client.query(
-			`SELECT id_inscripcion FROM inscripciones
-			 WHERE id_usuario = $1 AND id_curso = $2 AND estado <> 'cancelada'`,
-			[idUsuario, id_curso]
-		);
-		if (existente.rows[0]) {
-			await client.query('ROLLBACK');
-			return res.status(409).json({ ok: false, mensaje: 'Ya tienes una inscripción activa para este curso' });
-		}
 
 		const inscripcionResult = await client.query(
 			`INSERT INTO inscripciones (id_usuario, id_curso, id_horario, monto_total)

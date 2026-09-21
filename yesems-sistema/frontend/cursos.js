@@ -15,6 +15,41 @@ const loginSubmit = document.querySelector('#quick-login-submit');
 let selectedCourse = null;
 let courses = [];
 
+const sessionToken = localStorage.getItem('yesems_token');
+const sessionUser = JSON.parse(localStorage.getItem('yesems_usuario') || 'null');
+
+function clearStudentSession() {
+  localStorage.removeItem('yesems_token');
+  localStorage.removeItem('yesems_usuario');
+  window.location.href = './cursos.html';
+}
+
+function setupStudentNavigation() {
+  if (!sessionToken || !sessionUser) return;
+  document.querySelector('#public-navigation').hidden = true;
+  document.querySelector('#student-navigation').hidden = false;
+  const fullName = `${sessionUser.nombre || ''} ${sessionUser.apellido || ''}`.trim() || 'Mi cuenta';
+  const initial = fullName.charAt(0).toUpperCase() || 'A';
+  document.querySelector('#account-name').textContent = sessionUser.nombre || 'Mi cuenta';
+  ['#account-initial', '#drawer-initial', '#dialog-account-initial'].forEach((selector) => { document.querySelector(selector).textContent = initial; });
+  document.querySelector('#drawer-name').textContent = fullName;
+  document.querySelector('#drawer-email').textContent = sessionUser.email || '';
+  document.querySelector('#account-dialog-title').textContent = fullName;
+  document.querySelector('#account-dialog-email').textContent = sessionUser.email || '';
+  const drawer = document.querySelector('#student-drawer');
+  const overlay = document.querySelector('#student-menu-overlay');
+  const menuButton = document.querySelector('#student-menu-button');
+  const closeDrawer = () => { drawer.classList.remove('open'); overlay.hidden = true; drawer.setAttribute('aria-hidden', 'true'); menuButton.setAttribute('aria-expanded', 'false'); };
+  const openDrawer = () => { drawer.classList.add('open'); overlay.hidden = false; drawer.setAttribute('aria-hidden', 'false'); menuButton.setAttribute('aria-expanded', 'true'); };
+  menuButton.addEventListener('click', openDrawer);
+  document.querySelector('#close-student-menu').addEventListener('click', closeDrawer);
+  overlay.addEventListener('click', closeDrawer);
+  document.querySelector('#student-logout-button').addEventListener('click', clearStudentSession);
+  const accountDialog = document.querySelector('#account-dialog');
+  document.querySelector('#account-button').addEventListener('click', () => accountDialog.showModal());
+  document.querySelector('#close-account-dialog').addEventListener('click', () => accountDialog.close());
+}
+
 const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
 
 function valueOr(value, fallback) {
@@ -182,4 +217,5 @@ async function loadCourses() {
 search.addEventListener('input', renderCourses);
 category.addEventListener('change', renderCourses);
 document.querySelector('#current-year').textContent = new Date().getFullYear();
+setupStudentNavigation();
 loadCourses();

@@ -80,6 +80,15 @@ const desactivarUsuario = async (id) => {
   return resultado.rows[0];
 };
 
+const actualizarPerfilPropio = async (id, datos) => {
+  const { nombre, apellido, telefono } = datos;
+  const resultado = await pool.query(
+    `UPDATE usuarios SET nombre = $1, apellido = $2, telefono = $3 WHERE id_usuario = $4 AND activo = true RETURNING id_usuario, nombre, apellido, email, telefono, fecha_nacimiento, curp, folio, rol, activo`,
+    [nombre, apellido, telefono || null, id]
+  );
+  return resultado.rows[0];
+};
+
 module.exports = {
   obtenerUsuarios,
   obtenerUsuarioPorId,
@@ -88,4 +97,5 @@ module.exports = {
   ascenderAAlumno,
   actualizarUsuario,
   desactivarUsuario,
+  actualizarPerfilPropio,
 };

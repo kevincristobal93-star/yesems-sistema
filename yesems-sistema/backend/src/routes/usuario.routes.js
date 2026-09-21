@@ -8,6 +8,8 @@ router.post('/registrar', usuarioController.registrarCliente);
 router.post('/login', usuarioController.login);
 
 // Protegidas
+router.get('/mio', verificarToken, usuarioController.obtenerPerfilPropio);
+router.put('/mio', verificarToken, usuarioController.actualizarPerfilPropio);
 router.get('/', verificarToken, usuarioController.listarUsuarios);
 router.get('/:id', verificarToken, usuarioController.obtenerUsuario);
 router.put('/:id/ascender', verificarToken, usuarioController.ascenderAAlumno);

@@ -15,12 +15,28 @@
       <a class="brand" href="./cursos.html" aria-label="YES EMS, cursos disponibles">
         <img src="./assets/yesems-logo.png" alt="YES EMS" width="1254" height="1254" />
       </a>
-      <nav aria-label="Navegación principal">
+      <nav id="public-navigation" aria-label="Navegación principal">
         <a class="active" href="./cursos.html">Cursos</a>
         <a href="#contacto">Contacto</a>
         <a id="open-login-dialog" class="login-link" href="./index.html">Iniciar sesión</a>
       </nav>
+      <div id="student-navigation" class="student-navigation" hidden>
+        <button id="student-menu-button" class="header-icon-button" type="button" aria-label="Abrir menú del alumno" aria-expanded="false">☰</button>
+        <button id="account-button" class="account-button" type="button" aria-expanded="false"><span id="account-initial" class="account-initial">A</span><span id="account-name">Mi cuenta</span></button>
+      </div>
     </header>
+    <div id="student-menu-overlay" class="student-menu-overlay" hidden></div>
+    <aside id="student-drawer" class="student-drawer" aria-label="Menú del alumno" aria-hidden="true">
+      <div class="drawer-heading"><strong>Mi espacio YES EMS</strong><button id="close-student-menu" type="button" aria-label="Cerrar menú">×</button></div>
+      <div class="drawer-profile"><span id="drawer-initial" class="account-initial">A</span><div><strong id="drawer-name"></strong><small id="drawer-email"></small></div></div>
+      <nav class="drawer-links" aria-label="Opciones del alumno">
+        <a href="./panel.html">Mi panel</a><a href="./cursos.html">Explorar cursos</a><a href="./panel.html#mis-inscripciones">Mis inscripciones</a><a href="./panel.html#mis-pagos">Pagos</a><a href="./panel.html#mis-constancias">Constancias</a><a href="./configuracion.html">Configuración</a>
+      </nav>
+      <button id="student-logout-button" class="drawer-logout" type="button">Cerrar sesión</button>
+    </aside>
+    <dialog id="account-dialog" class="account-dialog" aria-labelledby="account-dialog-title">
+      <div class="account-dialog-content"><button id="close-account-dialog" class="dialog-close" type="button" aria-label="Cerrar">×</button><span id="dialog-account-initial" class="account-initial large">A</span><p class="eyebrow">Cuenta de alumno</p><h2 id="account-dialog-title"></h2><p id="account-dialog-email" class="dialog-intro"></p><div class="account-actions"><a href="./panel.html">Ver mi panel</a><a href="./configuracion.html">Configuración</a></div></div>
+    </dialog>
 
     <main>
       <section class="hero">

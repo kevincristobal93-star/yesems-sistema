@@ -6,6 +6,9 @@ const message = document.querySelector('#form-message');
 const submitButton = document.querySelector('#submit-button');
 const availabilityField = document.querySelector('#availability-field');
 const availabilitySelect = document.querySelector('#availability-select');
+const form = document.querySelector('#enrollment-form');
+const personalStep = document.querySelector('#personal-step');
+const confirmationStep = document.querySelector('#confirmation-step');
 document.querySelector('#footer-year').textContent = new Date().getFullYear();
 
 if (!courseId || !/^\d+$/.test(courseId)) {
@@ -76,7 +79,38 @@ async function loadAvailabilities() {
     // Si no se logra consultar la disponibilidad, la inscripción puede continuar.
   }
 }
-document.querySelector('#enrollment-form').addEventListener('submit', async (event) => {
+function showPersonalStep() {
+  confirmationStep.hidden = true;
+  personalStep.hidden = false;
+  document.querySelector('#step-confirmation').classList.remove('active');
+  document.querySelector('#step-personal').classList.add('active');
+  message.textContent = '';
+}
+
+function showConfirmationStep() {
+  if (!form.checkValidity()) {
+    message.textContent = 'Completa todos los datos antes de continuar.';
+    form.reportValidity();
+    return;
+  }
+  document.querySelector('#confirm-phone').textContent = document.querySelector('#telefono').value.trim();
+  document.querySelector('#confirm-birthdate').textContent = new Intl.DateTimeFormat('es-MX', { dateStyle: 'long' }).format(new Date(`${document.querySelector('#fecha-nacimiento').value}T00:00:00`));
+  document.querySelector('#confirm-curp').textContent = document.querySelector('#curp').value.trim().toUpperCase();
+  const hasAvailability = !availabilitySelect.disabled && availabilitySelect.value;
+  document.querySelector('#confirm-availability-row').hidden = !hasAvailability;
+  if (hasAvailability) document.querySelector('#confirm-availability').textContent = availabilitySelect.options[availabilitySelect.selectedIndex].textContent;
+  personalStep.hidden = true;
+  confirmationStep.hidden = false;
+  document.querySelector('#step-personal').classList.remove('active');
+  document.querySelector('#step-confirmation').classList.add('active');
+  message.textContent = '';
+  confirmationStep.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+document.querySelector('#continue-button').addEventListener('click', showConfirmationStep);
+document.querySelector('#back-to-data').addEventListener('click', showPersonalStep);
+
+form.addEventListener('submit', async (event) => {
   event.preventDefault();
   if (!event.currentTarget.checkValidity()) { message.textContent = 'Completa todos los datos antes de continuar.'; event.currentTarget.reportValidity(); return; }
   message.textContent = '';
@@ -98,7 +132,7 @@ document.querySelector('#enrollment-form').addEventListener('submit', async (eve
     const data = await response.json();
     if (!response.ok || !data.ok) throw new Error(data.mensaje || data.error || 'No fue posible registrar tu inscripción.');
 
-    localStorage.setItem('yesems_usuario', JSON.stringify({ ...user, ...data.usuario }));
+    if (data.usuario) localStorage.setItem('yesems_usuario', JSON.stringify({ ...user, ...data.usuario }));
     event.currentTarget.querySelectorAll('input, button').forEach((element) => { element.disabled = true; });
     completed = true;
     message.classList.add('success');
