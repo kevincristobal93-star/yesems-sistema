@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const path = require('path');
+const { isRemoteFile } = require('../services/storage.service');
 const adminModel = require('../models/administrador.model');
 
 const SALT_ROUNDS = 10;
@@ -35,6 +36,7 @@ const descargarComprobantePago = async (req, res) => {
     const pago = await require('../models/pago.model').obtenerPagoPorId(req.params.id);
     if (!pago) return res.status(404).json({ ok: false, mensaje: 'Pago no encontrado' });
     if (!pago.comprobante_url) return res.status(404).json({ ok: false, mensaje: 'Este pago no tiene comprobante adjunto' });
+    if (isRemoteFile(pago.comprobante_url)) return res.redirect(pago.comprobante_url);
     res.download(path.join(__dirname, '../..', pago.comprobante_url), path.basename(pago.comprobante_url));
   } catch (error) {
     console.error('Error al descargar comprobante:', error);

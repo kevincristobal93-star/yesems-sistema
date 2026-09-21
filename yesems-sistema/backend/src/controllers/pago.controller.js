@@ -1,6 +1,7 @@
 const pagoModel = require('../models/pago.model');
 const pool = require('../config/db');
 const path = require('path');
+const { guardarArchivoPermanente, isRemoteFile } = require('../services/storage.service');
 
 const METODOS_VALIDOS = ['efectivo', 'transferencia', 'tarjeta', 'otro'];
 const ESTADOS_VALIDOS = ['pendiente', 'completado', 'cancelado'];
@@ -8,6 +9,9 @@ const ESTADOS_VALIDOS = ['pendiente', 'completado', 'cancelado'];
 const obtenerPagoPropio = async (req, res) => {
   try {
     const { id_inscripcion } = req.params;
+    const comprobanteUrl = req.file
+      ? (await guardarArchivoPermanente(req.file.path, 'yesems/comprobantes')) || `/uploads/comprobantes/${req.file.filename}`
+      : null;
     const resultado = await pool.query(
       `SELECT i.id_inscripcion, i.monto_total, i.estado AS estado_inscripcion,
               c.nombre AS curso_nombre, c.descripcion AS curso_descripcion,
@@ -68,7 +72,7 @@ const crearPagoPropio = async (req, res) => {
     const resultado = await pool.query(
       `INSERT INTO pagos (id_inscripcion, monto, metodo_pago, referencia, comprobante_url, estado)
        VALUES ($1, $2, $3, $4, $5, 'pendiente') RETURNING *`,
-      [id_inscripcion, inscripcion.monto_total, metodo_pago, referencia?.trim() || null, req.file ? `/uploads/comprobantes/${req.file.filename}` : null]
+      [id_inscripcion, inscripcion.monto_total, metodo_pago, referencia?.trim() || null, comprobanteUrl]
     );
     res.status(201).json({ ok: true, pago: resultado.rows[0] });
   } catch (error) {
@@ -88,6 +92,7 @@ const descargarComprobantePropio = async (req, res) => {
     const pago = resultado.rows[0];
     if (!pago) return res.status(404).json({ ok: false, mensaje: 'Pago no encontrado' });
     if (!pago.comprobante_url) return res.status(404).json({ ok: false, mensaje: 'Este pago no tiene comprobante adjunto' });
+    if (isRemoteFile(pago.comprobante_url)) return res.redirect(pago.comprobante_url);
     res.download(path.join(__dirname, '../..', pago.comprobante_url), path.basename(pago.comprobante_url));
   } catch (error) {
     console.error('Error al descargar comprobante propio:', error);

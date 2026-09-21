@@ -1,6 +1,7 @@
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
+const { guardarArchivoPermanente } = require('../services/storage.service');
 
 const generarPdfConstancia = (datos, folio) => new Promise((resolve, reject) => {
   const nombreArchivo = `constancia_${folio}.pdf`;
@@ -57,7 +58,14 @@ const generarPdfConstancia = (datos, folio) => new Promise((resolve, reject) => 
   doc.fillColor('#9aacb7').fontSize(7.5).text('Documento emitido digitalmente por YES EMS · Servicios Educativos', 0, height - 38, { align: 'center' });
   doc.end();
 
-  stream.on('finish', () => resolve(`/uploads/constancias/${nombreArchivo}`));
+  stream.on('finish', async () => {
+    try {
+      const archivoPermanente = await guardarArchivoPermanente(rutaCompleta, 'yesems/constancias');
+      resolve(archivoPermanente || `/uploads/constancias/${nombreArchivo}`);
+    } catch (error) {
+      reject(error);
+    }
+  });
   stream.on('error', reject);
 });
 
