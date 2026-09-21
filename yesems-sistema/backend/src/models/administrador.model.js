@@ -37,7 +37,7 @@ const obtenerResumenPanel = async () => {
 };
 
 const obtenerPagosPendientes = async () => (await pool.query(`
-  SELECT p.id_pago, p.monto, p.metodo_pago, p.referencia, p.fecha_pago, i.id_inscripcion,
+  SELECT p.id_pago, p.monto, p.metodo_pago, p.referencia, p.comprobante_url, p.fecha_pago, i.id_inscripcion,
          c.nombre AS curso_nombre, u.nombre AS usuario_nombre, u.apellido AS usuario_apellido, u.folio
   FROM pagos p JOIN inscripciones i ON i.id_inscripcion = p.id_inscripcion
   JOIN usuarios u ON u.id_usuario = i.id_usuario JOIN cursos c ON c.id_curso = i.id_curso

@@ -296,7 +296,7 @@ async function loadPendingPayments() {
     const payments = data.pagos || [];
     document.querySelector('#pending-payment-count').textContent = `${payments.length} pendientes`;
     paymentMessage.hidden = true;
-    document.querySelector('#payment-table').innerHTML = payments.length ? payments.map((payment) => `<tr><td>${payment.usuario_nombre} ${payment.usuario_apellido}<br><small>${payment.folio || ''}</small></td><td>${payment.curso_nombre}</td><td>${money.format(Number(payment.monto))}</td><td>${payment.metodo_pago}<br><small>${payment.referencia || 'Sin referencia'}</small></td><td>${new Date(payment.fecha_pago).toLocaleDateString('es-MX')}</td><td class="action-group"><button class="table-action approve" data-payment="${payment.id_pago}" data-state="completado">Aprobar</button><button class="table-action cancel" data-payment="${payment.id_pago}" data-state="cancelado">Cancelar</button></td></tr>`).join('') : '<tr><td colspan="6">No hay pagos pendientes de validación.</td></tr>';
+    document.querySelector('#payment-table').innerHTML = payments.length ? payments.map((payment) => `<tr><td>${payment.usuario_nombre} ${payment.usuario_apellido}<br><small>${payment.folio || ''}</small></td><td>${payment.curso_nombre}</td><td>${money.format(Number(payment.monto))}</td><td>${payment.metodo_pago}<br><small>${payment.referencia || 'Sin referencia'}</small>${payment.comprobante_url ? `<br><button class="receipt-button" data-payment-receipt="${payment.id_pago}">Ver comprobante</button>` : '<br><small>Sin archivo adjunto</small>'}</td><td>${new Date(payment.fecha_pago).toLocaleDateString('es-MX')}</td><td class="action-group"><button class="table-action approve" data-payment="${payment.id_pago}" data-state="completado">Aprobar</button><button class="table-action cancel" data-payment="${payment.id_pago}" data-state="cancelado">Cancelar</button></td></tr>`).join('') : '<tr><td colspan="6">No hay pagos pendientes de validación.</td></tr>';
   } catch (error) { paymentMessage.textContent = error.message; }
 }
 
@@ -319,6 +319,17 @@ async function loadCertificates() {
 }
 
 document.querySelector('#payment-table').addEventListener('click', async (event) => {
+  const receiptButton = event.target.closest('[data-payment-receipt]');
+  if (receiptButton) {
+    try {
+      const response = await fetch(`${API_URL}/administradores/pagos/${receiptButton.dataset.paymentReceipt}/comprobante`, { headers: { Authorization: `Bearer ${token}` } });
+      if (!response.ok) { const data = await response.json(); throw new Error(data.mensaje || 'No se pudo abrir el comprobante.'); }
+      const receiptUrl = URL.createObjectURL(await response.blob());
+      window.open(receiptUrl, '_blank', 'noopener');
+      setTimeout(() => URL.revokeObjectURL(receiptUrl), 60000);
+    } catch (error) { alert(error.message); }
+    return;
+  }
   const button = event.target.closest('[data-payment]');
   if (!button || !window.confirm(`¿Deseas ${button.dataset.state === 'completado' ? 'aprobar' : 'cancelar'} este pago?`)) return;
   button.disabled = true;

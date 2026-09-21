@@ -1,5 +1,6 @@
 const pagoModel = require('../models/pago.model');
 const pool = require('../config/db');
+const path = require('path');
 
 const METODOS_VALIDOS = ['efectivo', 'transferencia', 'tarjeta', 'otro'];
 const ESTADOS_VALIDOS = ['pendiente', 'completado', 'cancelado'];
@@ -16,7 +17,7 @@ const obtenerPagoPropio = async (req, res) => {
               u.folio,
               COALESCE(json_agg(json_build_object(
                 'id_pago', p.id_pago, 'monto', p.monto, 'metodo_pago', p.metodo_pago,
-                'referencia', p.referencia, 'estado', p.estado, 'fecha_pago', p.fecha_pago
+                'referencia', p.referencia, 'comprobante_url', p.comprobante_url, 'estado', p.estado, 'fecha_pago', p.fecha_pago
               ) ORDER BY p.fecha_pago) FILTER (WHERE p.id_pago IS NOT NULL), '[]') AS pagos
        FROM inscripciones i
        JOIN cursos c ON c.id_curso = i.id_curso
@@ -45,6 +46,9 @@ const crearPagoPropio = async (req, res) => {
     if (!METODOS_VALIDOS.includes(metodo_pago)) {
       return res.status(400).json({ ok: false, mensaje: `metodo_pago debe ser uno de: ${METODOS_VALIDOS.join(', ')}` });
     }
+    if (metodo_pago !== 'efectivo' && !req.file) {
+      return res.status(400).json({ ok: false, mensaje: 'Adjunta el comprobante de pago en PDF, JPG o PNG.' });
+    }
     const inscripcionResult = await pool.query(
       "SELECT id_inscripcion, monto_total, estado FROM inscripciones WHERE id_inscripcion = $1 AND id_usuario = $2",
       [id_inscripcion, req.admin.id_usuario]
@@ -62,13 +66,31 @@ const crearPagoPropio = async (req, res) => {
     }
 
     const resultado = await pool.query(
-      `INSERT INTO pagos (id_inscripcion, monto, metodo_pago, referencia, estado)
-       VALUES ($1, $2, $3, $4, 'pendiente') RETURNING *`,
-      [id_inscripcion, inscripcion.monto_total, metodo_pago, referencia?.trim() || null]
+      `INSERT INTO pagos (id_inscripcion, monto, metodo_pago, referencia, comprobante_url, estado)
+       VALUES ($1, $2, $3, $4, $5, 'pendiente') RETURNING *`,
+      [id_inscripcion, inscripcion.monto_total, metodo_pago, referencia?.trim() || null, req.file ? `/uploads/comprobantes/${req.file.filename}` : null]
     );
     res.status(201).json({ ok: true, pago: resultado.rows[0] });
   } catch (error) {
     console.error('Error al crear pago propio:', error);
+    res.status(500).json({ ok: false, error: error.message });
+  }
+};
+
+const descargarComprobantePropio = async (req, res) => {
+  try {
+    const resultado = await pool.query(
+      `SELECT p.comprobante_url FROM pagos p
+       JOIN inscripciones i ON i.id_inscripcion = p.id_inscripcion
+       WHERE p.id_pago = $1 AND i.id_usuario = $2`,
+      [req.params.id, req.admin.id_usuario]
+    );
+    const pago = resultado.rows[0];
+    if (!pago) return res.status(404).json({ ok: false, mensaje: 'Pago no encontrado' });
+    if (!pago.comprobante_url) return res.status(404).json({ ok: false, mensaje: 'Este pago no tiene comprobante adjunto' });
+    res.download(path.join(__dirname, '../..', pago.comprobante_url), path.basename(pago.comprobante_url));
+  } catch (error) {
+    console.error('Error al descargar comprobante propio:', error);
     res.status(500).json({ ok: false, error: error.message });
   }
 };
@@ -190,6 +212,7 @@ const resumenPorInscripcion = async (req, res) => {
 module.exports = {
   obtenerPagoPropio,
   crearPagoPropio,
+  descargarComprobantePropio,
   listarPagos,
   obtenerPago,
   crearPago,

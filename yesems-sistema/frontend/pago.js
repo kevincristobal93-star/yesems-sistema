@@ -37,12 +37,26 @@ async function loadPayment() {
 }
 function showPending() { formMessage.classList.add('success'); formMessage.textContent = 'Ya registraste un pago pendiente de validación. Te avisaremos cuando sea revisado.'; form.querySelectorAll('input, select, button').forEach((element) => { element.disabled = true; }); }
 const form = document.querySelector('#payment-form');
+const receiptField = document.createElement('div');
+receiptField.className = 'receipt-field';
+receiptField.innerHTML = '<label for="receipt">Comprobante de pago</label><input id="receipt" type="file" accept="application/pdf,image/jpeg,image/png" /><p class="field-help">PDF, JPG o PNG · máximo 5 MB. Requerido excepto para pago en efectivo.</p>';
+formMessage.before(receiptField);
+const receiptInput = document.querySelector('#receipt');
 form.addEventListener('submit', async (event) => {
   event.preventDefault(); formMessage.textContent = ''; formMessage.classList.remove('success');
   if (!form.checkValidity()) { formMessage.textContent = 'Selecciona un método de pago.'; form.reportValidity(); return; }
+  const method = document.querySelector('#method').value;
+  const receipt = receiptInput.files[0];
+  if (method !== 'efectivo' && !receipt) { formMessage.textContent = 'Adjunta tu comprobante de pago para continuar.'; return; }
+  if (receipt && receipt.size > 5 * 1024 * 1024) { formMessage.textContent = 'El comprobante no puede superar 5 MB.'; return; }
   submitButton.disabled = true; submitButton.textContent = 'Registrando pago...';
   try {
-    const response = await fetch(`${API_URL}/pagos/mio`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ id_inscripcion: inscriptionId, metodo_pago: document.querySelector('#method').value, referencia: document.querySelector('#reference').value }) });
+    const paymentData = new FormData();
+    paymentData.append('id_inscripcion', inscriptionId);
+    paymentData.append('metodo_pago', method);
+    paymentData.append('referencia', document.querySelector('#reference').value.trim());
+    if (receipt) paymentData.append('comprobante', receipt);
+    const response = await fetch(`${API_URL}/pagos/mio`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body: paymentData });
     const data = await response.json();
     if (!response.ok || !data.ok) throw new Error(data.mensaje || data.error || 'No se pudo registrar el pago.');
     showPending();

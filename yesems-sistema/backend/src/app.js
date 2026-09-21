@@ -12,6 +12,10 @@ const administradorRoutes = require('./routes/administrador.routes');
 
 const app = express();
 
+// Migración idempotente para instalaciones ya existentes.
+pool.query('ALTER TABLE pagos ADD COLUMN IF NOT EXISTS comprobante_url varchar(255)')
+  .catch((error) => console.error('No se pudo preparar la columna de comprobantes:', error));
+
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -38,5 +42,12 @@ app.use('/api/horarios', horarioRoutes);
 app.use('/api/pagos', pagoRoutes);
 app.use('/api/constancias', constanciaRoutes);
 app.use('/api/administradores', administradorRoutes);
+
+app.use((error, req, res, next) => {
+  if (error instanceof require('multer').MulterError || error.message === 'El comprobante debe ser PDF, JPG o PNG.') {
+    return res.status(400).json({ ok: false, mensaje: error.code === 'LIMIT_FILE_SIZE' ? 'El comprobante no puede superar 5 MB.' : error.message });
+  }
+  next(error);
+});
 
 module.exports = app;

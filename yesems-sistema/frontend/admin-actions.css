@@ -4,6 +4,7 @@
 .pending-count { padding: 6px 10px; border-radius: 99px; color: #8a6100; background: #fff3d7; font-size: .76rem; font-weight: 700; }
 .certificate-guide{display:flex;gap:11px;padding:13px 15px;margin:20px 0 4px;border:1px solid #d9ebef;border-radius:9px;align-items:center;background:#f3fafb}.certificate-guide-icon{display:grid;width:27px;height:27px;border-radius:50%;place-items:center;color:#fff;background:#178360;font-weight:800}.certificate-guide p{margin:0;color:#587084;font-size:.82rem}.certificate-guide strong{color:#176b87}.certificate-status{display:inline-flex;gap:6px;align-items:center}.certificate-status:before{width:7px;height:7px;border-radius:50%;content:"";background:#f5b942}.certificate-status.authorized:before{background:#178360}.certificate-status.rejected:before{background:#c23b35}.table-action.approve.certificate-approve{padding:9px 12px;box-shadow:0 5px 12px rgba(23,131,96,.18)}
 .action-group { display: flex; gap: 7px; flex-wrap: wrap; }
+.receipt-button{padding:6px 0;border:0;color:#176b87;background:transparent;font:700 .72rem "Montserrat",sans-serif;text-decoration:underline;cursor:pointer}
 .table-action { padding: 7px 9px; border: 0; border-radius: 6px; font: 700 .72rem "Montserrat",sans-serif; cursor: pointer; }
 .table-action.approve { color: #fff; background: #178360; }.table-action.approve:hover { background: #106848; }
 .table-action.cancel { color: #a22922; background: #fdeaea; }.table-action.cancel:hover { background: #f9d4d1; }
