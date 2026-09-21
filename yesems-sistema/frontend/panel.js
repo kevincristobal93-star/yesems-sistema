@@ -15,6 +15,11 @@ else {
   document.querySelector('#profile-email').textContent = user.email || 'No disponible';
   document.querySelector('#profile-folio').textContent = user.folio || 'Pendiente';
   document.querySelector('#profile-role').textContent = user.rol || 'Alumno';
+  document.querySelector('#header-avatar').textContent = fullName.charAt(0).toUpperCase();
+  document.querySelector('#header-name').textContent = user.nombre || 'Mi cuenta';
+  document.querySelector('#drawer-avatar').textContent = fullName.charAt(0).toUpperCase();
+  document.querySelector('#drawer-name').textContent = fullName;
+  document.querySelector('#drawer-email').textContent = user.email || '';
   loadPanel();
 }
 function paymentLabel(item) { if (item.tiene_pago_pendiente) return 'Pago en validación'; if (Number(item.total_pagado) >= Number(item.monto_total)) return 'Pago confirmado'; return 'Pago pendiente'; }
@@ -90,4 +95,12 @@ list.addEventListener('click', async (event) => {
     const blob = await response.blob(); const url = URL.createObjectURL(blob); const download = document.createElement('a'); download.href = url; download.download = 'constancia.pdf'; download.click(); URL.revokeObjectURL(url);
   } catch (error) { panelMessage.hidden = false; panelMessage.textContent = error.message; }
 });
+const drawer = document.querySelector('#student-drawer');
+const overlay = document.querySelector('#student-menu-overlay');
+const menuButton = document.querySelector('#student-menu-button');
+const closeDrawer = () => { drawer.classList.remove('open'); overlay.hidden = true; drawer.setAttribute('aria-hidden', 'true'); menuButton.setAttribute('aria-expanded', 'false'); };
+menuButton.addEventListener('click', () => { drawer.classList.add('open'); overlay.hidden = false; drawer.setAttribute('aria-hidden', 'false'); menuButton.setAttribute('aria-expanded', 'true'); });
+document.querySelector('#close-student-menu').addEventListener('click', closeDrawer);
+overlay.addEventListener('click', closeDrawer);
+document.querySelector('#account-button').addEventListener('click', () => { window.location.href = './configuracion.html'; });
 document.querySelector('#logout-button').addEventListener('click', () => { localStorage.removeItem('yesems_token'); localStorage.removeItem('yesems_usuario'); window.location.href = './cursos.html'; });

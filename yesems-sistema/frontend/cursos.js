@@ -25,7 +25,7 @@ function clearStudentSession() {
 }
 
 function setupStudentNavigation() {
-  if (!sessionToken || !sessionUser) return;
+  if (!sessionToken || !sessionUser || !document.querySelector('#student-navigation')) return;
   document.querySelector('#public-navigation').hidden = true;
   document.querySelector('#student-navigation').hidden = false;
   const fullName = `${sessionUser.nombre || ''} ${sessionUser.apellido || ''}`.trim() || 'Mi cuenta';
