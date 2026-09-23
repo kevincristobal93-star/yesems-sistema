@@ -14,7 +14,7 @@ function setupPanelMotion() {
   document.querySelectorAll('.quick-summary, .dashboard-grid, .featured-section, .activity-section, #mis-inscripciones').forEach((section) => observer.observe(section));
 }
 document.querySelector('#footer-year').textContent = new Date().getFullYear();
-if (!token || !user) window.location.replace('./index.html');
+if (!token || !user) window.location.replace('./cursos.html');
 else {
   setupPanelMotion();
   const fullName = `${user.nombre || ''} ${user.apellido || ''}`.trim() || 'Alumno';
@@ -57,6 +57,14 @@ function renderActivity(items) {
   });
   document.querySelector('#activity-list').innerHTML = activity.slice(0, 5).map((event) => `<div class="activity-item"><span class="activity-dot"></span><div><strong>${event.title}</strong><small>${event.detail} · ${formatDate(event.date)}</small></div></div>`).join('') || '<p class="panel-message">Todavía no hay movimientos para mostrar.</p>';
 }
+function closeExpiredSession() {
+  localStorage.removeItem('yesems_token');
+  localStorage.removeItem('yesems_usuario');
+  panelMessage.hidden = false;
+  panelMessage.textContent = 'Tu sesión expiró. Te llevaremos al inicio para que vuelvas a iniciar sesión.';
+  document.querySelector('#activity-list').innerHTML = '<p class="panel-message">Inicia sesión nuevamente para consultar tus movimientos.</p>';
+  window.setTimeout(() => window.location.replace('./cursos.html'), 1800);
+}
 function constanciaAction(item) {
   if (item.estado_constancia === 'autorizada') {
     return `<a class="constancia-button" href="${API_URL}/constancias/mia/${encodeURIComponent(item.id_constancia)}/descargar" data-download="${item.id_constancia}">Descargar constancia</a>`;
@@ -70,6 +78,10 @@ async function loadPanel() {
   try {
     const response = await fetch(`${API_URL}/inscripciones/mias`, { headers: { Authorization: `Bearer ${token}` } });
     const data = await response.json();
+    if (response.status === 401 || response.status === 403) {
+      closeExpiredSession();
+      return;
+    }
     if (!response.ok || !data.ok) throw new Error(data.mensaje || data.error || 'No se pudo cargar tu panel.');
     const items = data.inscripciones || [];
     document.querySelector('#summary-courses').textContent = items.length;
@@ -81,7 +93,11 @@ async function loadPanel() {
     if (!items.length) { list.innerHTML = '<div class="empty">Aún no tienes inscripciones. Explora los cursos disponibles para comenzar.</div>'; return; }
     renderFeaturedCourse(items[0]);
     list.innerHTML = items.map((item) => `<article class="enrollment-card"><div><h3>${item.curso_nombre}</h3><p>${item.curso_descripcion || 'Curso YES EMS'}</p><div class="enrollment-info"><span>Inscripción: ${new Date(item.fecha_inscripcion).toLocaleDateString('es-MX')}</span><span>Disponibilidad: ${availabilityLabel(item)}</span><span>Monto: ${money.format(Number(item.monto_total))}</span><span>${paymentLabel(item)}</span></div></div><div class="enrollment-side"><span class="badge">${item.estado}</span><div class="constancia-actions">${constanciaAction(item)}</div><a class="payment-button" href="./pago.html?inscripcion=${encodeURIComponent(item.id_inscripcion)}">Ver pago</a></div></article>`).join('');
-  } catch (error) { panelMessage.textContent = error instanceof TypeError ? 'No se pudo conectar con el servidor.' : error.message; }
+  } catch (error) {
+    panelMessage.hidden = false;
+    panelMessage.textContent = error instanceof TypeError ? 'No se pudo conectar con el servidor.' : error.message;
+    document.querySelector('#activity-list').innerHTML = '<p class="panel-message">No se pudieron cargar los movimientos. Intenta actualizar la página.</p>';
+  }
 }
 list.addEventListener('click', async (event) => {
   const button = event.target.closest('[data-request]');
