@@ -1,4 +1,4 @@
-const API_URL = 'https://yesems-sistema.onrender.com/api';
+const API_URL = 'https://yesems-sistema-1.onrender.com/api';
 if (!localStorage.getItem('yesems_token') || !localStorage.getItem('yesems_usuario')) window.location.replace('./cursos.html');
 const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
 const grid = document.querySelector('#courses'); const message = document.querySelector('#message'); const search = document.querySelector('#search'); const category = document.querySelector('#category'); let courses = [];

@@ -1,4 +1,4 @@
-const API_URL = 'https://yesems-sistema.onrender.com/api';
+const API_URL = 'https://yesems-sistema-1.onrender.com/api';
 const token = localStorage.getItem('yesems_token');
 let user = JSON.parse(localStorage.getItem('yesems_usuario') || 'null');
 if (!token || !user) window.location.replace('./cursos.html');

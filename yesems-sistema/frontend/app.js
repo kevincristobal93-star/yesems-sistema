@@ -1,4 +1,4 @@
-const API_URL = 'https://yesems-sistema.onrender.com/api';
+const API_URL = 'https://yesems-sistema-1.onrender.com/api';
 
 const form = document.querySelector('#login-form');
 const message = document.querySelector('#form-message');

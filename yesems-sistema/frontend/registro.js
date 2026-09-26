@@ -1,4 +1,4 @@
-const API_URL = 'https://yesems-sistema.onrender.com/api';
+const API_URL = 'https://yesems-sistema-1.onrender.com/api';
 const params = new URLSearchParams(window.location.search);
 const courseId = params.get('curso');
 const form = document.querySelector('#registration-form');

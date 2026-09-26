@@ -1,4 +1,4 @@
-const API_URL = 'https://yesems-sistema.onrender.com/api';
+const API_URL = 'https://yesems-sistema-1.onrender.com/api';
 const token = localStorage.getItem('yesems_token');
 const inscriptionId = new URLSearchParams(window.location.search).get('inscripcion');
 const pageMessage = document.querySelector('#page-message');

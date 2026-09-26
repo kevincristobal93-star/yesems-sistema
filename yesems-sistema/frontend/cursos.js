@@ -1,4 +1,4 @@
-const API_URL = 'https://yesems-sistema.onrender.com/api';
+const API_URL = 'https://yesems-sistema-1.onrender.com/api';
 const grid = document.querySelector('#course-grid');
 const message = document.querySelector('#catalog-message');
 const count = document.querySelector('#course-count');

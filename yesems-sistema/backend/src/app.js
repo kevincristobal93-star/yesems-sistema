@@ -13,8 +13,6 @@ const administradorRoutes = require('./routes/administrador.routes');
 const app = express();
 
 // Migración idempotente para instalaciones ya existentes.
-pool.query('ALTER TABLE pagos ADD COLUMN IF NOT EXISTS comprobante_url varchar(255)')
-  .catch((error) => console.error('No se pudo preparar la columna de comprobantes:', error));
 
 app.use(cors());
 app.use(express.json());
