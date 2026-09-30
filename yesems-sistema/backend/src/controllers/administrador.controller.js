@@ -1,8 +1,8 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
-const path = require('path');
-const { isRemoteFile } = require('../services/storage.service');
+const { descargarComprobante } = require('../services/constancia-download.service');
 const adminModel = require('../models/administrador.model');
+const { sendError, positiveId } = require('../utils/http-error');
 
 const SALT_ROUNDS = 10;
 
@@ -27,20 +27,19 @@ const validarPago = async (req, res) => {
     res.json({ ok: true, pago: resultado });
   } catch (error) {
     console.error('Error al validar pago:', error);
-    res.status(500).json({ ok: false, error: error.message });
+    sendError(res, error);
   }
 };
 
 const descargarComprobantePago = async (req, res) => {
   try {
+    positiveId(req.params.id);
     const pago = await require('../models/pago.model').obtenerPagoPorId(req.params.id);
     if (!pago) return res.status(404).json({ ok: false, mensaje: 'Pago no encontrado' });
     if (!pago.comprobante_url) return res.status(404).json({ ok: false, mensaje: 'Este pago no tiene comprobante adjunto' });
-    if (isRemoteFile(pago.comprobante_url)) return res.redirect(pago.comprobante_url);
-    res.download(path.join(__dirname, '../..', pago.comprobante_url), path.basename(pago.comprobante_url));
+    await descargarComprobante(res, pago.comprobante_url);
   } catch (error) {
-    console.error('Error al descargar comprobante:', error);
-    res.status(500).json({ ok: false, error: error.message });
+    sendError(res, error);
   }
 };
 
@@ -51,7 +50,7 @@ const cancelarInscripcionAdmin = async (req, res) => {
     res.json({ ok: true, mensaje: 'Inscripción cancelada', inscripcion: resultado });
   } catch (error) {
     console.error('Error al cancelar inscripción:', error);
-    res.status(500).json({ ok: false, error: error.message });
+    sendError(res, error);
   }
 };
 

@@ -6,6 +6,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" /><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./admin.css" /><link rel="stylesheet" href="./admin-dashboard.css" /><link rel="stylesheet" href="./admin-actions.css" /><link rel="stylesheet" href="./admin-footer.css" /><link rel="stylesheet" href="./admin-reports.css" /><link rel="stylesheet" href="./admin-redesign.css" /><link rel="stylesheet" href="./admin-courses.css" /><link rel="stylesheet" href="./admin-motion.css" />
+  <link rel="stylesheet" href="./admin-seguimiento.css" />
 </head>
 <body class="dashboard-body">
   <header class="admin-topbar">
@@ -24,6 +25,7 @@
       <a href="#inscripciones"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6Zm1 2.5L17.5 7H15V4.5ZM8 12h8v2H8v-2Zm0 4h8v2H8v-2Z"/></svg>Inscripciones</a>
       <a href="#constancias"><svg viewBox="0 0 24 24"><path d="M6 2h12v20l-6-3-6 3V2Zm4 5v6l5-3-5-3Z"/></svg>Constancias</a>
       <a href="#cursos"><svg viewBox="0 0 24 24"><path d="M4 3h15a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm0 2v14h14V5H4Zm3 3h8v2H7V8Zm0 4h8v2H7v-2Z"/></svg>Cursos y disponibilidad</a>
+      <a href="#seguimiento"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h18v18H3V3Zm2 2v14h14V5H5Zm2 4h3v2H7V9Zm0 4h3v2H7v-2Zm5-4h5v2h-5V9Zm0 4h5v2h-5v-2Z"/></svg>Sesiones y avance</a>
     </nav>
     <button id="logout-button" class="drawer-logout" type="button">Cerrar sesión</button>
   </aside>
@@ -40,6 +42,46 @@
       <div id="courses-admin-list" class="course-admin-list"></div>
       <div class="availability-management"><div class="section-heading courses-heading"><div><p class="eyebrow blue">Atención y acceso</p><h3>Disponibilidad del servicio</h3><p>Define cómo, cuándo y por dónde se brinda cada capacitación o servicio.</p></div><button id="new-availability-button" class="primary-action" type="button">Nueva disponibilidad</button></div><p id="availability-message" class="form-message" aria-live="polite">Cargando disponibilidad...</p><div id="availability-list" class="availability-list"></div></div>
     </section>
+    <section id="seguimiento" class="data-section tracking-section" aria-labelledby="tracking-title">
+      <div class="section-heading courses-heading"><div><p class="eyebrow blue">Seguimiento del aprendizaje</p><h2 id="tracking-title">Sesiones y avance</h2><p>Define el plan del curso, registra el cumplimiento y revisa los requisitos para concluir.</p></div><button id="tracking-refresh" class="secondary-action" type="button">Actualizar</button></div>
+      <div class="tracking-course-picker"><label for="tracking-course">Curso</label><select id="tracking-course"><option value="">Selecciona un curso</option></select></div>
+      <p id="tracking-message" class="tracking-message" role="status" aria-live="polite"></p>
+      <div id="tracking-course-detail" hidden>
+        <div class="tracking-plan-heading"><h3>1. Plan y requisito del curso</h3><span id="tracking-plan-status" class="tracking-status"></span></div>
+        <p id="tracking-plan-help" class="tracking-help"></p>
+        <form id="tracking-rule-form" class="tracking-rule-form">
+          <label for="tracking-threshold">Cumplimiento mínimo para concluir (%)</label>
+          <div class="tracking-rule-controls"><input id="tracking-threshold" name="porcentaje_minimo" type="number" min="1" max="100" step="1" required placeholder="Define el porcentaje" aria-describedby="tracking-rule-help" /><button id="tracking-rule-save" class="secondary-action" type="submit">Guardar requisito</button></div>
+          <p id="tracking-rule-help" class="tracking-help">Cada sesión o actividad tiene el mismo peso. Además se exige pago completo confirmado y validación final del administrador.</p>
+        </form>
+        <div class="tracking-split">
+          <div><h4>Sesiones y actividades</h4><ol id="tracking-activities" class="tracking-activities"></ol></div>
+          <form id="tracking-activity-form" class="tracking-activity-form">
+            <h4 id="tracking-activity-title">Agregar al plan</h4>
+            <fieldset id="tracking-activity-fields">
+              <input id="tracking-activity-id" type="hidden" />
+              <label for="tracking-activity-name">Título</label><input id="tracking-activity-name" maxlength="150" required />
+              <div class="tracking-form-grid"><div><label for="tracking-activity-type">Tipo</label><select id="tracking-activity-type"><option value="sesion">Sesión</option><option value="actividad">Actividad</option></select></div><div><label for="tracking-activity-mode">Modalidad</label><select id="tracking-activity-mode"><option value="por_definir">Por definir</option><option value="presencial">Presencial</option><option value="en_linea">En línea</option><option value="hibrida">Híbrida</option></select></div></div>
+              <label for="tracking-activity-date">Fecha (opcional)</label><input id="tracking-activity-date" type="date" />
+              <div class="tracking-actions"><button id="tracking-activity-save" class="primary-action" type="submit">Agregar actividad</button><button id="tracking-activity-cancel" class="secondary-action" type="button" hidden>Cancelar edición</button></div>
+            </fieldset>
+          </form>
+        </div>
+        <div class="tracking-actions tracking-publish-actions"><button id="tracking-publish" class="primary-action" type="button">Publicar plan</button><button id="tracking-reopen" class="secondary-action" type="button" hidden>Reabrir plan para editar</button></div>
+        <p id="tracking-publish-help" class="tracking-help" aria-live="polite"></p>
+        <div class="tracking-students-heading"><h3>2. Avance por alumno</h3><p class="tracking-help">Selecciona una inscripción para registrar asistencias o actividades cumplidas.</p></div>
+        <div class="table-wrap"><table class="tracking-students-table"><caption class="tracking-sr-only">Inscripciones y avance del curso seleccionado</caption><thead><tr><th scope="col">Alumno</th><th scope="col">Estado</th><th scope="col">Cumplimiento</th><th scope="col">Pago</th><th scope="col">Acción</th></tr></thead><tbody id="tracking-students"></tbody></table></div>
+        <section id="tracking-student-detail" class="tracking-student-detail" aria-labelledby="tracking-student-title" hidden>
+          <h3 id="tracking-student-title" tabindex="-1"></h3>
+          <p id="tracking-student-message" class="tracking-message" role="status" aria-live="polite"></p>
+          <div id="tracking-student-summary" class="tracking-student-summary"></div>
+          <div id="tracking-student-requirements" class="tracking-requirements"></div>
+          <div id="tracking-attendance" class="tracking-attendance"></div>
+          <div class="tracking-actions"><button id="tracking-conclude" class="primary-action" type="button" disabled>Validar conclusión del curso</button><a href="#constancias">Ver solicitudes de constancia</a></div>
+          <p class="tracking-help">Concluir la inscripción habilita la solicitud de constancia. La autorización y la generación del PDF se revisan en Constancias.</p>
+        </section>
+      </div>
+    </section>
     <dialog id="course-dialog" class="course-dialog" aria-labelledby="course-dialog-title">
       <form id="course-form" method="dialog">
         <div class="dialog-heading"><div><p class="eyebrow blue" id="course-dialog-label">Nueva oferta</p><h2 id="course-dialog-title">Crear curso</h2></div><button class="dialog-close" type="button" data-close-course-dialog aria-label="Cerrar">×</button></div>
@@ -50,5 +92,5 @@
     </dialog>
     <dialog id="availability-dialog" class="course-dialog" aria-labelledby="availability-dialog-title"><form id="availability-form" method="dialog"><div class="dialog-heading"><div><p class="eyebrow blue" id="availability-dialog-label">Nueva disponibilidad</p><h2 id="availability-dialog-title">Configurar servicio</h2></div><button class="dialog-close" type="button" data-close-availability-dialog aria-label="Cerrar">×</button></div><input id="availability-id" type="hidden" /><div class="course-form-grid"><label>Curso o servicio<select id="availability-course" required></select></label><label>Modalidad<select id="availability-mode" required><option value="en_linea">En línea</option><option value="presencial">Presencial</option><option value="hibrida">Híbrida</option><option value="por_definir">Por definir</option></select></label><label>Día o periodo<input id="availability-day" maxlength="80" placeholder="Ej. Lunes y miércoles" /></label><label>Información adicional<input id="availability-details" maxlength="250" placeholder="Ej. Se confirma por WhatsApp" /></label><label>Fecha de inicio<input id="availability-start-date" type="date" /></label><label>Fecha de término<input id="availability-end-date" type="date" /></label><label>Hora de inicio<input id="availability-start-time" type="time" /></label><label>Hora de término<input id="availability-end-time" type="time" /></label><label class="wide">Enlace de acceso (opcional)<input id="availability-link" type="url" maxlength="500" placeholder="https://..." /></label><label class="wide">Notas para el alumno<textarea id="availability-notes" rows="3" maxlength="1000" placeholder="Indicaciones, materiales o proceso de confirmación."></textarea></label></div><p id="availability-form-message" class="form-message" aria-live="polite"></p><div class="dialog-actions"><button class="secondary-action" type="button" data-close-availability-dialog>Cancelar</button><button id="save-availability-button" class="primary-action" type="submit">Guardar disponibilidad</button></div></form></dialog>
     <footer class="admin-footer"><section class="footer-company"><img src="./assets/yesems-logo.png" alt="YES EMS" width="1254" height="1254" /><p>Capacitación, certificación y tecnología para transformar tu futuro.</p></section><section><h3>Oferta</h3><a href="https://plataformayesems.com/" target="_blank" rel="noopener noreferrer">Acredita-Bach</a><a href="https://plataformayesems.com/tecnologia-educativa.html" target="_blank" rel="noopener noreferrer">Tecnología Educativa</a></section><section><h3>Institución</h3><a href="https://www.servicioseducativosyesems.com/" target="_blank" rel="noopener noreferrer">Sobre nosotros</a><a href="https://api.whatsapp.com/send/?phone=5215648666596" target="_blank" rel="noopener noreferrer">Contacto</a></section><section><h3>Contáctanos</h3><a href="mailto:planeacionesyesems@gmail.com">planeacionesyesems@gmail.com</a><p>Lun – Vie · 9:00 – 18:00</p></section><div class="admin-footer-bottom"><span>© <span id="footer-year"></span> YES EMS · Servicios Educativos.</span><span>Hecho con dedicación para tu desarrollo.</span></div></footer>
-  </main><script src="./admin.js"></script>
+  </main><script src="./admin.js"></script><script src="./admin-seguimiento.js"></script>
 </body></html>

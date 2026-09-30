@@ -1,5 +1,7 @@
 const inscripcionModel = require('../models/inscripcion.model');
 const pool = require('../config/db');
+const seguimiento = require('../models/seguimiento.model');
+const { positiveId, sendError } = require('../utils/http-error');
 
 // POST /api/inscripciones/mia
 // Completa el perfil del cliente y crea su inscripción en una sola transacción.
@@ -8,6 +10,8 @@ const crearInscripcionPropia = async (req, res) => {
 	try {
 		const { id_curso, id_horario, telefono, fecha_nacimiento, curp } = req.body;
 		const idUsuario = req.admin.id_usuario;
+		positiveId(id_curso);
+		if (id_horario) positiveId(id_horario);
 
 		if (!id_curso || !telefono || !fecha_nacimiento || !curp) {
 			return res.status(400).json({ ok: false, mensaje: 'id_curso, telefono, fecha_nacimiento y curp son obligatorios' });
@@ -15,7 +19,7 @@ const crearInscripcionPropia = async (req, res) => {
 
 		await client.query('BEGIN');
 		const cursoResult = await client.query(
-			'SELECT id_curso, precio FROM cursos WHERE id_curso = $1 AND activo = true',
+			'SELECT id_curso, precio FROM cursos WHERE id_curso = $1 AND activo = true FOR UPDATE',
 			[id_curso]
 		);
 		if (!cursoResult.rows[0]) {
@@ -65,6 +69,7 @@ const crearInscripcionPropia = async (req, res) => {
 		res.status(201).json({ ok: true, usuario: usuarioResult.rows[0], inscripcion: inscripcionResult.rows[0] });
 	} catch (error) {
 		await client.query('ROLLBACK');
+		if (error.statusCode) return sendError(res, error);
 		console.error('Error al crear inscripción propia:', error);
 		if (error.code === '23505') {
 			return res.status(409).json({ ok: false, mensaje: 'La CURP ya está registrada en otra cuenta' });
@@ -101,7 +106,10 @@ const listarInscripcionesPropias = async (req, res) => {
 			 ORDER BY i.fecha_inscripcion DESC`,
 			[req.admin.id_usuario]
 		);
-		res.json({ ok: true, inscripciones: resultado.rows });
+		const inscripciones = await Promise.all(resultado.rows.map(async (item) => ({
+			...item, progreso: await seguimiento.obtenerProgreso(item.id_inscripcion),
+		})));
+		res.json({ ok: true, inscripciones });
 	} catch (error) {
 		console.error('Error al listar inscripciones propias:', error);
 		res.status(500).json({ ok: false, error: error.message });
@@ -137,11 +145,11 @@ const crearInscripcion = async (req, res) => {
 		res.status(201).json({ ok: true, inscripcion });
 	} catch (error) {
 		console.error('Error al crear inscripción:', error);
-		res.status(500).json({ ok: false, error: error.message });
+		sendError(res, error);
 	}
 };
 
-const actualizarInscripcion = async (req, res) => {
+	const actualizarInscripcion = async (req, res) => {
 	try {
 		const inscripcion = await inscripcionModel.actualizarInscripcion(req.params.id, req.body);
 		if (!inscripcion) {
@@ -150,7 +158,7 @@ const actualizarInscripcion = async (req, res) => {
 		res.json({ ok: true, inscripcion });
 	} catch (error) {
 		console.error('Error al actualizar inscripción:', error);
-		res.status(500).json({ ok: false, error: error.message });
+		sendError(res, error);
 	}
 };
 
@@ -163,7 +171,7 @@ const cambiarEstado = async (req, res) => {
 		res.json({ ok: true, inscripcion });
 	} catch (error) {
 		console.error('Error al cambiar estado de inscripción:', error);
-		res.status(500).json({ ok: false, error: error.message });
+		sendError(res, error);
 	}
 };
 
@@ -176,7 +184,7 @@ const cancelarInscripcion = async (req, res) => {
 		res.json({ ok: true, inscripcion });
 	} catch (error) {
 		console.error('Error al cancelar inscripción:', error);
-		res.status(500).json({ ok: false, error: error.message });
+		sendError(res, error);
 	}
 };
 

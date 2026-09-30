@@ -2,11 +2,12 @@ const express = require('express');
 const router = express.Router();
 const inscripcionController = require('../controllers/inscripcion.controller');
 const verificarToken = require('../middlewares/auth.middleware');
+const verificarAdministrador = require('../middlewares/admin.middleware');
+router.param('id', require('../utils/http-error').validateIdParam);
 
-router.use(verificarToken);
-
-router.post('/mia', inscripcionController.crearInscripcionPropia);
-router.get('/mias', inscripcionController.listarInscripcionesPropias);
+router.post('/mia', verificarToken, inscripcionController.crearInscripcionPropia);
+router.get('/mias', verificarToken, inscripcionController.listarInscripcionesPropias);
+router.use(verificarAdministrador);
 router.get('/', inscripcionController.listarInscripciones);
 router.get('/:id', inscripcionController.obtenerInscripcion);
 router.post('/', inscripcionController.crearInscripcion);

@@ -1,4 +1,6 @@
 const bcrypt = require('bcrypt');
+const fs = require('fs/promises');
+const path = require('path');
 const pool = require('./db');
 
 async function runDatabaseMigrations() {
@@ -55,6 +57,8 @@ async function bootstrapInitialAdmin() {
 
 async function runStartupMigrations() {
   await runDatabaseMigrations();
+  const progressMigration = await fs.readFile(path.resolve(__dirname, '../../database/migrations/004_course_progress.sql'), 'utf8');
+  await pool.query(progressMigration);
   await seedCatalog();
   await bootstrapInitialAdmin();
 }

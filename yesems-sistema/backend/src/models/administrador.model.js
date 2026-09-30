@@ -45,27 +45,11 @@ const obtenerPagosPendientes = async () => (await pool.query(`
 `)).rows;
 
 const validarPago = async (idPago, estado) => {
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const pago = (await client.query("UPDATE pagos SET estado = $1 WHERE id_pago = $2 AND estado = 'pendiente' RETURNING *", [estado, idPago])).rows[0];
-    if (!pago) { await client.query('ROLLBACK'); return null; }
-    if (estado === 'completado') await client.query("UPDATE inscripciones SET estado = 'confirmada' WHERE id_inscripcion = $1 AND estado = 'pendiente'", [pago.id_inscripcion]);
-    await client.query('COMMIT');
-    return pago;
-  } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
+  return require('./pago.model').actualizarEstadoPago(idPago, estado);
 };
 
 const cancelarInscripcionAdmin = async (idInscripcion) => {
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const inscripcion = (await client.query("UPDATE inscripciones SET estado = 'cancelada' WHERE id_inscripcion = $1 AND estado <> 'cancelada' RETURNING *", [idInscripcion])).rows[0];
-    if (!inscripcion) { await client.query('ROLLBACK'); return null; }
-    await client.query("UPDATE pagos SET estado = 'cancelado' WHERE id_inscripcion = $1 AND estado = 'pendiente'", [idInscripcion]);
-    await client.query('COMMIT');
-    return inscripcion;
-  } catch (error) { await client.query('ROLLBACK'); throw error; } finally { client.release(); }
+  return require('./inscripcion.model').cancelarInscripcion(idInscripcion);
 };
 
 const obtenerReportesIniciales = async () => {

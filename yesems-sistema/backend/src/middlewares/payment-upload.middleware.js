@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
-const uploadDirectory = path.join(__dirname, '../../uploads/comprobantes');
+const uploadDirectory = path.join(require('../config/upload-path'), 'comprobantes');
 fs.mkdirSync(uploadDirectory, { recursive: true });
 
 const storage = multer.diskStorage({

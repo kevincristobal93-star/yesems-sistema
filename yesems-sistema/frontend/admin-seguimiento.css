@@ -1,0 +1,58 @@
+.tracking-section { margin-top: 26px; scroll-margin-top: 96px; }
+.tracking-section [hidden] { display: none !important; }
+.tracking-section h3 { font-size: 1.15rem; }
+.tracking-section h4 { margin: 0 0 16px; font: 700 .94rem "Montserrat", sans-serif; }
+.tracking-section p { line-height: 1.6; }
+.tracking-section label { margin: 14px 0 7px; font-size: .82rem; }
+.tracking-section select, .tracking-section textarea { width: 100%; padding: 12px; border: 1px solid #cdd6e1; border-radius: 8px; color: var(--ink); background: #fff; font: inherit; }
+.tracking-section textarea { min-height: 76px; resize: vertical; }
+.tracking-section button:focus-visible, .tracking-section a:focus-visible, .tracking-section select:focus-visible, .tracking-section textarea:focus-visible { outline: 3px solid #176b87; outline-offset: 3px; }
+.tracking-section button:disabled { opacity: .6; cursor: not-allowed; transform: none; box-shadow: none; }
+.tracking-section input:disabled, .tracking-section select:disabled, .tracking-section textarea:disabled { color: #52687a; background: #edf1f5; }
+.tracking-course-picker { max-width: 580px; margin-top: 22px; }
+.tracking-message { min-height: 1.5em; margin: 12px 0 20px; color: #31506d; font-size: .88rem; }
+.tracking-message[data-error="true"] { color: #b42318; }
+.tracking-help { margin: 8px 0 16px; color: var(--muted); font-size: .86rem; }
+.tracking-plan-heading { display: flex; gap: 15px; align-items: center; justify-content: space-between; }
+.tracking-status { padding: 6px 10px; border-radius: 20px; color: #0c5e75; background: #e4f3f5; font-size: .76rem; font-weight: 700; }
+.tracking-status[data-published="false"] { color: #7b5809; background: #fff2d4; }
+.tracking-rule-form { margin: 22px 0; padding: 18px 22px; border: 1px solid #dae7ee; border-radius: 12px; background: #f7fbfd; }
+.tracking-rule-form label { margin-top: 0; }
+.tracking-rule-controls { display: flex; gap: 12px; align-items: center; }
+.tracking-rule-controls input { max-width: 240px; }
+.tracking-rule-form .tracking-help { margin-bottom: 0; }
+.tracking-split { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 26px; align-items: start; }
+.tracking-activities { display: grid; gap: 10px; padding: 0; list-style: none; }
+.tracking-activities li { padding: 16px; border: 1px solid #dfebef; border-radius: 10px; background: #fafcfd; }
+.tracking-activities h5 { margin: 0; overflow-wrap: anywhere; font-size: .9rem; }
+.tracking-activities p { margin: 7px 0; color: var(--muted); font-size: .8rem; }
+.tracking-activity-form { padding: 20px; border: 1px solid #dfebef; border-radius: 12px; }
+.tracking-activity-form fieldset, .tracking-attendance fieldset { min-width: 0; padding: 0; border: 0; margin: 0; }
+.tracking-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.tracking-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 16px; }
+.tracking-actions a { color: var(--blue); font-size: .82rem; font-weight: 700; }
+.tracking-actions .tracking-delete { color: #b42318; }
+.tracking-publish-actions { margin-top: 26px; }
+.tracking-students-heading { margin-top: 36px; padding-top: 28px; border-top: 1px solid var(--line); }
+.tracking-students-table { margin-top: 10px; }
+.tracking-students-table tr[aria-selected="true"] { background: #ecf7fa; }
+.tracking-student-detail { margin-top: 28px; padding: 24px; border: 1px solid #cddfe7; border-radius: 13px; background: #f8fbfd; }
+.tracking-student-summary { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.tracking-stat { padding: 18px; border: 1px solid #dbe9ef; border-radius: 10px; background: #fff; }
+.tracking-stat strong { display: block; color: #0d526d; font-size: 1.3rem; }
+.tracking-stat p { margin: 6px 0 0; color: var(--muted); font-size: .83rem; }
+.tracking-stat progress { width: 100%; height: 10px; margin-top: 10px; accent-color: #176b87; }
+.tracking-requirements { margin: 20px 0; padding: 16px 18px; border-left: 3px solid var(--gold); border-radius: 0 8px 8px 0; background: #fff8e8; }
+.tracking-requirements[data-ready="true"] { border-left-color: #23816a; background: #edf8f3; }
+.tracking-requirements p { margin: 0; font-size: .85rem; }
+.tracking-requirements ul { padding-left: 22px; margin: 9px 0 0; font-size: .84rem; line-height: 1.8; }
+.tracking-attendance { display: grid; gap: 14px; }
+.tracking-attendance form { padding: 18px; border: 1px solid #dbe9ef; border-radius: 10px; background: #fff; }
+.tracking-attendance legend { padding: 0; margin-bottom: 8px; font-size: .9rem; font-weight: 700; overflow-wrap: anywhere; }
+.tracking-attendance .tracking-check { display: flex; gap: 10px; align-items: center; }
+.tracking-check input { width: 20px; height: 20px; margin: 0; accent-color: #176b87; flex-shrink: 0; }
+.tracking-attendance .tracking-help { margin: 0 0 10px; }
+.tracking-empty { color: var(--muted); font-size: .86rem; }
+.tracking-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+@media (max-width: 800px) { .tracking-split { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .tracking-plan-heading, .tracking-rule-controls { align-items: start; flex-direction: column; } .tracking-rule-controls input { max-width: none; } .tracking-form-grid, .tracking-student-summary { grid-template-columns: 1fr; } .tracking-student-detail { padding: 16px; } .tracking-actions { align-items: stretch; flex-direction: column; } .tracking-section { padding: 20px; } }

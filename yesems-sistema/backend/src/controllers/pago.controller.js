@@ -1,7 +1,10 @@
 const pagoModel = require('../models/pago.model');
 const pool = require('../config/db');
-const path = require('path');
-const { guardarArchivoPermanente, isRemoteFile } = require('../services/storage.service');
+const { guardarArchivoPermanente } = require('../services/storage.service');
+const { descargarComprobante } = require('../services/constancia-download.service');
+const { withEnrollmentLock } = require('../models/seguimiento.model');
+const { positiveId, httpError, sendError } = require('../utils/http-error');
+const fs = require('fs/promises');
 
 const METODOS_VALIDOS = ['efectivo', 'transferencia', 'tarjeta', 'otro'];
 const ESTADOS_VALIDOS = ['pendiente', 'completado', 'cancelado'];
@@ -9,9 +12,7 @@ const ESTADOS_VALIDOS = ['pendiente', 'completado', 'cancelado'];
 const obtenerPagoPropio = async (req, res) => {
   try {
     const { id_inscripcion } = req.params;
-    const comprobanteUrl = req.file
-      ? (await guardarArchivoPermanente(req.file.path, 'yesems/comprobantes')) || `/uploads/comprobantes/${req.file.filename}`
-      : null;
+    positiveId(id_inscripcion);
     const resultado = await pool.query(
       `SELECT i.id_inscripcion, i.monto_total, i.estado AS estado_inscripcion,
               c.nombre AS curso_nombre, c.descripcion AS curso_descripcion,
@@ -37,47 +38,49 @@ const obtenerPagoPropio = async (req, res) => {
     res.json({ ok: true, inscripcion: resultado.rows[0] });
   } catch (error) {
     console.error('Error al obtener pago propio:', error);
-    res.status(500).json({ ok: false, error: error.message });
+    sendError(res, error);
   }
 };
 
 const crearPagoPropio = async (req, res) => {
+  let guardado = false;
   try {
     const { id_inscripcion, metodo_pago, referencia } = req.body;
-    if (!id_inscripcion || !metodo_pago) {
-      return res.status(400).json({ ok: false, mensaje: 'id_inscripcion y metodo_pago son obligatorios' });
-    }
+    positiveId(id_inscripcion);
     if (!METODOS_VALIDOS.includes(metodo_pago)) {
-      return res.status(400).json({ ok: false, mensaje: `metodo_pago debe ser uno de: ${METODOS_VALIDOS.join(', ')}` });
+      throw httpError(400, `metodo_pago debe ser uno de: ${METODOS_VALIDOS.join(', ')}`);
     }
     if (metodo_pago !== 'efectivo' && !req.file) {
-      return res.status(400).json({ ok: false, mensaje: 'Adjunta el comprobante de pago en PDF, JPG o PNG.' });
+      throw httpError(400, 'Adjunta el comprobante de pago en PDF, JPG o PNG.');
     }
-    const inscripcionResult = await pool.query(
-      "SELECT id_inscripcion, monto_total, estado FROM inscripciones WHERE id_inscripcion = $1 AND id_usuario = $2",
-      [id_inscripcion, req.admin.id_usuario]
-    );
-    const inscripcion = inscripcionResult.rows[0];
-    if (!inscripcion) return res.status(404).json({ ok: false, mensaje: 'Inscripción no encontrada' });
-    if (inscripcion.estado === 'cancelada') return res.status(409).json({ ok: false, mensaje: 'No se puede registrar un pago para una inscripción cancelada' });
-
-    const pendiente = await pool.query(
-      "SELECT id_pago FROM pagos WHERE id_inscripcion = $1 AND estado = 'pendiente'",
-      [id_inscripcion]
-    );
-    if (pendiente.rows[0]) {
-      return res.status(409).json({ ok: false, mensaje: 'Ya tienes un pago pendiente de validación para esta inscripción' });
-    }
-
-    const resultado = await pool.query(
-      `INSERT INTO pagos (id_inscripcion, monto, metodo_pago, referencia, comprobante_url, estado)
-       VALUES ($1, $2, $3, $4, $5, 'pendiente') RETURNING *`,
-      [id_inscripcion, inscripcion.monto_total, metodo_pago, referencia?.trim() || null, comprobanteUrl]
-    );
-    res.status(201).json({ ok: true, pago: resultado.rows[0] });
+    if (referencia != null && (typeof referencia !== 'string' || referencia.length > 100)) throw httpError(400, 'Referencia inválida');
+    const pago = await withEnrollmentLock(id_inscripcion, async (client) => {
+      const inscripcion = (await client.query(
+        'SELECT id_inscripcion, monto_total, estado, concluida_at FROM inscripciones WHERE id_inscripcion = $1 AND id_usuario = $2',
+        [id_inscripcion, req.admin.id_usuario]
+      )).rows[0];
+      if (!inscripcion) throw httpError(404, 'Inscripción no encontrada');
+      await pagoModel.comprobarInscripcionAbierta(client, id_inscripcion);
+      const pendiente = await client.query("SELECT 1 FROM pagos WHERE id_inscripcion = $1 AND estado = 'pendiente'", [id_inscripcion]);
+      if (pendiente.rowCount) throw httpError(409, 'Ya tienes un pago pendiente de validación para esta inscripción');
+      const saldo = (await client.query(`SELECT $2::numeric - COALESCE(SUM(monto), 0) AS saldo
+        FROM pagos WHERE id_inscripcion = $1 AND estado = 'completado'`, [id_inscripcion, inscripcion.monto_total])).rows[0].saldo;
+      if (Number(saldo) <= 0) throw httpError(409, 'La inscripción ya está pagada');
+      const comprobanteUrl = req.file
+        ? (await guardarArchivoPermanente(req.file.path, 'yesems/comprobantes')) || `/uploads/comprobantes/${req.file.filename}`
+        : null;
+      return (await client.query(
+        `INSERT INTO pagos (id_inscripcion, monto, metodo_pago, referencia, comprobante_url, estado)
+         VALUES ($1, $2, $3, $4, $5, 'pendiente') RETURNING *`,
+        [id_inscripcion, saldo, metodo_pago, referencia?.trim() || null, comprobanteUrl]
+      )).rows[0];
+    });
+    guardado = true;
+    res.status(201).json({ ok: true, pago });
   } catch (error) {
-    console.error('Error al crear pago propio:', error);
-    res.status(500).json({ ok: false, error: error.message });
+    sendError(res, error);
+  } finally {
+    if (!guardado && req.file) await fs.unlink(req.file.path).catch(() => {});
   }
 };
 
@@ -92,11 +95,9 @@ const descargarComprobantePropio = async (req, res) => {
     const pago = resultado.rows[0];
     if (!pago) return res.status(404).json({ ok: false, mensaje: 'Pago no encontrado' });
     if (!pago.comprobante_url) return res.status(404).json({ ok: false, mensaje: 'Este pago no tiene comprobante adjunto' });
-    if (isRemoteFile(pago.comprobante_url)) return res.redirect(pago.comprobante_url);
-    res.download(path.join(__dirname, '../..', pago.comprobante_url), path.basename(pago.comprobante_url));
+    await descargarComprobante(res, pago.comprobante_url);
   } catch (error) {
-    console.error('Error al descargar comprobante propio:', error);
-    res.status(500).json({ ok: false, error: error.message });
+    sendError(res, error);
   }
 };
 
@@ -145,6 +146,7 @@ const crearPago = async (req, res) => {
     res.status(201).json({ ok: true, pago: nuevo });
   } catch (error) {
     console.error('Error al crear pago:', error);
+    if (error.statusCode) return sendError(res, error);
     if (error.code === '23503') {
       return res.status(400).json({ ok: false, mensaje: 'id_inscripcion no existe' });
     }
@@ -172,7 +174,7 @@ const actualizarPago = async (req, res) => {
     res.json({ ok: true, pago: actualizado });
   } catch (error) {
     console.error('Error al actualizar pago:', error);
-    res.status(500).json({ ok: false, error: error.message });
+    sendError(res, error);
   }
 };
 
@@ -195,7 +197,7 @@ const cambiarEstado = async (req, res) => {
     res.json({ ok: true, pago: actualizado });
   } catch (error) {
     console.error('Error al cambiar estado del pago:', error);
-    res.status(500).json({ ok: false, error: error.message });
+    sendError(res, error);
   }
 };
 

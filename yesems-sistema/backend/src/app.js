@@ -9,10 +9,9 @@ const horarioRoutes = require('./routes/horario.routes');
 const pagoRoutes = require('./routes/pago.routes');
 const constanciaRoutes = require('./routes/constancia.routes');
 const administradorRoutes = require('./routes/administrador.routes');
+const seguimientoRoutes = require('./routes/seguimiento.routes');
 
 const app = express();
-
-// Migración idempotente para instalaciones ya existentes.
 
 app.use(cors());
 app.use(express.json());
@@ -40,12 +39,16 @@ app.use('/api/horarios', horarioRoutes);
 app.use('/api/pagos', pagoRoutes);
 app.use('/api/constancias', constanciaRoutes);
 app.use('/api/administradores', administradorRoutes);
+app.use('/api/seguimiento', seguimientoRoutes);
 
 app.use((error, req, res, next) => {
   if (error instanceof require('multer').MulterError || error.message === 'El comprobante debe ser PDF, JPG o PNG.') {
     return res.status(400).json({ ok: false, mensaje: error.code === 'LIMIT_FILE_SIZE' ? 'El comprobante no puede superar 5 MB.' : error.message });
   }
-  next(error);
+  if (res.headersSent) return next(error);
+  console.error('Error de API:', error);
+  const status = error.statusCode || 500;
+  res.status(status).json({ ok: false, mensaje: status >= 500 ? 'No fue posible completar la operación. Intenta nuevamente.' : error.message });
 });
 
 module.exports = app;

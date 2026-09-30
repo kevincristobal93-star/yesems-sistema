@@ -1,4 +1,33 @@
 const pool = require('../config/db');
+const { withEnrollmentLock } = require('./seguimiento.model');
+const { httpError, positiveId } = require('../utils/http-error');
+
+function validarMonto(monto) {
+  if (!/^\d+(\.\d{1,2})?$/.test(String(monto)) || Number(monto) <= 0 || Number(monto) >= 100000000) {
+    throw httpError(400, 'El monto debe ser positivo y tener hasta dos decimales');
+  }
+}
+
+async function comprobarInscripcionAbierta(client, idInscripcion) {
+  const result = await client.query('SELECT * FROM inscripciones WHERE id_inscripcion = $1', [idInscripcion]);
+  const inscripcion = result.rows[0];
+  if (!inscripcion) throw httpError(404, 'Inscripción no encontrada');
+  const emitida = await client.query("SELECT 1 FROM constancias WHERE id_inscripcion = $1 AND estado = 'autorizada'", [idInscripcion]);
+  if (inscripcion.estado === 'cancelada' || inscripcion.concluida_at || emitida.rowCount) {
+    throw httpError(409, 'No se pueden modificar pagos de una inscripción cancelada o concluida');
+  }
+  return inscripcion;
+}
+
+async function cambiarPago(id, callback) {
+  positiveId(id);
+  const pago = await obtenerPagoPorId(id);
+  if (!pago) return null;
+  return withEnrollmentLock(pago.id_inscripcion, async (client) => {
+    await comprobarInscripcionAbierta(client, pago.id_inscripcion);
+    return callback(client, pago.id_inscripcion);
+  });
+}
 
 const obtenerPagos = async () => {
   const resultado = await pool.query(`
@@ -30,30 +59,41 @@ const obtenerPagoPorId = async (id) => {
 
 const crearPago = async (datos) => {
   const { id_inscripcion, monto, metodo_pago, referencia, estado } = datos;
-  const resultado = await pool.query(
-    `INSERT INTO pagos (id_inscripcion, monto, metodo_pago, referencia, estado)
-     VALUES ($1, $2, $3, $4, COALESCE($5, 'pendiente')) RETURNING *`,
-    [id_inscripcion, monto, metodo_pago, referencia ?? null, estado]
-  );
-  return resultado.rows[0];
+  positiveId(id_inscripcion);
+  validarMonto(monto);
+  return withEnrollmentLock(id_inscripcion, async (client) => {
+    await comprobarInscripcionAbierta(client, id_inscripcion);
+    const resultado = await client.query(
+      `INSERT INTO pagos (id_inscripcion, monto, metodo_pago, referencia, estado)
+       VALUES ($1, $2, $3, $4, COALESCE($5, 'pendiente')) RETURNING *`,
+      [id_inscripcion, monto, metodo_pago, referencia ?? null, estado]
+    );
+    if (estado === 'completado') await client.query("UPDATE inscripciones SET estado = 'confirmada' WHERE id_inscripcion = $1 AND estado = 'pendiente'", [id_inscripcion]);
+    return resultado.rows[0];
+  });
 };
 
 const actualizarEstadoPago = async (id, estado) => {
-  const resultado = await pool.query(
-    'UPDATE pagos SET estado = $1 WHERE id_pago = $2 RETURNING *',
-    [estado, id]
-  );
-  return resultado.rows[0];
+  if (!['completado', 'cancelado'].includes(estado)) throw httpError(400, 'Solo puedes confirmar o rechazar un pago pendiente');
+  return cambiarPago(id, async (client, idInscripcion) => {
+    const result = await client.query("UPDATE pagos SET estado = $1 WHERE id_pago = $2 AND estado = 'pendiente' RETURNING *", [estado, id]);
+    if (!result.rowCount) throw httpError(409, 'El pago ya fue revisado');
+    if (estado === 'completado') await client.query("UPDATE inscripciones SET estado = 'confirmada' WHERE id_inscripcion = $1 AND estado = 'pendiente'", [idInscripcion]);
+    return result.rows[0];
+  });
 };
 
 const actualizarPago = async (id, datos) => {
   const { monto, metodo_pago, referencia } = datos;
-  const resultado = await pool.query(
-    `UPDATE pagos SET monto = $1, metodo_pago = $2, referencia = $3
-     WHERE id_pago = $4 RETURNING *`,
-    [monto, metodo_pago, referencia ?? null, id]
-  );
-  return resultado.rows[0];
+  validarMonto(monto);
+  return cambiarPago(id, async (client) => {
+    const resultado = await client.query(
+      `UPDATE pagos SET monto = $1, metodo_pago = $2, referencia = $3
+       WHERE id_pago = $4 AND estado = 'pendiente' RETURNING *`, [monto, metodo_pago, referencia ?? null, id]
+    );
+    if (!resultado.rowCount) throw httpError(409, 'Solo puedes corregir un pago pendiente');
+    return resultado.rows[0];
+  });
 };
 
 // Cálculo automático: total pagado (solo pagos completados), saldo y estado de pago
@@ -89,6 +129,7 @@ const obtenerResumenPago = async (idInscripcion) => {
 };
 
 module.exports = {
+  comprobarInscripcionAbierta,
   obtenerPagos,
   obtenerPagosPorInscripcion,
   obtenerPagoPorId,

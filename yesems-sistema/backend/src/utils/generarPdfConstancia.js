@@ -2,15 +2,17 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
 const { guardarArchivoPermanente } = require('../services/storage.service');
+const uploadRoot = require('../config/upload-path');
 
 const generarPdfConstancia = (datos, folio) => new Promise((resolve, reject) => {
   const nombreArchivo = `constancia_${folio}.pdf`;
-  const directorioConstancias = path.join(__dirname, '../../uploads/constancias');
+  const directorioConstancias = path.join(uploadRoot, 'constancias');
   const rutaCompleta = path.join(directorioConstancias, nombreArchivo);
   const rutaLogo = path.join(__dirname, '../../../frontend/assets/yesems-logo.png');
   fs.mkdirSync(directorioConstancias, { recursive: true });
 
   const doc = new PDFDocument({ size: 'letter', layout: 'landscape', margin: 0 });
+  doc.on('error', reject);
   const stream = fs.createWriteStream(rutaCompleta);
   doc.pipe(stream);
 
