@@ -25,6 +25,9 @@ async function verificarToken(req, res, next) {
     if (!usuario || !usuario.activo) {
       return res.status(401).json({ ok: false, mensaje: 'Cuenta no válida o inactiva' });
     }
+    if ((decoded.token_version || 0) !== (usuario.token_version || 0)) {
+      return res.status(401).json({ok:false,mensaje:'La contraseña cambió. Inicia sesión nuevamente.'});
+    }
     req.usuario = { id_usuario: usuario.id_usuario, rol: usuario.rol };
     // Compatibilidad con los controladores del alumno existentes.
     req.admin = req.usuario;

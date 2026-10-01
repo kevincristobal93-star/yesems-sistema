@@ -49,11 +49,10 @@ integration('Proceso real de inscripción, avance y constancia (PostgreSQL aisla
 
   async function register(label) {
     const email = `integration-${tag}-${label}@example.test`;
-    const registration = await request('POST', '/usuarios/registrar', {
-      body: { nombre: `Prueba ${label}`, apellido: 'Integración', email, password }, status: 201,
-    });
+    // Fixture histórica con contraseña; el registro verificado se prueba en acceso.integration.
+    const registration = await require('../src/models/usuario.model').registrarCliente({ nombre: `Prueba ${label}`, apellido: 'Integración', email, password });
     const login = await request('POST', '/usuarios/login', { body: { email, password }, status: 200 });
-    return { id: registration.json.usuario.id_usuario, email, token: login.json.token };
+    return { id: registration.id_usuario, email, token: login.json.token };
   }
 
   async function createCourse({ price = 500, threshold = null, count = 0, publish = false, dates = [] } = {}) {
@@ -80,7 +79,7 @@ integration('Proceso real de inscripción, avance y constancia (PostgreSQL aisla
   async function enroll(course, user = alumno) {
     const result = await request('POST', '/inscripciones/mia', {
       token: user.token, status: 201,
-      body: { id_curso: course.id, telefono: '5500000000', fecha_nacimiento: '2000-01-01', curp: 'TEST000101HDFXXX00' },
+      body: { id_curso: course.id, telefono: '5500000000', fecha_nacimiento: '2000-01-01', curp: 'TEST000101HDF' + String(user.id).padStart(5,'0') },
     });
     return result.json.inscripcion.id_inscripcion;
   }

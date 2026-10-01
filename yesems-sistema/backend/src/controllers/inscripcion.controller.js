@@ -57,7 +57,7 @@ const crearInscripcionPropia = async (req, res) => {
 			     rol = 'alumno'
 			 WHERE id_usuario = $4
 			 RETURNING id_usuario, nombre, apellido, email, folio, rol`,
-			[telefono, fecha_nacimiento, curp.toUpperCase(), idUsuario]
+			[telefono, fecha_nacimiento, require('../utils/identidad').normalizarCurp(curp), idUsuario]
 		);
 
 		const inscripcionResult = await client.query(
@@ -70,10 +70,10 @@ const crearInscripcionPropia = async (req, res) => {
 	} catch (error) {
 		await client.query('ROLLBACK');
 		if (error.statusCode) return sendError(res, error);
-		console.error('Error al crear inscripción propia:', error);
 		if (error.code === '23505') {
 			return res.status(409).json({ ok: false, mensaje: 'La CURP ya está registrada en otra cuenta' });
 		}
+		console.error('Error al crear inscripción propia:', error.code || error.name);
 		res.status(500).json({ ok: false, error: error.message });
 	} finally {
 		client.release();

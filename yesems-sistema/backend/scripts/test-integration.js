@@ -58,6 +58,9 @@ async function main() {
       DB_USER: 'yesems_test_admin',
       DB_PASSWORD: '',
       CLOUDINARY_URL: '',
+      RESEND_API_KEY: '',
+      AUTH_EMAIL_FROM: '',
+      GOOGLE_CLIENT_ID: '',
       CLOUDINARY_CLOUD_NAME: '',
       CLOUDINARY_API_KEY: '',
       CLOUDINARY_API_SECRET: '',
@@ -78,7 +81,10 @@ async function main() {
     const exitCode = await new Promise((resolve, reject) => {
       const child = spawn(process.execPath, args, { cwd: backend, env, windowsHide: true, stdio: 'inherit' });
       child.once('error', reject);
-      child.once('exit', (code) => resolve(code ?? 1));
+      child.once('exit', (code, signal) => {
+        if (code === null) console.error('El proceso de pruebas terminó sin código de salida. Señal:', signal || 'desconocida');
+        resolve(code ?? 1);
+      });
     });
     process.exitCode = exitCode;
   } catch (error) {

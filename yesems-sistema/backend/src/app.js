@@ -34,6 +34,7 @@ app.get('/api/db-test', async (req, res) => {
 app.use('/api/cursos', cursoRoutes);
 app.use('/api/categorias', categoriaRoutes);
 app.use('/api/usuarios', usuarioRoutes);
+app.use('/api/acceso', require('./routes/acceso.routes'));
 app.use('/api/inscripciones', inscripcionRoutes);
 app.use('/api/horarios', horarioRoutes);
 app.use('/api/pagos', pagoRoutes);

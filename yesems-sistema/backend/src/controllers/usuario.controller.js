@@ -67,7 +67,7 @@ const login = async (req, res) => {
     }
 
     const token = jwt.sign(
-      { id_usuario: usuario.id_usuario, email: usuario.email, rol: usuario.rol },
+      { id_usuario: usuario.id_usuario, email: usuario.email, rol: usuario.rol, token_version: usuario.token_version || 0 },
       process.env.JWT_SECRET,
       { expiresIn: '8h' }
     );
@@ -107,7 +107,9 @@ const ascenderAAlumno = async (req, res) => {
     const actualizado = await usuarioModel.ascenderAAlumno(id, { telefono, fecha_nacimiento, curp });
     res.json({ ok: true, usuario: actualizado });
   } catch (error) {
-    console.error('Error al ascender a alumno:', error);
+    console.error('Error al ascender a alumno:', error.code || error.name);
+    if (error.statusCode) return res.status(error.statusCode).json({ok:false,mensaje:error.message});
+    if (error.code === '23505') return res.status(409).json({ok:false,mensaje:'La CURP o el folio ya están registrados en otra cuenta.'});
     res.status(500).json({ ok: false, error: error.message });
   }
 };
@@ -149,7 +151,9 @@ const actualizarUsuario = async (req, res) => {
     const actualizado = await usuarioModel.actualizarUsuario(id, { nombre, apellido, telefono, fecha_nacimiento, curp, folio });
     res.json({ ok: true, usuario: actualizado });
   } catch (error) {
-    console.error('Error al actualizar usuario:', error);
+    console.error('Error al actualizar usuario:', error.code || error.name);
+    if (error.statusCode) return res.status(error.statusCode).json({ok:false,mensaje:error.message});
+    if (error.code === '23505') return res.status(409).json({ok:false,mensaje:'La CURP o el folio ya están registrados en otra cuenta.'});
     res.status(500).json({ ok: false, error: error.message });
   }
 };

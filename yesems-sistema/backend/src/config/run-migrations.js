@@ -59,6 +59,8 @@ async function runStartupMigrations() {
   await runDatabaseMigrations();
   const progressMigration = await fs.readFile(path.resolve(__dirname, '../../database/migrations/004_course_progress.sql'), 'utf8');
   await pool.query(progressMigration);
+  await pool.query(await fs.readFile(path.resolve(__dirname, '../../database/migrations/005_verified_identity.sql'), 'utf8'));
+  await pool.query(await fs.readFile(path.resolve(__dirname, '../../database/migrations/006_password_recovery.sql'), 'utf8'));
   await seedCatalog();
   await bootstrapInitialAdmin();
 }

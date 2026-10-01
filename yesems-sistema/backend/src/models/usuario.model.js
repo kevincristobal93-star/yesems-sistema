@@ -15,7 +15,7 @@ const obtenerUsuarios = async () => {
 const obtenerUsuarioPorId = async (id) => {
   const resultado = await pool.query(
     `SELECT id_usuario, nombre, apellido, email, telefono, fecha_nacimiento,
-            curp, folio, rol, activo, created_at
+            curp, folio, rol, activo, created_at, token_version
      FROM usuarios WHERE id_usuario = $1`,
     [id]
   );
@@ -24,13 +24,14 @@ const obtenerUsuarioPorId = async (id) => {
 
 const obtenerUsuarioPorEmail = async (email) => {
   const resultado = await pool.query(
-    'SELECT * FROM usuarios WHERE email = $1',
-    [email]
+    'SELECT * FROM usuarios WHERE lower(btrim(email)) = $1',
+    [typeof email === 'string' ? email.trim().toLowerCase() : '']
   );
-  return resultado.rows[0];
+  // No elegir arbitrariamente una cuenta si hay duplicados históricos.
+  return resultado.rows.length === 1 ? resultado.rows[0] : undefined;
 };
 
-// Registro ligero de un cliente nuevo (sin CURP/folio todavía)
+// Registro interno; la ruta pública requiere verificación de correo.
 const registrarCliente = async (datos) => {
   const { nombre, apellido, email, password } = datos;
   const password_hash = await bcrypt.hash(password, SALT_ROUNDS);
@@ -55,7 +56,7 @@ const ascenderAAlumno = async (id, datos) => {
          rol = 'alumno'
      WHERE id_usuario = $4
      RETURNING id_usuario, nombre, apellido, email, telefono, fecha_nacimiento, curp, folio, rol, activo`,
-    [telefono, fecha_nacimiento, curp, id]
+    [telefono, fecha_nacimiento, require('../utils/identidad').normalizarCurp(curp), id]
   );
   return resultado.rows[0];
 };
@@ -67,7 +68,7 @@ const actualizarUsuario = async (id, datos) => {
      fecha_nacimiento = $4, curp = $5, folio = $6
      WHERE id_usuario = $7
      RETURNING id_usuario, nombre, apellido, email, telefono, fecha_nacimiento, curp, folio, rol, activo`,
-    [nombre, apellido, telefono, fecha_nacimiento, curp, folio, id]
+    [nombre, apellido, telefono, fecha_nacimiento, curp ? require('../utils/identidad').normalizarCurp(curp) : null, folio, id]
   );
   return resultado.rows[0];
 };

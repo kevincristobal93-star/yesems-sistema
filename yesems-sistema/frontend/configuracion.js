@@ -9,3 +9,9 @@ async function load() { try { const data = await request(`${API_URL}/usuarios/mi
 document.querySelector('#settings-form').addEventListener('submit', async (event) => { event.preventDefault(); const form = event.currentTarget; if (!form.checkValidity()) return form.reportValidity(); const button = form.querySelector('button'); button.disabled = true; button.textContent = 'Guardando...'; message.className = ''; message.textContent = ''; try { const data = await request(`${API_URL}/usuarios/mio`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ nombre: document.querySelector('#nombre').value.trim(), apellido: document.querySelector('#apellido').value.trim(), telefono: document.querySelector('#telefono').value.trim() }) }); user = { ...user, ...data.usuario }; localStorage.setItem('yesems_usuario', JSON.stringify(user)); render(user); message.className = 'success'; message.textContent = 'Tus cambios se guardaron correctamente.'; } catch (error) { message.textContent = error.message; } finally { button.disabled = false; button.textContent = 'Guardar cambios'; } });
 document.querySelector('#logout-button').addEventListener('click', () => { localStorage.removeItem('yesems_token'); localStorage.removeItem('yesems_usuario'); window.location.href = './cursos.html'; });
 load();
+const passwordLink = document.createElement('a');
+passwordLink.href = './password.html?modo=cambiar';
+passwordLink.textContent = 'Cambiar contraseña con un código por correo';
+passwordLink.style.display = 'inline-block';
+passwordLink.style.marginTop = '24px';
+document.querySelector('#settings-form').after(passwordLink);

@@ -1,0 +1,19 @@
+#verified-access{box-sizing:border-box;width:min(560px,calc(100% - 24px));max-height:92dvh;border:1px solid #dce6ed;border-radius:28px;padding:32px;color:#172743;background:#fff;box-shadow:0 28px 90px #06152d55;font:15px/1.5 'Open Sans',sans-serif;animation:access-in .22s ease-out}
+#verified-access::backdrop{background:#071b32a8;backdrop-filter:blur(4px)}
+#verified-access *{box-sizing:border-box}#verified-access [hidden]{display:none!important}
+#verified-access .access-close{position:absolute;right:16px;top:10px;border:0;background:transparent;color:#5e7388;font-size:30px;cursor:pointer;width:auto;padding:4px 12px}
+#verified-access .access-logo{display:block;width:68px;height:68px;object-fit:contain;margin:0 auto 10px}
+#verified-access h2{font-size:27px;line-height:1.25;text-align:center;margin:8px 0 12px}
+#verified-access .access-eyebrow{text-align:center;color:#186d83;letter-spacing:2px;font-size:11px;font-weight:800}
+#verified-access .access-intro{text-align:center;color:#63758a;margin:0 0 22px}
+#verified-access label{display:block;font-size:13px;font-weight:700}#verified-access input{display:block;width:100%;border:1px solid #cbd9e5;border-radius:12px;background:#f8fbfd;padding:12px;margin:6px 0 12px;color:#172743;font:inherit}
+#verified-access input:focus{outline:3px solid #2193a62b;border-color:#176f86}
+#verified-access .access-profile{display:grid;grid-template-columns:1fr 1fr;gap:0 12px}#verified-access .access-phone{grid-column:1/-1}
+#verified-access .access-note{font-size:12px;color:#62758b;margin:8px 0 16px}#verified-access #access-google{display:flex;justify-content:center}
+#verified-access .access-divider{display:flex;align-items:center;gap:12px;color:#65758a;font-size:12px;margin:20px 0}#verified-access .access-divider:before,#verified-access .access-divider:after{content:'';height:1px;background:#dce6ed;flex:1}
+#verified-access button[type=submit]{width:100%;border:0;border-radius:24px;background:#176c83;color:white;padding:13px;font:700 15px 'Open Sans',sans-serif;cursor:pointer;margin-bottom:10px}
+#verified-access button:disabled{opacity:.5;cursor:wait}#verified-access a{display:block;text-align:center;color:#176c83;margin:14px 0;font-size:13px}#verified-access .access-admin{font-size:12px;color:#66768a}
+#verified-access #access-message{font-size:14px;color:#674710}#verified-access #access-course{color:#176c83;text-align:center;font-weight:700}
+@keyframes access-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:420px){#verified-access{padding:28px 20px}#verified-access .access-profile{display:block}#verified-access h2{font-size:24px}}
+@media(prefers-reduced-motion:reduce){#verified-access{animation:none}}

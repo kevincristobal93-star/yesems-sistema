@@ -83,23 +83,12 @@ function renderCourses() {
 
 function openRegistration(course) {
   selectedCourse = course;
-  registrationForm.reset();
-  registrationMessage.textContent = '';
-  registrationMessage.classList.remove('success');
-  document.querySelector('#dialog-course-name').textContent = course?.nombre ? `Curso seleccionado: ${course.nombre}` : '';
-  document.querySelector('#dialog-login-link').href = course ? `./index.html?curso=${encodeURIComponent(course.id_curso)}` : './index.html';
-  registrationDialog.showModal();
-  document.querySelector('#quick-full-name').focus();
+  window.YesemsAccess.open(course);
 }
 
 function openLogin(course = selectedCourse) {
   selectedCourse = course || null;
-  loginForm.reset();
-  loginMessage.textContent = '';
-  loginMessage.classList.remove('success');
-  document.querySelector('#login-dialog-course-name').textContent = selectedCourse?.nombre ? `Curso seleccionado: ${selectedCourse.nombre}` : '';
-  loginDialog.showModal();
-  document.querySelector('#quick-login-email').focus();
+  window.YesemsAccess.open(selectedCourse);
 }
 
 grid.addEventListener('click', (event) => {
