@@ -1,0 +1,58 @@
+#reportes{padding:30px;border:1px solid #e2eaf0;border-radius:20px;min-width:0;scroll-margin-top:96px}
+#reportes .reports-heading{display:flex;justify-content:space-between;gap:20px;align-items:center}
+#reportes h2{font-size:clamp(1.45rem,2.5vw,1.9rem)}
+#reportes .report-intro{margin:10px 0 0;color:#62748a;font-size:.88rem;line-height:1.6}
+#reportes .report-tools{display:flex;align-items:flex-end;flex-direction:column;gap:9px;flex-shrink:0}
+#reportes .report-tools button{display:flex;align-items:center;gap:9px;border:1px solid #ccdce5;border-radius:10px;padding:10px 16px;background:#fff;color:#176b87;font:700 .83rem 'Open Sans',sans-serif;cursor:pointer}
+#reportes .report-tools button:hover{background:#edf7fa}
+#reportes .report-tools button:focus-visible{outline:3px solid #f5b942;outline-offset:3px}
+#reportes button:disabled{opacity:.6;cursor:wait}
+#reportes #reports-updated{font-size:.72rem;color:#62748a}
+#reportes .report-summary{gap:16px;margin:28px 0 24px}
+#reportes .report-kpi{min-width:0;padding:22px;border:1px solid #e0eaf0;border-radius:15px;background:#f5f9fc}
+#reportes .report-kpi:after{display:none}
+#reportes .report-kpi-top{display:flex;gap:10px;align-items:center;justify-content:space-between}
+#reportes .report-kpi-top span{color:#536b7b;font-weight:600;font-size:.81rem}
+#reportes .report-kpi svg{width:32px;height:32px;padding:6px;border-radius:9px;stroke:currentColor;stroke-width:1.7;fill:none;color:#176b87;background:#e2eef4;flex-shrink:0}
+#reportes .report-kpi strong{font-size:clamp(1.4rem,2.4vw,2rem);margin:17px 0 9px;overflow-wrap:anywhere;letter-spacing:-.045em;font-variant-numeric:tabular-nums}
+#reportes .report-kpi small{display:block;color:#60748a;font-size:.71rem;line-height:1.5}
+#reportes .report-kpi-income{background:#103e53;border-color:#103e53;box-shadow:0 7px 18px #0d3d5914}
+#reportes .report-kpi-income:hover{background:#164e64}
+#reportes .report-kpi-income strong{color:#fff}
+#reportes .report-kpi-income span,#reportes .report-kpi-income small{color:#d4e7ef}
+#reportes .report-kpi-income svg{background:#ffffff17;color:#b4e7e4}
+#reportes .report-kpi-pending{background:#fffaf0;border-color:#f1e4c7}
+#reportes .report-kpi-pending svg{color:#8b640c;background:#faedc9}
+#reportes .report-grids{grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:18px}
+#reportes .chart-card{min-width:0;padding:23px;border-radius:15px;border-color:#dde7ed}
+#reportes .report-chart-heading{display:flex;gap:12px;justify-content:space-between;align-items:center}
+#reportes .report-overline{margin:0 0 7px;text-transform:uppercase;font-size:.64rem;letter-spacing:.1em;font-weight:700;color:#617888}
+#reportes .chart-card h3{font-size:1.02rem;line-height:1.4}
+#reportes .report-chip{flex-shrink:0;padding:6px 9px;border-radius:7px;background:#edf5f8;color:#176b87;font-size:.68rem;font-weight:700;white-space:nowrap}
+#reportes .report-chart-help{color:#64788b;font-size:.74rem;line-height:1.6;margin:12px 0 0}
+#reportes .bar-list{max-height:300px;overflow-y:auto;gap:19px;margin-top:25px;padding-right:4px}
+#reportes .report-course-row{display:flex;gap:13px;align-items:center}
+#reportes .report-rank{color:#7590a0;font:700 .75rem 'Montserrat',sans-serif}
+#reportes .report-course-main{flex:1;min-width:0}
+#reportes .report-course-label{display:flex;gap:12px;justify-content:space-between;align-items:baseline;margin-bottom:10px;font-size:.8rem}
+#reportes .report-course-label>span{overflow-wrap:anywhere}
+#reportes .report-course-label strong{flex-shrink:0;color:#123c52;font-variant-numeric:tabular-nums}
+#reportes .report-course-label small{font-size:.65rem;font-weight:400;color:#617888}
+#reportes .bar-track{height:8px;background:#eef3f6}
+#reportes .bar-fill{background:linear-gradient(90deg,#176b87,#3babb7);transform-origin:left;animation:report-grow .6s ease-out both}
+#reportes .trend-list{display:flex;gap:10px;align-items:end;justify-content:space-around;margin-top:22px;min-height:165px;background:repeating-linear-gradient(to top,transparent 0,transparent 39px,#edf2f6 40px);padding:0 4px 4px}
+#reportes .trend-item{flex:1;min-width:0;max-width:65px;gap:10px}
+#reportes .report-column{height:145px;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:7px;border-bottom:1px solid #b7cbd7}
+#reportes .trend-bar{min-height:0;width:65%;max-width:38px;border-radius:6px 6px 0 0;background:linear-gradient(#ffd16c,#f5b942);transform-origin:bottom;animation:report-rise .65s ease-out both}
+#reportes .trend-item>span{font-size:.64rem;color:#536b7b}
+#reportes .trend-item strong{font-variant-numeric:tabular-nums}
+#reportes .report-empty{font-size:.83rem;line-height:1.7;color:#62748a;padding:18px;border:1px dashed #cfdee7;border-radius:12px;margin:0;background:#f8fbfd}
+#reportes .report-notice{padding:12px 15px;border-radius:9px;background:#fff4dd;color:#775417;font-size:.83rem;line-height:1.5}
+#reportes .report-notice[hidden]{display:none}
+#reportes .report-footnote{margin:22px 0 0;padding-top:17px;border-top:1px solid #e4ecf1;color:#63788a;font-size:.72rem;line-height:1.6}
+#reportes .report-sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+@keyframes report-grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+@keyframes report-rise{from{transform:scaleY(0)}to{transform:scaleY(1)}}
+@media(max-width:1050px){#reportes .report-grids{grid-template-columns:1fr}#reportes .report-summary{gap:10px}#reportes .report-kpi{padding:16px}}
+@media(max-width:650px){#reportes{padding:20px}#reportes .reports-heading{align-items:flex-start;flex-direction:column}#reportes .report-tools{align-items:center;flex-direction:row;flex-wrap:wrap}#reportes .report-summary{grid-template-columns:1fr}#reportes .chart-card{padding:16px}#reportes .report-chart-heading{flex-wrap:wrap}#reportes .report-course-label{flex-direction:column;gap:4px}#reportes .trend-list{gap:5px}}
+@media(prefers-reduced-motion:reduce){#reportes *,#reportes *:before,#reportes *:after{animation:none!important;transition:none!important}#reportes .report-kpi:hover{transform:none}}

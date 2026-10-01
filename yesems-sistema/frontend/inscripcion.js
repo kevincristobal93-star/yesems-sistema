@@ -9,6 +9,8 @@ const availabilitySelect = document.querySelector('#availability-select');
 const form = document.querySelector('#enrollment-form');
 const personalStep = document.querySelector('#personal-step');
 const confirmationStep = document.querySelector('#confirmation-step');
+const backButton = document.querySelector('#back-to-data');
+let submitting = false;
 document.querySelector('#footer-year').textContent = new Date().getFullYear();
 
 if (!courseId || !/^\d+$/.test(courseId)) {
@@ -80,6 +82,8 @@ async function loadAvailabilities() {
   }
 }
 function showPersonalStep() {
+  if (submitting) return;
+  document.querySelector('#continue-button').before(message);
   confirmationStep.hidden = true;
   personalStep.hidden = false;
   document.querySelector('#step-confirmation').classList.remove('active');
@@ -101,6 +105,7 @@ function showConfirmationStep() {
   if (hasAvailability) document.querySelector('#confirm-availability').textContent = availabilitySelect.options[availabilitySelect.selectedIndex].textContent;
   personalStep.hidden = true;
   confirmationStep.hidden = false;
+  confirmationStep.querySelector('.confirmation-actions').before(message);
   document.querySelector('#step-personal').classList.remove('active');
   document.querySelector('#step-confirmation').classList.add('active');
   message.textContent = '';
@@ -108,13 +113,21 @@ function showConfirmationStep() {
 }
 
 document.querySelector('#continue-button').addEventListener('click', showConfirmationStep);
-document.querySelector('#back-to-data').addEventListener('click', showPersonalStep);
+backButton.addEventListener('click', showPersonalStep);
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
-  if (!event.currentTarget.checkValidity()) { message.textContent = 'Completa todos los datos antes de continuar.'; event.currentTarget.reportValidity(); return; }
+  if (submitting) return;
+  if (!form.checkValidity()) {
+    showPersonalStep();
+    message.textContent = 'Completa todos los datos antes de continuar.';
+    form.reportValidity();
+    return;
+  }
+  submitting = true;
   message.textContent = '';
   submitButton.disabled = true;
+  backButton.disabled = true;
   submitButton.textContent = 'Registrando inscripción...';
   let completed = false;
   try {
@@ -129,20 +142,28 @@ form.addEventListener('submit', async (event) => {
         curp: document.querySelector('#curp').value.trim(),
       }),
     });
-    const data = await response.json();
+    const data = await response.json().catch(() => null);
+    if (!data) throw new Error('El servidor no pudo responder. Vuelve a intentarlo en unos momentos.');
     if (!response.ok || !data.ok) throw new Error(data.mensaje || data.error || 'No fue posible registrar tu inscripción.');
+    const enrollmentId = Number(data.inscripcion?.id_inscripcion);
+    if (!Number.isSafeInteger(enrollmentId) || enrollmentId <= 0) {
+      throw new Error('No se recibió el número de inscripción. Vuelve a intentarlo o revisa Mi panel.');
+    }
 
     if (data.usuario) localStorage.setItem('yesems_usuario', JSON.stringify({ ...user, ...data.usuario }));
-    event.currentTarget.querySelectorAll('input, button').forEach((element) => { element.disabled = true; });
+    // currentTarget deja de estar disponible después de await; usar el formulario estable.
+    form.querySelectorAll('input, button, select').forEach((element) => { element.disabled = true; });
     completed = true;
     message.classList.add('success');
-    window.location.href = `./pago.html?inscripcion=${encodeURIComponent(data.inscripcion.id_inscripcion)}`;
+    window.location.href = `./pago.html?inscripcion=${encodeURIComponent(enrollmentId)}`;
   } catch (error) {
     message.classList.remove('success');
-    message.textContent = error instanceof TypeError ? 'El servidor está iniciando. Espera unos segundos y vuelve a intentarlo.' : error.message;
+    message.textContent = error instanceof TypeError ? 'No se pudo conectar con el servidor. Revisa tu conexión y vuelve a intentarlo.' : error.message;
   } finally {
     if (!completed) {
+      submitting = false;
       submitButton.disabled = false;
+      backButton.disabled = false;
       submitButton.textContent = 'Confirmar inscripción';
     }
   }

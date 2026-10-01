@@ -21,6 +21,7 @@ const availabilityDialog = document.querySelector('#availability-dialog');
 const availabilityForm = document.querySelector('#availability-form');
 const availabilityFormMessage = document.querySelector('#availability-form-message');
 let availabilities = [];
+let reportsLoading = false;
 
 function toggleMenu(open) {
   drawer.classList.toggle('open', open);
@@ -256,7 +257,17 @@ courseForm.addEventListener('submit', async (event) => {
   }
 });
 
+document.querySelector('#refresh-reports').addEventListener('click', loadReports);
+document.addEventListener('yesems:admin-data-changed', loadReports);
 async function loadReports() {
+  if (reportsLoading) return;
+  reportsLoading = true;
+  const refresh = document.querySelector('#refresh-reports');
+  const notice = document.querySelector('#reports-message');
+  refresh.disabled = true;
+  document.querySelector('#reportes').setAttribute('aria-busy', 'true');
+  notice.hidden = false;
+  notice.textContent = 'Consultando indicadores…';
   try {
     const data = await request('/administradores/reportes');
     const report = data.reportes;
@@ -264,12 +275,24 @@ async function loadReports() {
     document.querySelector('#report-confirmed-income').textContent = money.format(Number(report.generales.ingresos_confirmados));
     document.querySelector('#report-pending-income').textContent = money.format(Number(report.generales.ingresos_pendientes));
     const courses = report.por_curso || [];
-    const maxCourses = Math.max(1, ...courses.map((item) => Number(item.inscripciones)));
-    document.querySelector('#course-report').innerHTML = courses.length ? courses.map((item) => `<div class="bar-item"><span>${escapeHtml(item.nombre)}</span><div class="bar-track"><div class="bar-fill" style="width:${(Number(item.inscripciones) / maxCourses) * 100}%"></div></div><strong>${Number(item.inscripciones)}</strong></div>`).join('') : '<span>Sin información disponible.</span>';
+    document.querySelector('#course-report').innerHTML = AdminReportView.courses(courses);
+    document.querySelector('#report-course-count').textContent = `${courses.length} ${courses.length === 1 ? 'curso' : 'cursos'}`;
     const months = report.por_mes || [];
-    const maxMonths = Math.max(1, ...months.map((item) => Number(item.inscripciones)));
-    document.querySelector('#month-report').innerHTML = months.length ? months.map((item) => `<div class="trend-item"><strong>${Number(item.inscripciones)}</strong><div class="trend-bar" style="height:${Math.max(8, (Number(item.inscripciones) / maxMonths) * 95)}px"></div><span>${escapeHtml(item.periodo)}</span></div>`).join('') : '<span>Sin información disponible.</span>';
-  } catch (error) { console.error('No se pudieron cargar los reportes:', error); }
+    document.querySelector('#month-report').innerHTML = AdminReportView.months(months);
+    document.querySelector('#report-period-total').textContent = `${months.reduce((sum, item) => sum + AdminReportView.count(item.inscripciones), 0)} en el periodo`;
+    document.querySelector('#reports-updated').textContent = `Actualizado a las ${new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}`;
+    notice.hidden = true;
+  } catch (error) {
+    notice.textContent = 'No se pudieron actualizar los indicadores. Pulsa Actualizar para reintentar.';
+    document.querySelector('#reports-updated').textContent = 'Actualización pendiente';
+    ['#report-active-enrollments', '#report-confirmed-income', '#report-pending-income', '#report-course-count', '#report-period-total'].forEach((selector) => { document.querySelector(selector).textContent = '—'; });
+    document.querySelector('#course-report').textContent = 'Datos no disponibles.';
+    document.querySelector('#month-report').textContent = 'Datos no disponibles.';
+  } finally {
+    reportsLoading = false;
+    refresh.disabled = false;
+    document.querySelector('#reportes').setAttribute('aria-busy', 'false');
+  }
 }
 
 async function request(path, options = {}) {
