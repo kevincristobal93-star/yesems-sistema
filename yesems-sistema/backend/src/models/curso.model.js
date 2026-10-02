@@ -22,9 +22,9 @@ const obtenerCursoPorId = async (id) => {
 const crearCurso = async (datos) => {
   const { id_categoria, nombre, descripcion, duracion_horas, precio, cupo } = datos;
   const resultado = await pool.query(
-    `INSERT INTO cursos (id_categoria, nombre, descripcion, duracion_horas, precio, cupo)
-     VALUES ($1, $2, $3, $4, $5, $6) RETURNING *`,
-    [id_categoria, nombre, descripcion, duracion_horas, precio, cupo]
+    `INSERT INTO cursos (id_categoria, nombre, descripcion, duracion_horas, precio, cupo, oferta_provisional)
+     VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *`,
+    [id_categoria, nombre, descripcion, duracion_horas, precio, cupo, datos.oferta_provisional ?? false]
   );
   return resultado.rows[0];
 };
@@ -33,9 +33,10 @@ const actualizarCurso = async (id, datos) => {
   const { id_categoria, nombre, descripcion, duracion_horas, precio, cupo } = datos;
   const resultado = await pool.query(
     `UPDATE cursos SET id_categoria = $1, nombre = $2, descripcion = $3,
-     duracion_horas = $4, precio = $5, cupo = $6
+     duracion_horas = $4, precio = $5, cupo = $6,
+     oferta_provisional = COALESCE($8, oferta_provisional)
      WHERE id_curso = $7 RETURNING *`,
-    [id_categoria, nombre, descripcion, duracion_horas, precio, cupo, id]
+    [id_categoria, nombre, descripcion, duracion_horas, precio, cupo, id, datos.oferta_provisional ?? null]
   );
   return resultado.rows[0];
 };

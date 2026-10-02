@@ -25,12 +25,17 @@ const crearInscripcionPropia = async (req, res) => {
 			throw require('../utils/http-error').httpError(400, 'Fecha de nacimiento inválida');
 		}
 		const cursoResult = await client.query(
-			'SELECT id_curso, precio FROM cursos WHERE id_curso = $1 AND activo = true FOR UPDATE',
+			'SELECT id_curso, precio, oferta_provisional FROM cursos WHERE id_curso = $1 AND activo = true FOR UPDATE',
 			[id_curso]
 		);
 		if (!cursoResult.rows[0]) {
 			await client.query('ROLLBACK');
 			return res.status(404).json({ ok: false, mensaje: 'El curso seleccionado no está disponible' });
+		}
+
+		if (cursoResult.rows[0].oferta_provisional) {
+			await client.query('ROLLBACK');
+			return res.status(409).json({ ok: false, mensaje: 'Oferta provisional: YES EMS debe confirmar los datos y el precio antes de abrir inscripciones.' });
 		}
 
 		if (id_horario) {

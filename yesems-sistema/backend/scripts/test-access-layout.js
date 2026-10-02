@@ -10,7 +10,7 @@ const { startBrowser } = require('../test/helpers/browser-client');
   let enrollments=[];
   app.get('/api/inscripciones/mias',(_req,res)=>res.json({ok:true,inscripciones:enrollments}));
   app.get('/api/usuarios/mio',(_req,res)=>res.json({ok:true,usuario:{nombre:'Alumno',apellido:'Prueba',email:'test@example.test',telefono:'5500000000',fecha_nacimiento:'2000-01-01',curp:'TEST000101HDFXXX00'}}));
-  app.get('/api/cursos/1',(_req,res)=>res.json({ok:true,curso:{nombre:'Curso ficticio',precio:500}}));
+  app.get('/api/cursos/1',(_req,res)=>res.json({ok:true,curso:{nombre:'Curso ficticio',precio:500,activo:true}}));
   app.get('/api/cursos/1/disponibilidades',(_req,res)=>res.json({ok:true,disponibilidades:[]}));
   app.get('/api/pagos/mio/42',(_req,res)=>res.json({ok:true,inscripcion:{curso_nombre:'Curso ficticio',monto_total:500,estado_inscripcion:'pendiente',pagos:[]}}));
   app.use(express.static(path.resolve(__dirname, '../../frontend')));

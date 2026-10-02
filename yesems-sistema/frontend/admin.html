@@ -101,6 +101,8 @@
         <div class="dialog-heading"><div><p class="eyebrow blue" id="course-dialog-label">Nueva oferta</p><h2 id="course-dialog-title">Crear curso</h2></div><button class="dialog-close" type="button" data-close-course-dialog aria-label="Cerrar">×</button></div>
         <input id="course-id" type="hidden" />
         <div class="course-form-grid"><label>Nombre del curso<input id="course-name" name="nombre" maxlength="150" required /></label><label>Categoría<select id="course-category" name="id_categoria" required><option value="">Selecciona una categoría</option></select></label><label>Duración (horas)<input id="course-duration" name="duracion_horas" type="number" min="1" required /></label><label>Cupo disponible<input id="course-capacity" name="cupo" type="number" min="1" required /></label><label>Precio (MXN)<input id="course-price" name="precio" type="number" min="0" step="0.01" value="0" required /></label><label class="wide">Descripción<textarea id="course-description" name="descripcion" rows="4" maxlength="1000"></textarea></label></div>
+        <label><input id="course-provisional" type="checkbox" style="width: 18px; height: 18px; padding: 0; vertical-align: middle;" /> Oferta provisional: mostrar costo por confirmar y mantener cerradas las inscripciones.</label>
+        <p>Antes de desmarcar esta opción, confirma precio, duración, cupo, descripción y disponibilidad. Un precio de $0 habilita un curso gratuito.</p>
         <p id="course-form-message" class="form-message" aria-live="polite"></p><div class="dialog-actions"><button class="secondary-action" type="button" data-close-course-dialog>Cancelar</button><button id="save-course-button" class="primary-action" type="submit">Guardar curso</button></div>
       </form>
     </dialog>

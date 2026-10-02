@@ -58,11 +58,20 @@ async function loadCourse() {
     setText('#course-title', course.nombre || 'Curso seleccionado');
     setText('#course-category', course.categoria || 'Capacitación');
     setText('#course-description', course.descripcion || 'Consulta los detalles con nuestro equipo.');
-    setText('#course-duration', `${course.duracion_horas ?? '—'} horas`);
-    setText('#course-capacity', `${course.cupo ?? '—'} lugares`);
-    setText('#course-price', course.precio === null || course.precio === undefined ? 'Por confirmar' : new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(Number(course.precio)));
+    setText('#course-duration', `${course.duracion_horas ?? '—'} horas${course.oferta_provisional ? ' sugeridas' : ''}`);
+    setText('#course-capacity', `${course.cupo ?? '—'} lugares${course.oferta_provisional ? ' sugeridos' : ''}`);
+    setText('#course-price', course.oferta_provisional || course.precio === null || course.precio === undefined ? 'Por confirmar' : new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(Number(course.precio)));
     document.querySelector('#course-loading').hidden = true;
     document.querySelector('#course-content').hidden = false;
+    if (course.oferta_provisional || !course.activo) {
+      form.hidden = true;
+      const notice = document.createElement('p');
+      notice.className = 'folio-note';
+      notice.textContent = 'Inscripciones no disponibles. Esta oferta requiere confirmación de YES EMS. Puedes consultar otros cursos con el enlace Cambiar curso.';
+      form.before(notice);
+      submitButton.disabled = true;
+      return;
+    }
     loadAvailabilities();
   } catch (error) { document.querySelector('#course-loading').textContent = error.message; }
 }

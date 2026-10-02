@@ -50,12 +50,6 @@ function setupStudentNavigation() {
   document.querySelector('#close-account-dialog').addEventListener('click', () => accountDialog.close());
 }
 
-const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
-
-function valueOr(value, fallback) {
-  return value === null || value === undefined || value === '' ? fallback : value;
-}
-
 function renderCourses() {
   const query = search.value.trim().toLocaleLowerCase('es-MX');
   const selectedCategory = category.value;
@@ -64,21 +58,9 @@ function renderCourses() {
     return text.includes(query) && (!selectedCategory || course.categoria === selectedCategory);
   });
 
-  count.textContent = `${filtered.length} ${filtered.length === 1 ? 'curso disponible' : 'cursos disponibles'}`;
+  count.textContent = `${filtered.length} ${filtered.length === 1 ? 'curso en catálogo' : 'cursos en catálogo'}`;
   message.textContent = filtered.length ? '' : 'No encontramos cursos que coincidan con tu búsqueda.';
-  grid.innerHTML = filtered.map((course) => `
-    <article class="course-card">
-      <p class="course-category">${valueOr(course.categoria, 'Capacitación')}</p>
-      <h3>${valueOr(course.nombre, 'Curso sin nombre')}</h3>
-      <p class="course-description">${valueOr(course.descripcion, 'Consulta los detalles de este curso con nuestro equipo.')}</p>
-      <div class="course-data">
-        <span>${valueOr(course.duracion_horas, '—')} horas</span>
-        <span>${valueOr(course.cupo, '—')} lugares</span>
-      </div>
-      <p class="course-price">${course.precio === null || course.precio === undefined ? 'Costo por confirmar' : money.format(Number(course.precio))}</p>
-      <button class="enroll-button" type="button" data-enroll-course="${course.id_curso}">Quiero inscribirme</button>
-    </article>
-  `).join('');
+  grid.innerHTML = filtered.map((course) => CatalogoView.card(course)).join('');
 }
 
 function openRegistration(course) {
@@ -95,7 +77,7 @@ grid.addEventListener('click', (event) => {
   const button = event.target.closest('[data-enroll-course]');
   if (!button) return;
   const course = courses.find((item) => String(item.id_curso) === button.dataset.enrollCourse);
-  if (!course) return;
+  if (!course || course.oferta_provisional) return;
   if (localStorage.getItem('yesems_token') && localStorage.getItem('yesems_usuario')) {
     window.location.href = `./inscripcion.html?curso=${encodeURIComponent(course.id_curso)}`;
     return;
@@ -193,7 +175,7 @@ async function loadCourses() {
 
     courses = data.cursos || [];
     const categories = [...new Set(courses.map((course) => course.categoria).filter(Boolean))].sort();
-    category.insertAdjacentHTML('beforeend', categories.map((item) => `<option value="${item}">${item}</option>`).join(''));
+    category.insertAdjacentHTML('beforeend', categories.map((item) => `<option value="${CatalogoView.escapeHtml(item)}">${CatalogoView.escapeHtml(item)}</option>`).join(''));
     renderCourses();
   } catch (error) {
     message.textContent = error instanceof TypeError

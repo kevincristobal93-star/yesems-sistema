@@ -86,7 +86,7 @@ async function loadCourseManagement() {
     adminCourses = coursesData.cursos || [];
     categories = categoriesData.categorias || [];
     coursesMessage.hidden = true;
-    coursesList.innerHTML = adminCourses.length ? adminCourses.map((course) => `<article class="course-admin-card"><div><h3>${escapeHtml(course.nombre)}</h3><p>${escapeHtml(course.descripcion || 'Sin descripción disponible.')}</p></div><div class="course-admin-meta"><span>${escapeHtml(course.categoria || 'Sin categoría')}</span><span>${Number(course.duracion_horas)} horas</span><span>${Number(course.cupo)} lugares</span><span>${money.format(Number(course.precio || 0))}</span></div><div class="course-admin-actions"><button type="button" data-edit-course="${course.id_curso}">Editar</button><button type="button" data-delete-course="${course.id_curso}">Desactivar</button></div></article>`).join('') : '<p class="empty-state">Aún no hay cursos activos. Crea el primero para mostrarlo en el catálogo público.</p>';
+    coursesList.innerHTML = adminCourses.length ? adminCourses.map((course) => `<article class="course-admin-card"><div><h3>${escapeHtml(course.nombre)}</h3><p>${escapeHtml(course.descripcion || 'Sin descripción disponible.')}</p></div><div class="course-admin-meta"><span>${escapeHtml(course.categoria || 'Sin categoría')}</span><span>${Number(course.duracion_horas)} horas</span><span>${Number(course.cupo)} lugares</span><span>${course.oferta_provisional ? 'Propuesta · Costo por confirmar' : money.format(Number(course.precio || 0))}</span></div><div class="course-admin-actions"><button type="button" data-edit-course="${course.id_curso}">Editar</button><button type="button" data-delete-course="${course.id_curso}">Desactivar</button></div></article>`).join('') : '<p class="empty-state">Aún no hay cursos activos. Crea el primero para mostrarlo en el catálogo público.</p>';
   } catch (error) {
     coursesMessage.hidden = false;
     coursesMessage.textContent = error.message;
@@ -105,6 +105,7 @@ function openCourseDialog(course = null) {
   document.querySelector('#course-capacity').value = course?.cupo || '';
   document.querySelector('#course-price').value = course?.precio || 0;
   document.querySelector('#course-description').value = course?.descripcion || '';
+  document.querySelector('#course-provisional').checked = course?.oferta_provisional === true;
   renderCategoryOptions(course?.id_categoria);
   courseDialog.showModal();
 }
@@ -240,8 +241,11 @@ courseForm.addEventListener('submit', async (event) => {
     descripcion: document.querySelector('#course-description').value.trim(),
     duracion_horas: Number(document.querySelector('#course-duration').value),
     cupo: Number(document.querySelector('#course-capacity').value),
-    precio: Number(document.querySelector('#course-price').value)
+    precio: Number(document.querySelector('#course-price').value),
+    oferta_provisional: document.querySelector('#course-provisional').checked
   };
+  const previous = adminCourses.find((course) => String(course.id_curso) === id);
+  if (previous?.oferta_provisional && !payload.oferta_provisional && !window.confirm(`¿Confirmas la oferta y abres inscripciones con precio de ${money.format(payload.precio)}? Revisa también descripción, cupo y duración.`)) return;
   saveButton.disabled = true;
   courseFormMessage.textContent = '';
   try {

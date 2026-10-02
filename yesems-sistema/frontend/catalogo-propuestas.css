@@ -1,0 +1,4 @@
+.proposal-badge { align-self: flex-start; margin: 0 0 14px; padding: 6px 10px; border-radius: 20px; background: #fff3d4; color: #73500a; font-size: .78rem; font-weight: 700; }
+.proposal-note { color: #62708a; font-size: .8rem; line-height: 1.6; margin: 0 0 18px; }
+.course-card .enroll-button { text-align: center; text-decoration: none; }
+.course-card .course-data, .card .data { flex-wrap: wrap; }

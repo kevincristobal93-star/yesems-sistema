@@ -47,6 +47,9 @@ const listarDisponibilidadesPublicas = async (req, res) => {
 // POST /api/cursos
 const crearCurso = async (req, res) => {
   try {
+    if (req.body.oferta_provisional !== undefined && typeof req.body.oferta_provisional !== 'boolean') {
+      return res.status(400).json({ ok: false, mensaje: 'oferta_provisional debe ser booleano' });
+    }
     const { id_categoria, nombre, descripcion, duracion_horas, precio, cupo } = req.body;
 
     if (!id_categoria || !nombre || !duracion_horas || !cupo) {
@@ -54,6 +57,7 @@ const crearCurso = async (req, res) => {
     }
 
     const nuevoCurso = await cursoModel.crearCurso({
+      oferta_provisional: req.body.oferta_provisional,
       id_categoria, nombre, descripcion, duracion_horas, precio, cupo,
     });
     res.status(201).json({ ok: true, curso: nuevoCurso });
@@ -66,6 +70,9 @@ const crearCurso = async (req, res) => {
 // PUT /api/cursos/:id
 const actualizarCurso = async (req, res) => {
   try {
+    if (req.body.oferta_provisional !== undefined && typeof req.body.oferta_provisional !== 'boolean') {
+      return res.status(400).json({ ok: false, mensaje: 'oferta_provisional debe ser booleano' });
+    }
     const { id } = req.params;
     const { id_categoria, nombre, descripcion, duracion_horas, precio, cupo } = req.body;
 
@@ -75,6 +82,7 @@ const actualizarCurso = async (req, res) => {
     }
 
     const cursoActualizado = await cursoModel.actualizarCurso(id, {
+      oferta_provisional: req.body.oferta_provisional,
       id_categoria, nombre, descripcion, duracion_horas, precio, cupo,
     });
     res.json({ ok: true, curso: cursoActualizado });

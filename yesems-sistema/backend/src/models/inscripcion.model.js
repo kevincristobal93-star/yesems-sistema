@@ -32,6 +32,7 @@ const crearInscripcion = async (datos) => {
   if (monto_total != null) validarMontoInscripcion(monto_total);
   return withCourseLock(id_curso, async (client, curso) => {
     if (!curso.activo) throw httpError(409, 'El curso no está disponible');
+    if (curso.oferta_provisional) throw httpError(409, 'Oferta provisional: YES EMS debe confirmar los datos y el precio antes de abrir inscripciones.');
     const usuario = await client.query('SELECT 1 FROM usuarios WHERE id_usuario = $1 AND activo = true', [id_usuario]);
     if (!usuario.rowCount) throw httpError(404, 'Alumno no encontrado o inactivo');
     if (id_horario != null) {

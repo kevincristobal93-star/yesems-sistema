@@ -147,6 +147,41 @@ integration('Proceso real de inscripción, avance y constancia (PostgreSQL aisla
     if (pool) await pool.end();
   });
 
+  test('las cuatro propuestas son idempotentes y una repetición conserva ediciones y bajas', async () => {
+    const sql = await fs.readFile(path.join(__dirname, '../database/migrations/007_proposed_courses.sql'), 'utf8');
+    const proposals = (await pool.query('SELECT * FROM cursos WHERE catalogo_clave IS NOT NULL ORDER BY catalogo_clave')).rows;
+    expect(proposals).toHaveLength(4);
+    expect(proposals.every((c) => c.oferta_provisional && Number(c.precio) === 0 && c.descripcion.includes('Plus:'))).toBe(true);
+    expect(proposals.map((c) => c.duracion_horas).sort()).toEqual([24, 24, 32, 32]);
+    const original = proposals[0];
+    await pool.query('UPDATE cursos SET nombre=$1, precio=725, activo=false WHERE id_curso=$2', ['Edición que debe conservarse', original.id_curso]);
+    await pool.query(sql);
+    await pool.query(sql);
+    const after = (await pool.query('SELECT * FROM cursos WHERE catalogo_clave IS NOT NULL')).rows;
+    expect(after).toHaveLength(4);
+    expect(after.find((c) => c.id_curso === original.id_curso)).toMatchObject({ nombre: 'Edición que debe conservarse', precio: '725.00', activo: false });
+    await pool.query('UPDATE cursos SET nombre=$1, precio=$2, activo=true WHERE id_curso=$3', [original.nombre, original.precio, original.id_curso]);
+  });
+
+  test('propuestas bloquean inscripción en ambas rutas; solo administración puede validarlas', async () => {
+    const body = { id_categoria: category, nombre: `Propuesta ${tag}`, descripcion: 'Datos sugeridos', duracion_horas: 24, precio: 0, cupo: 10, oferta_provisional: true };
+    const created = await request('POST', '/cursos', { token: admin.token, body, status: 201 });
+    const id = created.json.curso.id_curso;
+    const enrollment = { id_curso: id, telefono: '5500000000', fecha_nacimiento: '2000-01-01', curp: 'TEST000101HDF' + String(alumno.id).padStart(5, '0') };
+    await request('POST', '/inscripciones/mia', { token: alumno.token, body: enrollment, status: 409 });
+    await request('POST', '/inscripciones', { token: admin.token, body: { id_curso: id, id_usuario: alumno.id }, status: 409 });
+    expect((await pool.query('SELECT count(*)::int AS n FROM inscripciones WHERE id_curso=$1', [id])).rows[0].n).toBe(0);
+    await request('PUT', `/cursos/${id}`, { token: alumno.token, body: { ...body, oferta_provisional: false }, status: 403 });
+    await request('PUT', `/cursos/${id}`, { body: { ...body, oferta_provisional: false }, status: 401 });
+    await request('PUT', `/cursos/${id}`, { token: admin.token, body: { ...body, oferta_provisional: 'false' }, status: 400 });
+    const { oferta_provisional, ...legacyBody } = body;
+    const unchanged = await request('PUT', `/cursos/${id}`, { token: admin.token, body: legacyBody, status: 200 });
+    expect(unchanged.json.curso.oferta_provisional).toBe(true);
+    await request('PUT', `/cursos/${id}`, { token: admin.token, body: { ...body, oferta_provisional: false, precio: 600 }, status: 200 });
+    const accepted = await request('POST', '/inscripciones/mia', { token: alumno.token, body: enrollment, status: 201 });
+    expect(Number(accepted.json.inscripcion.monto_total)).toBe(600);
+  });
+
   test('la migración agrega seguimiento a un esquema antiguo sin borrar inscripciones ni constancias y admite repetición', async () => {
     const { Pool } = require('pg');
     const dbName = 'yesems_progress_migration_test';

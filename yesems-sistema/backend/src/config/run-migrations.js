@@ -61,6 +61,7 @@ async function runStartupMigrations() {
   await pool.query(progressMigration);
   await pool.query(await fs.readFile(path.resolve(__dirname, '../../database/migrations/005_verified_identity.sql'), 'utf8'));
   await pool.query(await fs.readFile(path.resolve(__dirname, '../../database/migrations/006_password_recovery.sql'), 'utf8'));
+  await pool.query(await fs.readFile(path.resolve(__dirname, '../../database/migrations/007_proposed_courses.sql'), 'utf8'));
   await seedCatalog();
   await bootstrapInitialAdmin();
 }
