@@ -9,6 +9,35 @@ const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN
 const escapeHtml = PanelProgreso.escapeHtml;
 let sessionExpired = false;
 let loadingPanel = false;
+let completionPromptShown = false;
+
+function renderCompletion(items) {
+  let banner=document.querySelector('#complete-enrollment-banner');
+  if(!banner){
+    const css=document.createElement('link');css.rel='stylesheet';css.href='./inscripcion-pendiente.css';document.head.append(css);
+    banner=document.createElement('section');banner.id='complete-enrollment-banner';
+    document.querySelector('.quick-summary').before(banner);
+  }
+  const selected=new URLSearchParams(location.search).get('curso');
+  const validCourse=/^[1-9]\d*$/.test(selected || '')?selected:null;
+  const active=items.filter(item=>item.estado!=='cancelada');
+  const matching=active.find(item=>String(item.id_curso)===validCourse);
+  const pending=matching || active.find(item=>!paymentComplete(item) && !item.tiene_pago_pendiente);
+  const needsCourse=validCourse && !matching;
+  if(!needsCourse && active.length && (!pending || paymentComplete(pending) || pending.tiene_pago_pendiente)){banner.hidden=true;return;}
+  banner.hidden=false;
+  const href=needsCourse?`./inscripcion.html?curso=${encodeURIComponent(validCourse)}`:pending?`./pago.html?inscripcion=${encodeURIComponent(pending.id_inscripcion)}`:'./catalogo-alumno.html';
+  const detail=needsCourse || !pending?'Elige tu curso, completa tus datos personales y revisa las opciones de pago.':'Tu inscripción está guardada. Puedes pagar en efectivo en YES EMS y regresar a subir tu comprobante.';
+  const content=`<p class="eyebrow">SIGUIENTE PASO</p><h2>Completa tu inscripción</h2><p>${detail}</p><a class="payment-button" href="${href}">${pending && !needsCourse?'Continuar con mi pago':'Continuar inscripción'}</a>`;
+  banner.innerHTML=content;
+  if(completionPromptShown)return;
+  completionPromptShown=true;
+  const dialog=document.createElement('dialog');dialog.className='enrollment-prompt';dialog.setAttribute('aria-labelledby','completion-title');
+  dialog.innerHTML=content.replace('<h2>','<h2 id="completion-title">')+'<button type="button">Completar después</button>';
+  document.body.append(dialog);
+  dialog.querySelector('button').onclick=()=>dialog.close();
+  dialog.addEventListener('close',()=>dialog.remove());dialog.showModal();
+}
 
 function setupPanelMotion() {
   if (!('IntersectionObserver' in window)) return;
@@ -155,6 +184,7 @@ async function loadPanel() {
     const data = await apiRequest('/inscripciones/mias');
     if (!Array.isArray(data.inscripciones)) throw new Error('La información de las inscripciones no está disponible. Intenta actualizar.');
     const items = data.inscripciones;
+    renderCompletion(items);
     document.querySelector('#summary-courses').textContent = items.length;
     document.querySelector('#summary-payments').textContent = items.filter((item) => item.estado !== 'cancelada' && !paymentComplete(item)).length;
     document.querySelector('#summary-certificates').textContent = items.filter((item) => item.estado_constancia === 'autorizada').length;

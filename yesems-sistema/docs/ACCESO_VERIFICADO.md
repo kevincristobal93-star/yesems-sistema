@@ -1,5 +1,10 @@
 # Acceso verificado sin SMS
 
+Actualización: también se admite Gmail API mediante `EMAIL_PROVIDER=gmail`.
+Consultar [GMAIL_API.md](GMAIL_API.md) para autorización privada del remitente,
+variables de Render y pruebas reales pendientes. Resend sigue disponible como
+proveedor predeterminado; no es obligatorio para los códigos.
+
 Implementación preparada para publicación con autorización del usuario. No se han creado cuentas de proveedor ni enviado correos reales; la activación de Google y Resend requiere configuración externa.
 
 ## Qué incluye

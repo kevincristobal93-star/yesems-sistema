@@ -23,6 +23,7 @@
         <form id="enrollment-form" class="details-card" novalidate>
           <div id="personal-step"><h2>Datos del alumno</h2>
           <p class="card-intro">Estos datos son necesarios para formalizar la inscripción.</p>
+          <div class="two-columns"><div><label for="nombre">Nombre(s)</label><input id="nombre" autocomplete="given-name" maxlength="100" required /></div><div><label for="apellido">Apellidos</label><input id="apellido" autocomplete="family-name" maxlength="100" required /></div></div>
           <div class="two-columns">
             <div><label for="telefono">Teléfono</label><input id="telefono" name="telefono" type="tel" autocomplete="tel" required /></div>
             <div><label for="fecha-nacimiento">Fecha de nacimiento</label><input id="fecha-nacimiento" name="fecha-nacimiento" type="date" autocomplete="bday" required /></div>
@@ -35,7 +36,7 @@
           <button id="continue-button" class="primary-button" type="button">Continuar a confirmación</button></div>
           <div id="confirmation-step" hidden>
             <p class="eyebrow">Paso 2 de 3</p><h2>Confirma tu inscripción</h2><p class="card-intro">Revisa tus datos antes de reservar tu lugar.</p>
-            <dl class="confirmation-data"><div><dt>Teléfono</dt><dd id="confirm-phone"></dd></div><div><dt>Fecha de nacimiento</dt><dd id="confirm-birthdate"></dd></div><div><dt>CURP</dt><dd id="confirm-curp"></dd></div><div id="confirm-availability-row" hidden><dt>Disponibilidad</dt><dd id="confirm-availability"></dd></div></dl>
+            <dl class="confirmation-data"><div><dt>Nombre completo</dt><dd id="confirm-name"></dd></div><div><dt>Teléfono</dt><dd id="confirm-phone"></dd></div><div><dt>Fecha de nacimiento</dt><dd id="confirm-birthdate"></dd></div><div><dt>CURP</dt><dd id="confirm-curp"></dd></div><div id="confirm-availability-row" hidden><dt>Disponibilidad</dt><dd id="confirm-availability"></dd></div></dl>
             <p class="folio-note"><strong>Al confirmar,</strong> se creará tu inscripción y continuarás al pago.</p>
             <div class="confirmation-actions"><button id="back-to-data" class="secondary-button" type="button">Regresar</button><button id="submit-button" class="primary-button" type="submit">Confirmar inscripción</button></div>
           </div>

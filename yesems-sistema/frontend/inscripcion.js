@@ -21,6 +21,19 @@ if (!courseId || !/^\d+$/.test(courseId)) {
 } else {
   document.querySelector('#user-name').textContent = `${user.nombre} ${user.apellido}`;
   loadCourse();
+  loadProfile();
+}
+
+async function loadProfile() {
+  try {
+    const response = await fetch(`${API_URL}/usuarios/mio`, {headers:{Authorization:`Bearer ${token}`}});
+    const data = await response.json();
+    if (!response.ok || !data.ok) throw new Error('No se pudieron recuperar tus datos. Puedes completarlos abajo.');
+    for (const [field,key] of [['nombre','nombre'],['apellido','apellido'],['telefono','telefono'],['fecha-nacimiento','fecha_nacimiento'],['curp','curp']]) {
+      const input=document.getElementById(field);
+      if(!input.value) input.value=String(data.usuario[key] || '').slice(0,field==='fecha-nacimiento'?10:150);
+    }
+  } catch(error) { message.textContent=error.message; }
 }
 
 function setText(selector, value) { document.querySelector(selector).textContent = value; }
@@ -98,6 +111,7 @@ function showConfirmationStep() {
     return;
   }
   document.querySelector('#confirm-phone').textContent = document.querySelector('#telefono').value.trim();
+  document.querySelector('#confirm-name').textContent = `${document.querySelector('#nombre').value.trim()} ${document.querySelector('#apellido').value.trim()}`;
   document.querySelector('#confirm-birthdate').textContent = new Intl.DateTimeFormat('es-MX', { dateStyle: 'long' }).format(new Date(`${document.querySelector('#fecha-nacimiento').value}T00:00:00`));
   document.querySelector('#confirm-curp').textContent = document.querySelector('#curp').value.trim().toUpperCase();
   const hasAvailability = !availabilitySelect.disabled && availabilitySelect.value;
@@ -136,6 +150,8 @@ form.addEventListener('submit', async (event) => {
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
       body: JSON.stringify({
         id_curso: courseId,
+        nombre: document.querySelector('#nombre').value.trim(),
+        apellido: document.querySelector('#apellido').value.trim(),
         id_horario: availabilitySelect.disabled ? null : Number(availabilitySelect.value),
         telefono: document.querySelector('#telefono').value.trim(),
         fecha_nacimiento: document.querySelector('#fecha-nacimiento').value,

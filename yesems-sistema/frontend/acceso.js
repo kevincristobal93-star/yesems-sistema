@@ -12,7 +12,7 @@
     <div class="access-provider"><div id="access-google"></div><p id="access-google-note" class="access-note"></p></div>
     <div class="access-divider">o con tu correo electrónico</div>
     <section id="access-registration" hidden aria-label="Datos de la nueva cuenta">
-    <p class="access-note">Completa tus datos antes de continuar con Google o correo.</p>
+    <p class="access-note">Con Google completarás tus datos después, en el panel. Estos campos son solo para registrarte por correo.</p>
     <div class="access-profile"><label>Nombre(s)<input id="access-name" autocomplete="given-name" maxlength="100"></label>
     <label>Apellidos<input id="access-lastname" autocomplete="family-name" maxlength="100"></label>
     <label class="access-phone">Teléfono de contacto<input id="access-phone" type="tel" autocomplete="tel" maxlength="20" placeholder="10 dígitos o código de país"></label></div>
@@ -55,9 +55,9 @@
     try { await fn(); } catch(error) { get('access-message').textContent=error instanceof TypeError || error.name==='TimeoutError' ? 'No se pudo conectar. Intenta nuevamente.' : error.message; }
     finally { busy=false;dialog.removeAttribute('aria-busy');dialog.querySelectorAll('button[type=submit]').forEach(b=>b.disabled=false);get('access-send').disabled=!mailEnabled; }
   }
-  function finish(result) {
+  function finish(result, fromGoogle = false) {
     localStorage.setItem('yesems_token', result.token);localStorage.setItem('yesems_usuario',JSON.stringify(result.usuario));
-    window.location.href=course?.id_curso ? './inscripcion.html?curso='+encodeURIComponent(course.id_curso) : './panel.html';
+    window.location.href=fromGoogle ? './panel.html'+(course?.id_curso?'?curso='+encodeURIComponent(course.id_curso):'') : course?.id_curso ? './inscripcion.html?curso='+encodeURIComponent(course.id_curso) : './panel.html';
   }
   function loadGoogle() {
     if (!sdk) sdk = new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.async=true;s.onload=resolve;s.onerror=()=>{sdk=null;reject(new Error('Google no pudo cargar. Usa tu correo o intenta de nuevo.'));};document.head.append(s);});
@@ -67,7 +67,7 @@
     const [state] = await Promise.all([request('google/reto',{}),loadGoogle()]);
     if (current!==version || !dialog.open) return;
     window.google.accounts.id.initialize({client_id:clientId,nonce:state.nonce,auto_select:false,callback: response=>action(async()=>{
-      try { finish(await request('google',{...data(),credential:response.credential,challenge:state.challenge})); }
+      try { finish(await request('google',{credential:response.credential,challenge:state.challenge}),true); }
       catch(error) { await google(clientId,current); throw error; }
     })});
     get('access-google').replaceChildren();

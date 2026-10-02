@@ -8,7 +8,7 @@ const { positiveId, sendError } = require('../utils/http-error');
 const crearInscripcionPropia = async (req, res) => {
 	const client = await pool.connect();
 	try {
-		const { id_curso, id_horario, telefono, fecha_nacimiento, curp } = req.body;
+		const { id_curso, id_horario, telefono, fecha_nacimiento, curp, nombre, apellido } = req.body;
 		const idUsuario = req.admin.id_usuario;
 		positiveId(id_curso);
 		if (id_horario) positiveId(id_horario);
@@ -18,6 +18,12 @@ const crearInscripcionPropia = async (req, res) => {
 		}
 
 		await client.query('BEGIN');
+		const actual = (await client.query('SELECT nombre, apellido FROM usuarios WHERE id_usuario=$1 FOR UPDATE', [idUsuario])).rows[0];
+		const perfil = require('../services/acceso.service').profile({ nombre: nombre ?? actual?.nombre, apellido: apellido ?? actual?.apellido, telefono });
+		const fecha = new Date(fecha_nacimiento);
+		if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha_nacimiento) || !Number.isFinite(fecha.getTime()) || fecha.toISOString().slice(0,10) !== fecha_nacimiento || fecha > new Date()) {
+			throw require('../utils/http-error').httpError(400, 'Fecha de nacimiento inválida');
+		}
 		const cursoResult = await client.query(
 			'SELECT id_curso, precio FROM cursos WHERE id_curso = $1 AND activo = true FOR UPDATE',
 			[id_curso]
@@ -50,14 +56,14 @@ const crearInscripcionPropia = async (req, res) => {
 
 		const usuarioResult = await client.query(
 			`UPDATE usuarios
-			 SET telefono = $1,
+			 SET telefono = $1, nombre = $5, apellido = $6,
 			     fecha_nacimiento = $2,
 			     curp = $3,
 			     folio = COALESCE(folio, 'YESEMS-' || TO_CHAR(CURRENT_DATE, 'YYYY') || '-' || LPAD(id_usuario::text, 5, '0')),
 			     rol = 'alumno'
 			 WHERE id_usuario = $4
 			 RETURNING id_usuario, nombre, apellido, email, folio, rol`,
-			[telefono, fecha_nacimiento, require('../utils/identidad').normalizarCurp(curp), idUsuario]
+			[perfil.telefono, fecha_nacimiento, require('../utils/identidad').normalizarCurp(curp), idUsuario, perfil.nombre, perfil.apellido]
 		);
 
 		const inscripcionResult = await client.query(
@@ -85,7 +91,7 @@ const crearInscripcionPropia = async (req, res) => {
 const listarInscripcionesPropias = async (req, res) => {
 	try {
 		const resultado = await pool.query(
-			`SELECT i.id_inscripcion, i.fecha_inscripcion, i.estado, i.monto_total,
+			`SELECT i.id_inscripcion, i.id_curso, i.fecha_inscripcion, i.estado, i.monto_total,
 			        c.nombre AS curso_nombre, c.descripcion AS curso_descripcion,
 			        h.id_horario, h.modalidad AS disponibilidad_modalidad, h.dia_semana AS disponibilidad_dia,
 			        h.hora_inicio AS disponibilidad_hora_inicio, h.hora_fin AS disponibilidad_hora_fin,

@@ -25,6 +25,14 @@ const enabled=process.env.YES_EMS_ISOLATED_TEST==='1' && process.env.NODE_ENV===
     process.env.RESEND_API_KEY='solo-prueba-no-real';process.env.AUTH_EMAIL_FROM='test@example.test';process.env.GOOGLE_CLIENT_ID='test-client';
     global.fetch=jest.fn(async(url,options)=>{
       if(typeof url==='string' && url.startsWith('http://127.0.0.1:'))return nativeFetch(url,options);
+      if(url==='https://oauth2.googleapis.com/token')return {ok:!sendFails,json:async()=>({access_token:'gmail-test-access'})};
+      if(url==='https://gmail.googleapis.com/gmail/v1/users/me/messages/send'){
+        const mime=Buffer.from(JSON.parse(options.body).raw,'base64url').toString();
+        const recipient=mime.match(/^To: (.+)$/m)[1].trim();
+        const content=Buffer.from(mime.split('\r\n\r\n')[1],'base64').toString();
+        messages.set(recipient,content.match(/\b\d{6}\b/)[0]);
+        return {ok:true,json:async()=>({id:'gmail-test-message'})};
+      }
       if(url!=='https://api.resend.com/emails')throw new Error('Red externa prohibida en esta prueba');
       const body=JSON.parse(options.body);messages.set(body.to[0],body.text.match(/\b\d{6}\b/)[0]);
       return {ok:!sendFails};
@@ -34,6 +42,26 @@ const enabled=process.env.YES_EMS_ISOLATED_TEST==='1' && process.env.NODE_ENV===
     base=`http://127.0.0.1:${server.address().port}/api`;
   });
   beforeEach(clearLimits);
+  test('Gmail API permite recuperar contraseña y fallo OAuth invalida el código sin revelar claves',async()=>{
+    const email=address('gmail-reset');const initial=await code(email);
+    await request('/acceso/correo',{...profile,email,codigo:initial});await clearLimits();
+    process.env.EMAIL_PROVIDER='gmail';process.env.GMAIL_CLIENT_ID='test-gmail-id';process.env.GMAIL_CLIENT_SECRET='test-gmail-secret';
+    process.env.GMAIL_REFRESH_TOKEN='test-gmail-refresh';process.env.GMAIL_SENDER_EMAIL='test@example.test';
+    try {
+      expect(access.config()).toEqual({correo:true,google_client_id:'test-client'});
+      await request('/acceso/password/codigo',{email});
+      const password='Clave-ficticia-Gmail-2026';
+      await request('/acceso/password/restablecer',{email,codigo:messages.get(email),password,confirmacion:password});
+      await request('/usuarios/login',{email,password});
+      await clearLimits();sendFails=true;
+      const failure=await request('/acceso/password/codigo',{email},503);
+      expect(JSON.stringify(failure)).not.toMatch(/test-gmail-secret|test-gmail-refresh/);
+      expect((await pool.query('SELECT 1 FROM acceso_codigos WHERE email=$1',['password:'+email])).rows).toHaveLength(0);
+    } finally {
+      process.env.EMAIL_PROVIDER='resend';sendFails=false;
+      for(const key of ['GMAIL_CLIENT_ID','GMAIL_CLIENT_SECRET','GMAIL_REFRESH_TOKEN','GMAIL_SENDER_EMAIL'])process.env[key]='';
+    }
+  });
   afterAll(async()=>{global.fetch=nativeFetch;delete global.__googleTestPayload;process.env.RESEND_API_KEY='';process.env.AUTH_EMAIL_FROM='';process.env.GOOGLE_CLIENT_ID='';if(server)await new Promise(r=>{server.close(r);server.closeAllConnections();});if(pool)await pool.end();});
   test('registro antiguo no permite saltarse verificación',async()=>{await request('/usuarios/registrar',{...profile,email:address('bypass'),password:'not-real-test-password'},403);});
   test('sin proveedor configurado no simula envíos ni registra cuentas',async()=>{
@@ -129,6 +157,17 @@ const enabled=process.env.YES_EMS_ISOLATED_TEST==='1' && process.env.NODE_ENV===
     await request('/acceso/google',body,401);
     const next=await request('/acceso/google/reto',{});global.__googleTestPayload={...global.__googleTestPayload,sub:tag+'other',nonce:next.nonce};
     await request('/acceso/google',{...body,challenge:next.challenge},409);
+  });
+  test('Google permite crear cuenta sin teléfono y solo usa nombres del token verificado',async()=>{
+    const state=await request('/acceso/google/reto',{});
+    global.__googleTestPayload={sub:tag+'onboarding',email:`onboarding-${tag}@gmail.com`,email_verified:true,nonce:state.nonce,given_name:'Google',family_name:'Prueba'};
+    const result=await request('/acceso/google',{credential:'token-ficticio',challenge:state.challenge,nombre:'Suplantado',rol:'admin'});
+    expect(result.usuario).toMatchObject({nombre:'Google',apellido:'Prueba',rol:'cliente'});
+    const row=(await pool.query('SELECT telefono,curp FROM usuarios WHERE id_usuario=$1',[result.usuario.id_usuario])).rows[0];
+    expect(row).toEqual({telefono:null,curp:null});
+    const again=await request('/acceso/google/reto',{});global.__googleTestPayload.nonce=again.nonce;
+    const login=await request('/acceso/google',{credential:'token-ficticio',challenge:again.challenge});
+    expect(login.usuario.id_usuario).toBe(result.usuario.id_usuario);
   });
   test('migración preserva duplicados históricos, protege nuevas escrituras y es repetible',async()=>{
     const {Pool}=require('pg');await pool.query('CREATE DATABASE yesems_identity_migration_test');

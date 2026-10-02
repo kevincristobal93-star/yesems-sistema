@@ -31,6 +31,7 @@ async function screen(reply = { ok: true, inscripcion: { id_inscripcion: 42 } },
   node('#curp').value = 'TEST000101HDFXXX00';
   const fetch = jest.fn(async (url, options) => {
     if (options?.method === 'POST') return { ok: status < 400, json: async () => reply };
+    if(url.endsWith('/usuarios/mio'))return {ok:true,json:async()=>({ok:true,usuario:{nombre:'Alumno',apellido:'Prueba',telefono:'5500000000'}})};
     return { ok: true, json: async () => url.endsWith('/disponibilidades')
       ? { ok: true, disponibilidades: [] } : { ok: true, curso: { nombre: 'Curso de prueba', precio: 500 } } };
   });
@@ -40,7 +41,7 @@ async function screen(reply = { ok: true, inscripcion: { id_inscripcion: 42 } },
   ]);
   const window = { location: { search: '?curso=1', href: '', replace: jest.fn() } };
   vm.runInNewContext(source, {
-    document: { querySelector: node }, window, fetch, URLSearchParams, TypeError,
+    document: { querySelector: node, getElementById: id=>node('#'+id) }, window, fetch, URLSearchParams, TypeError,
     localStorage: { getItem: (key) => storage.get(key), setItem: (key, value) => storage.set(key, value), removeItem: (key) => storage.delete(key) },
     setTimeout: (fn) => { fn(); },
   });
@@ -57,6 +58,14 @@ async function screen(reply = { ok: true, inscripcion: { id_inscripcion: 42 } },
 }
 
 describe('Confirmación de inscripción → pago', () => {
+  test('recupera el perfil y envía el nombre legal al confirmar',async()=>{
+    const ui=await screen();
+    expect(ui.node('#nombre').value).toBe('Alumno');
+    expect(ui.node('#apellido').value).toBe('Prueba');
+    await ui.submit();
+    const call=ui.fetch.mock.calls.find(([,options])=>options?.method==='POST');
+    expect(JSON.parse(call[1].body)).toMatchObject({nombre:'Alumno',apellido:'Prueba'});
+  });
   test.each([
     ['inscripción nueva', { ok: true, inscripcion: { id_inscripcion: 42 } }, 201],
     ['inscripción ya existente', { ok: true, existente: true, inscripcion: { id_inscripcion: 42 } }, 200],

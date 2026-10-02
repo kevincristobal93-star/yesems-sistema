@@ -365,7 +365,7 @@ document.querySelector('#payment-table').addEventListener('click', async (event)
     return;
   }
   const button = event.target.closest('[data-payment]');
-  if (!button || !window.confirm(`¿Deseas ${button.dataset.state === 'completado' ? 'aprobar' : 'cancelar'} este pago?`)) return;
+  if (!button || !window.confirm(button.dataset.state === 'completado' ? '¿Revisaste el comprobante y cotejaste el monto con el pago recibido en YES EMS? Confirma solo si ambos coinciden.' : '¿Deseas cancelar este pago? Informa al alumno qué debe corregir.')) return;
   button.disabled = true;
   try {
     await request(`/administradores/pagos/${button.dataset.payment}/validar`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: button.dataset.state }) });

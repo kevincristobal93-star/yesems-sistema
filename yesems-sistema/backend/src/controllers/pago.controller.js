@@ -50,7 +50,7 @@ const crearPagoPropio = async (req, res) => {
     if (!METODOS_VALIDOS.includes(metodo_pago)) {
       throw httpError(400, `metodo_pago debe ser uno de: ${METODOS_VALIDOS.join(', ')}`);
     }
-    if (metodo_pago !== 'efectivo' && !req.file) {
+    if (!req.file) {
       throw httpError(400, 'Adjunta el comprobante de pago en PDF, JPG o PNG.');
     }
     if (referencia != null && (typeof referencia !== 'string' || referencia.length > 100)) throw httpError(400, 'Referencia inválida');

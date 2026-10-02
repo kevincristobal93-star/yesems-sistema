@@ -32,22 +32,39 @@ async function loadPayment() {
     setText('#payment-amount', money.format(Number(enrollment.monto_total)));
     pageMessage.hidden = true;
     document.querySelector('#payment-layout').hidden = false;
+    const paid=enrollment.pagos.filter(p=>p.estado==='completado').reduce((sum,p)=>sum+Number(p.monto),0);
+    if (paid>=Number(enrollment.monto_total) || enrollment.estado_inscripcion==='cancelada') {
+      formMessage.textContent=enrollment.estado_inscripcion==='cancelada'?'Esta inscripción está cancelada.':'Tu pago ya está confirmado.';
+      form.querySelectorAll('input,select,button').forEach(el=>el.disabled=true);
+      return;
+    }
+    setText('#payment-amount',money.format(Math.max(0,Number(enrollment.monto_total)-paid)));
+    if(enrollment.pagos.some(p=>p.estado==='cancelado')) formMessage.textContent='Un comprobante anterior no fue aprobado. Consulta a YES EMS y sube el comprobante corregido.';
     if (enrollment.pagos.some((payment) => payment.estado === 'pendiente')) showPending();
   } catch (error) { pageMessage.textContent = error instanceof TypeError ? 'No se pudo conectar con el servidor.' : error.message; }
 }
 function showPending() { formMessage.classList.add('success'); formMessage.textContent = 'Ya registraste un pago pendiente de validación. Te avisaremos cuando sea revisado.'; form.querySelectorAll('input, select, button').forEach((element) => { element.disabled = true; }); }
 const form = document.querySelector('#payment-form');
+const cashInstructions=document.createElement('section');
+cashInstructions.className='receipt-field';
+cashInstructions.innerHTML='<h3>Pago en efectivo en YES EMS</h3><ol><li>Acude a YES EMS e indica tu curso y folio de alumno.</li><li>Realiza el pago y solicita tu comprobante.</li><li>Regresa aquí y adjunta una fotografía o escaneo legible.</li></ol><p>Subir un comprobante no aprueba el pago: la administración debe cotejarlo con el dinero recibido.</p><a href="./panel.html">Completar después · Volver al panel</a>';
+form.before(cashInstructions);
+const methodSelect=document.querySelector('#method');
+methodSelect.querySelector('[value="efectivo"]').textContent='Efectivo en YES EMS';
+methodSelect.value='efectivo';
+methodSelect.addEventListener('change',()=>{cashInstructions.hidden=methodSelect.value!=='efectivo';});
+submitButton.textContent='Enviar comprobante a revisión';
 const receiptField = document.createElement('div');
 receiptField.className = 'receipt-field';
-receiptField.innerHTML = '<label for="receipt">Comprobante de pago</label><input id="receipt" type="file" accept="application/pdf,image/jpeg,image/png" /><p class="field-help">PDF, JPG o PNG · máximo 5 MB. Requerido excepto para pago en efectivo.</p>';
+receiptField.innerHTML = '<label for="receipt">Comprobante de pago</label><input id="receipt" type="file" accept="application/pdf,image/jpeg,image/png" required /><p class="field-help">Escanea o fotografía el comprobante que recibiste en YES EMS. PDF, JPG o PNG legible · máximo 5 MB. También es obligatorio para efectivo.</p>';
 formMessage.before(receiptField);
 const receiptInput = document.querySelector('#receipt');
 form.addEventListener('submit', async (event) => {
   event.preventDefault(); formMessage.textContent = ''; formMessage.classList.remove('success');
-  if (!form.checkValidity()) { formMessage.textContent = 'Selecciona un método de pago.'; form.reportValidity(); return; }
+  if (!form.checkValidity()) { formMessage.textContent = 'Selecciona un método y adjunta tu comprobante.'; form.reportValidity(); return; }
   const method = document.querySelector('#method').value;
   const receipt = receiptInput.files[0];
-  if (method !== 'efectivo' && !receipt) { formMessage.textContent = 'Adjunta tu comprobante de pago para continuar.'; return; }
+  if (!receipt) { formMessage.textContent = 'Adjunta tu comprobante de pago para continuar.'; return; }
   if (receipt && receipt.size > 5 * 1024 * 1024) { formMessage.textContent = 'El comprobante no puede superar 5 MB.'; return; }
   submitButton.disabled = true; submitButton.textContent = 'Registrando pago...';
   try {

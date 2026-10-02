@@ -180,7 +180,12 @@ integration('Proceso real de inscripción, avance y constancia (PostgreSQL aisla
     expect(await progress(id)).toMatchObject({ total: 4, cumplidas: 0, pendientes: 4, porcentaje: 0, pago_completo: false, puede_solicitar_constancia: false });
     const duplicate = await request('POST', '/inscripciones/mia', { token: alumno.token, status: 200, body: { id_curso: course.id, telefono: '5500000000', fecha_nacimiento: '2000-01-01', curp: 'TEST000101HDFXXX00' } });
     expect(duplicate.json.inscripcion.id_inscripcion).toBe(id);
-    const pending = await request('POST', '/pagos/mio', { token: alumno.token, status: 201, body: { id_inscripcion: id, metodo_pago: 'efectivo', referencia: 'Prueba' } });
+    await request('POST', '/pagos/mio', { token: alumno.token, status: 400, body: { id_inscripcion: id, metodo_pago: 'efectivo' } });
+    const cashReceipt = new FormData();
+    cashReceipt.set('id_inscripcion',String(id));cashReceipt.set('metodo_pago','efectivo');
+    cashReceipt.set('comprobante',new Blob(['%PDF-1.4\nRecibo ficticio\n%%EOF'],{type:'application/pdf'}),'efectivo.pdf');
+    const pending = await request('POST', '/pagos/mio', { token: alumno.token, status: 201, body: cashReceipt });
+    await request('POST', '/pagos/mio', { token: alumno.token, status: 409, body: cashReceipt });
     expect((await progress(id)).total_pagado).toBe(0);
     await request('PATCH', `/administradores/pagos/${pending.json.pago.id_pago}/validar`, { token: admin.token, body: { estado: 'completado' }, status: 200 });
     await fulfill(id, course.activities.slice(0, 3));
