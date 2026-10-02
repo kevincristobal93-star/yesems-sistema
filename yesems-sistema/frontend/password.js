@@ -3,15 +3,18 @@
   const change=new URLSearchParams(location.search).get('modo')==='cambiar';
   const token=localStorage.getItem('yesems_token');
   const get=id=>document.getElementById(id);
+  get('google-recovery').hidden=change;
+  get('yesems-recovery-title').hidden=change;
+  get('recovery-google-login').onclick=()=>window.YesemsAccess.open();
   let busy=false;let available=false;let done=false;
   async function request(path,body){
     const response=await fetch(api+path,{method:body?'POST':'GET',headers:{...(body?{'Content-Type':'application/json'}:{}),...(change?{Authorization:'Bearer '+token}:{})},body:body?JSON.stringify(body):undefined,signal:AbortSignal.timeout(20000)});
     const data=await response.json();if(!response.ok||!data.ok)throw new Error(data.mensaje||'No fue posible continuar.');return data;
   }
   async function action(fn){
-    if(busy||done)return;busy=true;document.querySelectorAll('button').forEach(b=>b.disabled=true);get('password-message').textContent='Procesando…';
+    if(busy||done)return;busy=true;document.querySelectorAll('#password-send-form button, #password-reset-form button').forEach(b=>b.disabled=true);get('password-message').textContent='Procesando…';
     try{await fn();}catch(e){get('password-message').textContent=e instanceof TypeError||e.name==='TimeoutError'?'No se pudo conectar. Intenta nuevamente.':e.message;}
-    finally{busy=false;document.querySelectorAll('button').forEach(b=>b.disabled=done||!available);}
+    finally{busy=false;document.querySelectorAll('#password-send-form button, #password-reset-form button').forEach(b=>b.disabled=done||!available);}
   }
   get('password-send-form').addEventListener('submit',e=>{e.preventDefault();action(async()=>{
     const result=await request('/acceso/password/'+(change?'mio/codigo':'codigo'),{email:get('recovery-email').value.trim()});

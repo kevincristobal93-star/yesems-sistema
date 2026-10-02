@@ -17,3 +17,27 @@
 @keyframes access-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
 @media(max-width:420px){#verified-access{padding:28px 20px}#verified-access .access-profile{display:block}#verified-access h2{font-size:24px}}
 @media(prefers-reduced-motion:reduce){#verified-access{animation:none}}
+#verified-access{width:min(480px,calc(100% - 24px));max-height:calc(100dvh - 32px);padding:36px 40px 22px;border:0;border-radius:24px;box-shadow:0 32px 100px #06152d55;overflow-y:auto;scrollbar-width:thin}
+#verified-access .access-logo{width:58px;height:58px;margin-bottom:16px}
+#verified-access .access-eyebrow{font-size:10px;letter-spacing:2.4px;margin:0 0 10px}
+#verified-access h2{font-size:30px;letter-spacing:-1px;margin:0 0 10px}
+#verified-access .access-intro{font-size:14px;margin:0 auto 28px;max-width:300px}
+#verified-access .access-provider{padding:0;margin:0}
+#verified-access .access-divider{margin:22px 0;font-size:11px}
+#verified-access input{background:#fff;border-radius:10px;padding:14px;margin-bottom:18px}
+#verified-access button[type=submit]{border-radius:10px;padding:14px;background:#113f55}
+#verified-access #access-login-help{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 18px}
+#verified-access #access-login-help a{font-size:12px;margin:4px 0 12px}
+#verified-access .access-switch{text-align:center;border-top:1px solid #e7edf2;margin-top:18px;padding-top:8px;font-size:13px;color:#63758a}
+#verified-access .access-switch button{border:0;padding:4px;background:none;color:#176c83;font:inherit;font-weight:700;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+#verified-access #access-message:empty,#verified-access #access-course:empty,#verified-access #access-google-note:empty{display:none}
+#verified-access #access-message{font-size:12px;line-height:1.6;background:#fff8e7;border-radius:8px;padding:10px 12px}
+#verified-access[data-mode=register] .access-intro{margin-bottom:20px}
+#verified-access :is(button,a):focus-visible{outline:3px solid #168da6;outline-offset:3px}
+#verified-access #access-registration{margin-bottom:18px}
+#verified-access #access-google{min-height:44px}
+#verified-access .access-admin{border-top:1px solid #e7edf2;padding-top:16px;margin-bottom:0}
+#verified-access button[type=submit]{transition:background .18s,box-shadow .18s}
+#verified-access button[type=submit]:not(:disabled):hover{background:#10576d;box-shadow:0 4px 14px #176c8326}
+@media(prefers-reduced-motion:reduce){#verified-access button[type=submit]{transition:none}}
+@media(max-width:420px){#verified-access{padding:28px 24px 18px}#verified-access h2{font-size:27px}#verified-access .access-logo{width:48px;height:48px}#verified-access .access-intro{margin-bottom:20px}}

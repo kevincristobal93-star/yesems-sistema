@@ -99,6 +99,10 @@ const enabled=process.env.YES_EMS_ISOLATED_TEST==='1' && process.env.NODE_ENV===
       browser=await startBrowser(origin);await browser.navigate(origin+'/registro.html?curso=1');
       await browser.click('.form-container > .primary-button');
       await browser.waitFor("document.querySelector('#verified-access').open && !document.querySelector('#access-send').disabled");
+      await browser.click('#access-login-mode');
+      expect(await browser.evaluate("document.querySelector('#access-registration').hidden")).toBe(true);
+      await browser.click('#access-register-mode');
+      expect(await browser.evaluate("document.querySelector('#access-registration').hidden")).toBe(false);
       await browser.fill('#access-name','Alumna');await browser.fill('#access-lastname','Prueba acceso');await browser.fill('#access-phone','5500000000');await browser.fill('#access-email',address('browser'));
       await browser.screenshot(path.join(artifacts,'registro-desktop.png'));
       await browser.viewport(390,844);
@@ -109,6 +113,11 @@ const enabled=process.env.YES_EMS_ISOLATED_TEST==='1' && process.env.NODE_ENV===
       await browser.waitFor("location.pathname.endsWith('/inscripcion.html')");
       expect(await browser.evaluate('location.search')).toBe('?curso=1');
       expect(await browser.evaluate("JSON.parse(localStorage.getItem('yesems_usuario')).nombre")).toBe('Alumna');
+      await browser.navigate(origin+'/password.html');
+      expect(await browser.evaluate("document.querySelector('#google-recovery a').href")).toBe('https://accounts.google.com/signin/recovery');
+      await browser.click('#recovery-google-login');
+      await browser.waitFor("document.querySelector('#verified-access').open");
+      expect(await browser.evaluate("document.querySelector('#access-registration').hidden")).toBe(true);
       expect(browser.errors).toEqual([]);console.log('Capturas de registro ficticio:',artifacts);
     }finally{process.env.GOOGLE_CLIENT_ID='test-client';if(browser)await browser.close();}
   },60000);

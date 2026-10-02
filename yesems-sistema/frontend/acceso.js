@@ -6,28 +6,44 @@
   dialog.id = 'verified-access'; dialog.setAttribute('aria-labelledby', 'verified-title');
   dialog.innerHTML = `<button type="button" class="access-close" aria-label="Cerrar">×</button>
     <img class="access-logo" src="./assets/yesems-logo.png" alt="YES EMS">
-    <p class="access-eyebrow">TU ESPACIO YES EMS</p><h2 id="verified-title">Iniciar sesión o registrarse</h2>
-    <p class="access-intro">Accede a tus cursos, pagos y constancias con una sola cuenta.</p>
+    <p class="access-eyebrow">BIENVENIDO A YES EMS</p><h2 id="verified-title">Iniciar sesión</h2>
+    <p class="access-intro" id="access-intro">Tus cursos y constancias, en un solo lugar.</p>
     <p id="access-course"></p>
-    <p class="access-note">¿Es tu primera vez? Completa estos datos antes de continuar. Si ya tienes cuenta, puedes dejarlos vacíos.</p>
+    <div class="access-provider"><div id="access-google"></div><p id="access-google-note" class="access-note"></p></div>
+    <div class="access-divider">o con tu correo electrónico</div>
+    <section id="access-registration" hidden aria-label="Datos de la nueva cuenta">
+    <p class="access-note">Completa tus datos antes de continuar con Google o correo.</p>
     <div class="access-profile"><label>Nombre(s)<input id="access-name" autocomplete="given-name" maxlength="100"></label>
     <label>Apellidos<input id="access-lastname" autocomplete="family-name" maxlength="100"></label>
     <label class="access-phone">Teléfono de contacto<input id="access-phone" type="tel" autocomplete="tel" maxlength="20" placeholder="10 dígitos o código de país"></label></div>
-    <p class="access-note">El teléfono es solo de contacto. No enviamos SMS ni lo marcamos como verificado.</p>
-    <div id="access-google"></div><p id="access-google-note" class="access-note"></p>
-    <div class="access-divider">o continúa con tu correo</div>
+    <p class="access-note">Usaremos tu teléfono solo para contacto.</p></section>
     <form id="access-email-form"><label>Correo electrónico<input id="access-email" type="email" autocomplete="email" maxlength="150" required placeholder="tu@correo.com"></label>
-    <button id="access-send" type="submit">Enviar código gratuito</button></form>
+    <button id="access-send" type="submit">Continuar con correo</button></form>
     <form id="access-code-form" hidden><label>Código de verificación<input id="access-code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required placeholder="6 dígitos"></label>
     <button type="submit">Verificar y continuar</button><p class="access-note">Vence en 10 minutos. Para reenviar, espera al menos 60 segundos.</p></form>
     <p id="access-message" role="status" aria-live="polite"></p>
-    <a id="access-password" href="./index.html">Ya tengo cuenta con contraseña</a>
-    <a href="./password.html">Olvidé mi contraseña</a>
+    <div id="access-login-help"><a id="access-password" href="./index.html">Entrar con mi contraseña</a>
+    <a href="./password.html">¿Olvidaste tu contraseña?</a></div>
+    <div class="access-switch"><p id="access-register-prompt">¿Es tu primera vez? <button type="button" id="access-register-mode">Crear una cuenta</button></p><p id="access-login-prompt" hidden>¿Ya tienes cuenta? <button type="button" id="access-login-mode">Iniciar sesión</button></p></div>
     <a class="access-admin" href="./admin-login.html">Acceso administrativo</a>`;
   document.body.append(dialog);
   const get = id => dialog.querySelector('#' + id);
   let course; let sentEmail; let busy = false; let version = 0; let sdk; let mailEnabled = false;
-  function data() { return { nombre:get('access-name').value.trim(),apellido:get('access-lastname').value.trim(),telefono:get('access-phone').value.trim() }; }
+  function data() { return get('access-registration').hidden ? {} : { nombre:get('access-name').value.trim(),apellido:get('access-lastname').value.trim(),telefono:get('access-phone').value.trim() }; }
+  function mode(register) {
+    if (busy) return;
+    get('access-registration').hidden=!register;
+    get('access-register-prompt').hidden=register;
+    get('access-login-prompt').hidden=!register;
+    get('access-login-help').hidden=register;
+    get('verified-title').textContent=register?'Crear tu cuenta':'Iniciar sesión';
+    get('access-intro').textContent=register?'Comienza tu próximo curso con YES EMS.':'Tus cursos y constancias, en un solo lugar.';
+    dialog.dataset.mode=register?'register':'login';
+    sentEmail=null;get('access-code-form').hidden=true;get('access-code').value='';
+    dialog.scrollTop=0;
+  }
+  get('access-login-mode').onclick=()=>mode(false);
+  get('access-register-mode').onclick=()=>mode(true);
   async function request(path, body) {
     const res = await fetch(api + '/acceso/' + path, { method:body ? 'POST':'GET',headers:body ? {'Content-Type':'application/json'}:undefined,body:body ? JSON.stringify(body):undefined,signal:AbortSignal.timeout(20000) });
     const result = await res.json(); if (!res.ok || !result.ok) throw new Error(result.mensaje || 'No fue posible continuar.'); return result;
@@ -55,7 +71,7 @@
       catch(error) { await google(clientId,current); throw error; }
     })});
     get('access-google').replaceChildren();
-    window.google.accounts.id.renderButton(get('access-google'),{theme:'outline',size:'large',text:'continue_with',shape:'pill',width:Math.min(360,Math.max(200,dialog.clientWidth-64)),locale:'es'});
+    window.google.accounts.id.renderButton(get('access-google'),{theme:'outline',size:'large',text:'continue_with',shape:'rectangular',width:Math.min(400,Math.max(200,dialog.clientWidth-80)),locale:'es'});
   }
   get('access-email-form').addEventListener('submit',e=>{e.preventDefault();action(async()=>{
     const address=get('access-email').value.trim().toLowerCase();
@@ -71,6 +87,8 @@
   dialog.addEventListener('cancel',event=>{if(busy)event.preventDefault();});
   dialog.addEventListener('close',()=>{version++;});
   window.YesemsAccess={open:async(selected=null)=>{
+    if(dialog.open || busy)return;
+    mode(Boolean(document.querySelector('#registration-form')));
     course=selected;sentEmail=null;mailEnabled=false;version++;const current=version;
     get('access-course').textContent=course?.nombre ? 'Curso: '+course.nombre : '';
     get('access-password').href='./index.html'+(course?.id_curso?'?curso='+encodeURIComponent(course.id_curso):'');
