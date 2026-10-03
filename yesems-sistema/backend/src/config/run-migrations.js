@@ -33,11 +33,6 @@ async function seedCatalog() {
     INSERT INTO public.categorias (nombre, descripcion)
     VALUES ('Tecnología', 'Cursos relacionados con tecnología, programación y sistemas.')
     ON CONFLICT (nombre) DO NOTHING;
-    INSERT INTO public.cursos (id_categoria, nombre, descripcion, duracion_horas, precio, cupo, activo)
-    SELECT id_categoria, 'Introducción a Excel', 'Curso básico de hojas de cálculo', 20, 500.00, 25, true
-    FROM public.categorias
-    WHERE nombre = 'Tecnología'
-      AND NOT EXISTS (SELECT 1 FROM public.cursos WHERE nombre = 'Introducción a Excel');
   `);
 }
 
@@ -62,6 +57,7 @@ async function runStartupMigrations() {
   await pool.query(await fs.readFile(path.resolve(__dirname, '../../database/migrations/005_verified_identity.sql'), 'utf8'));
   await pool.query(await fs.readFile(path.resolve(__dirname, '../../database/migrations/006_password_recovery.sql'), 'utf8'));
   await pool.query(await fs.readFile(path.resolve(__dirname, '../../database/migrations/007_proposed_courses.sql'), 'utf8'));
+  await pool.query(await fs.readFile(path.resolve(__dirname, '../../database/migrations/008_retire_excel.sql'), 'utf8'));
   await seedCatalog();
   await bootstrapInitialAdmin();
 }

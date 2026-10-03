@@ -73,10 +73,7 @@ function openLogin(course = selectedCourse) {
   window.YesemsAccess.open(selectedCourse);
 }
 
-grid.addEventListener('click', (event) => {
-  const button = event.target.closest('[data-enroll-course]');
-  if (!button) return;
-  const course = courses.find((item) => String(item.id_curso) === button.dataset.enrollCourse);
+CatalogoView.bindDetails(grid, () => courses, (course) => {
   if (!course || course.oferta_provisional) return;
   if (localStorage.getItem('yesems_token') && localStorage.getItem('yesems_usuario')) {
     window.location.href = `./inscripcion.html?curso=${encodeURIComponent(course.id_curso)}`;

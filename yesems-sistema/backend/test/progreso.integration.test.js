@@ -147,6 +147,22 @@ integration('Proceso real de inscripción, avance y constancia (PostgreSQL aisla
     if (pool) await pool.end();
   });
 
+  test('la baja de Excel conserva inscripción, pago y constancia y no lo recrea al reiniciar', async () => {
+    const c = (await pool.query('INSERT INTO cursos (id_categoria,nombre,duracion_horas,precio,cupo) VALUES ($1,$2,20,500,25) RETURNING id_curso', [category, 'Introducción a Excel'])).rows[0].id_curso;
+    const inscription = (await pool.query("INSERT INTO inscripciones (id_usuario,id_curso,monto_total,estado) VALUES ($1,$2,500,'completada') RETURNING id_inscripcion", [alumno.id,c])).rows[0].id_inscripcion;
+    await pool.query("INSERT INTO pagos (id_inscripcion,monto,metodo_pago,estado) VALUES ($1,500,'efectivo','completado')", [inscription]);
+    await pool.query("INSERT INTO constancias (id_inscripcion,folio,estado) VALUES ($1,$2,'autorizada')", [inscription,`HISTORICO-${tag}`]);
+    await runStartupMigrations();
+    await runStartupMigrations();
+    expect((await pool.query('SELECT activo FROM cursos WHERE id_curso=$1', [c])).rows[0].activo).toBe(false);
+    const catalog = await request('GET','/cursos',{status:200});
+    expect(catalog.json.cursos.some((course) => course.nombre === 'Introducción a Excel')).toBe(false);
+    expect((await pool.query('SELECT count(*)::int AS n FROM cursos WHERE nombre=$1',['Introducción a Excel'])).rows[0].n).toBe(1);
+    expect((await pool.query('SELECT estado FROM inscripciones WHERE id_inscripcion=$1',[inscription])).rows[0].estado).toBe('completada');
+    expect((await pool.query('SELECT estado FROM pagos WHERE id_inscripcion=$1',[inscription])).rows[0].estado).toBe('completado');
+    expect((await pool.query('SELECT estado FROM constancias WHERE id_inscripcion=$1',[inscription])).rows[0].estado).toBe('autorizada');
+  });
+
   test('las cuatro propuestas son idempotentes y una repetición conserva ediciones y bajas', async () => {
     const sql = await fs.readFile(path.join(__dirname, '../database/migrations/007_proposed_courses.sql'), 'utf8');
     const proposals = (await pool.query('SELECT * FROM cursos WHERE catalogo_clave IS NOT NULL ORDER BY catalogo_clave')).rows;

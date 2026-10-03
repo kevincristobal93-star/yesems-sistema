@@ -1,4 +1,4 @@
-const { card } = require('../../frontend/catalogo-view');
+const { card, details, icon } = require('../../frontend/catalogo-view');
 const course = { id_curso: 7, nombre: 'Curso de prueba', descripcion: 'Plus: proyecto práctico', categoria: 'Tecnología', duracion_horas: 32, cupo: 12, precio: '0.00' };
 
 describe.each([false, true])('Catálogo (alumno=%s)', (student) => {
@@ -7,8 +7,9 @@ describe.each([false, true])('Catálogo (alumno=%s)', (student) => {
     expect(html).toContain('Costo por confirmar');
     expect(html).toContain('32 horas sugeridas');
     expect(html).toContain('12 personas por grupo sugeridas');
-    expect(html).toContain('Solicitar información');
-    expect(html).toContain('api.whatsapp.com');
+    expect(html).toContain('Ver más información');
+    expect(html).toContain('data-course-details="7"');
+    expect(html).not.toContain('api.whatsapp.com');
     expect(html).not.toContain('$0.00');
     expect(html).not.toContain('Quiero inscribirme');
     expect(html).not.toContain('inscripcion.html');
@@ -17,7 +18,8 @@ describe.each([false, true])('Catálogo (alumno=%s)', (student) => {
   test('oferta validada conserva precio y acceso a inscripción', () => {
     const html = card({ ...course, oferta_provisional: false, precio: '500.00' }, student);
     expect(html).toContain('$500.00');
-    expect(html).toContain('Quiero inscribirme');
+    expect(html).toContain('Ver más información');
+    expect(details({ ...course, oferta_provisional: false })).toContain('Quiero inscribirme');
     expect(html).not.toContain('Propuesta ·');
   });
   test('un curso gratuito validado sigue mostrando su precio real', () => {
@@ -29,4 +31,21 @@ describe.each([false, true])('Catálogo (alumno=%s)', (student) => {
     expect(html).not.toContain('<script>');
     expect(html).toContain('&lt;img');
   });
+});
+
+test('el detalle conserva todo el texto y separa el plus sin inventar contenido', () => {
+  const html = details({ ...course, descripcion: 'Contenido inicial completo. Plus: Proyecto final y costos.', oferta_provisional: true });
+  expect(html).toContain('Contenido inicial completo.');
+  expect(html).toContain('Proyecto final y costos.');
+  expect(html).toContain('El plus de tu capacitación');
+  expect(html).toContain('Inscripciones aún no abiertas');
+  expect(html).not.toContain('data-detail-enroll');
+  expect(html).not.toContain('$0.00');
+});
+test('el detalle también escapa contenido no confiable', () => {
+  expect(details({ ...course, nombre: '<script>x</script>', descripcion: 'Plus: <img onerror=bad()>' })).not.toMatch(/<script>|<img/);
+});
+test.each([['Reparación de celulares', 'phone'], ['Sublimación y diseño', 'shirt'], ['Corte y grabado láser', 'laser'], ['Impresión 3D', 'printer']])('icono de %s', (nombre, type) => {
+  expect(icon({ nombre })).toContain(`data-icon="${type}"`);
+  expect(icon({ nombre })).toContain('aria-hidden="true"');
 });
