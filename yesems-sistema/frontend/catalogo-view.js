@@ -15,8 +15,11 @@
     return `<div class="catalog-icon" data-icon="${key}"><svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">${paths[key]}</svg></div>`;
   }
   function price(course) {
-    return course.oferta_provisional || course.precio == null ? 'Costo por confirmar' : money.format(Number(course.precio));
+    if (course.oferta_provisional || course.precio == null) return 'Costo por confirmar';
+    return `${money.format(Number(course.precio))} por curso completo`;
   }
+  const duration = (course) => `${escapeHtml(course.duracion_horas ?? '—')} horas${course.duracion_aproximada ? ' aproximadamente' : ''}`;
+  const capacity = (course) => course.cupo_confirmado === false ? 'Cupo por confirmar' : `${escapeHtml(course.cupo ?? '—')} ${course.oferta_provisional ? 'personas por grupo' : 'lugares'}`;
   function card(course, student = false) {
     const provisional = course.oferta_provisional === true;
     const cls = (name) => student ? name : `course-${name}`;
@@ -28,7 +31,7 @@
       ${provisional ? '<p class="proposal-badge">Propuesta · Por confirmar</p>' : ''}
       <${title}>${escapeHtml(course.nombre || 'Curso YES EMS')}</${title}>
       <p class="${cls('description')} catalog-summary">${escapeHtml(course.descripcion || 'Consulta los detalles con nuestro equipo.')}</p>
-      <div class="${cls('data')}"><span>${escapeHtml(course.duracion_horas ?? '—')} horas${provisional ? ' sugeridas' : ''}</span><span>${escapeHtml(course.cupo ?? '—')} ${provisional ? 'personas por grupo sugeridas' : 'lugares'}</span></div>
+      <div class="${cls('data')}"><span>${duration(course)}${provisional ? ' sugeridas' : ''}</span><span>${capacity(course)}${provisional ? ' sugeridas' : ''}</span></div>
       <p class="${cls('price')}">${price(course)}</p>
       ${action}
     </article>`;
@@ -46,10 +49,12 @@
       ${provisional ? '<p class="proposal-badge">Propuesta · Por confirmar</p>' : ''}
       <section><h3>Acerca del curso</h3><p class="course-detail-description">${escapeHtml(overview)}</p></section>
       ${plus ? `<section class="course-detail-plus"><h3>El plus de tu capacitación</h3><p>${escapeHtml(plus)}</p></section>` : ''}
-      <dl class="course-detail-facts"><div><dt>Duración${provisional ? ' sugerida' : ''}</dt><dd>${escapeHtml(course.duracion_horas ?? 'Por confirmar')} horas</dd></div>
-      <div><dt>Cupo${provisional ? ' sugerido' : ''}</dt><dd>${escapeHtml(course.cupo ?? 'Por confirmar')} personas</dd></div>
+      <dl class="course-detail-facts"><div><dt>Duración${provisional ? ' sugerida' : ''}</dt><dd>${duration(course)}</dd></div>
+      <div><dt>Cupo${provisional ? ' sugerido' : ''}</dt><dd>${capacity(course)}</dd></div>
       <div><dt>Precio</dt><dd>${price(course)}</dd></div></dl>
       ${provisional ? '<p class="proposal-note">Duración y cupo sujetos a validación. Fechas, modalidad, equipo y materiales por confirmar. Inscripciones aún no abiertas.</p>' : ''}
+      ${!provisional ? '<p class="proposal-note">Para obtener constancia es necesario estar inscrito al curso completo, cubrir el pago y cumplir los requisitos académicos y la validación administrativa.</p>' : ''}
+      ${!provisional && course.duracion_aproximada ? '<p class="proposal-note">Fechas y horarios por acordar con YES EMS. Consulta la disponibilidad y los materiales antes de pagar.</p>' : ''}
       ${!provisional && course.activo !== false ? '<button class="course-more-button" type="button" data-detail-enroll>Quiero inscribirme</button>' : ''}`;
   }
   function bindDetails(container, getCourses, onEnroll) {

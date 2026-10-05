@@ -48,7 +48,8 @@ const generarPdfConstancia = (datos, folio) => new Promise((resolve, reject) => 
   doc.moveTo(width * 0.27, 309).lineTo(width * 0.73, 309).strokeColor(gold).lineWidth(1.5).stroke();
   doc.fillColor(muted).font('Helvetica').fontSize(11.5).text('por haber concluido satisfactoriamente la capacitación:', 0, 329, { align: 'center' });
   doc.fillColor(blue).font('Helvetica-Bold').fontSize(17).text(`“${datos.curso_nombre || 'Curso YES EMS'}”`, 100, 353, { width: width - 200, align: 'center' });
-  doc.fillColor(ink).font('Helvetica').fontSize(11).text(`Con una duración de ${datos.duracion_horas || 0} horas.`, 0, 386, { align: 'center' });
+  const duracion = datos.duracion_horas ? `${datos.duracion_horas} horas` : null;
+  doc.fillColor(ink).font('Helvetica').fontSize(11).text(duracion ? `Con una duración ${datos.duracion_aproximada ? 'aproximada ' : ''}de ${duracion}.` : 'Curso concluido conforme al plan académico.', 0, 386, { align: 'center' });
 
   const signY = 451;
   doc.moveTo(125, signY).lineTo(310, signY).strokeColor('#9fb2bd').lineWidth(1).stroke();

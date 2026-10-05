@@ -163,20 +163,34 @@ integration('Proceso real de inscripción, avance y constancia (PostgreSQL aisla
     expect((await pool.query('SELECT estado FROM constancias WHERE id_inscripcion=$1',[inscription])).rows[0].estado).toBe('autorizada');
   });
 
-  test('las cuatro propuestas son idempotentes y una repetición conserva ediciones y bajas', async () => {
+  test('los cuatro cursos cuestan 1000 por 60 horas aproximadas; repetir migraciones conserva ediciones y bajas', async () => {
     const sql = await fs.readFile(path.join(__dirname, '../database/migrations/007_proposed_courses.sql'), 'utf8');
+    const confirmedSql = await fs.readFile(path.join(__dirname, '../database/migrations/009_confirmed_courses.sql'), 'utf8');
     const proposals = (await pool.query('SELECT * FROM cursos WHERE catalogo_clave IS NOT NULL ORDER BY catalogo_clave')).rows;
     expect(proposals).toHaveLength(4);
-    expect(proposals.every((c) => c.oferta_provisional && Number(c.precio) === 0 && c.descripcion.includes('Plus:'))).toBe(true);
-    expect(proposals.map((c) => c.duracion_horas).sort()).toEqual([24, 24, 32, 32]);
+    expect(proposals.every((c) => !c.oferta_provisional && Number(c.precio) === 1000 && c.descripcion.includes('Plus:') && c.duracion_aproximada && !c.cupo_confirmado)).toBe(true);
+    expect(proposals.map((c) => c.duracion_horas)).toEqual([60, 60, 60, 60]);
     const original = proposals[0];
     await pool.query('UPDATE cursos SET nombre=$1, precio=725, activo=false WHERE id_curso=$2', ['Edición que debe conservarse', original.id_curso]);
     await pool.query(sql);
     await pool.query(sql);
+    await pool.query(confirmedSql);
+    await pool.query(confirmedSql);
     const after = (await pool.query('SELECT * FROM cursos WHERE catalogo_clave IS NOT NULL')).rows;
     expect(after).toHaveLength(4);
     expect(after.find((c) => c.id_curso === original.id_curso)).toMatchObject({ nombre: 'Edición que debe conservarse', precio: '725.00', activo: false });
     await pool.query('UPDATE cursos SET nombre=$1, precio=$2, activo=true WHERE id_curso=$3', [original.nombre, original.precio, original.id_curso]);
+  });
+
+  test('curso confirmado cobra 1000, conserva el importe contratado y exige requisitos para constancia', async () => {
+    const course = (await pool.query("SELECT id_curso FROM cursos WHERE catalogo_clave='yesems-celulares'")).rows[0];
+    const id = await enroll({ id: course.id_curso });
+    expect((await pool.query('SELECT monto_total FROM inscripciones WHERE id_inscripcion=$1', [id])).rows[0].monto_total).toBe('1000.00');
+    await assertBlocked('POST', '/constancias/mia', { token: alumno.token, body: { id_inscripcion: id } });
+    await payment(id, 1000);
+    await assertBlocked('POST', '/constancias/mia', { token: alumno.token, body: { id_inscripcion: id } });
+    await runStartupMigrations();
+    expect(await progress(id)).toMatchObject({ monto_total: 1000, total_pagado: 1000, pago_completo: true, puede_solicitar_constancia: false });
   });
 
   test('propuestas bloquean inscripción en ambas rutas; solo administración puede validarlas', async () => {

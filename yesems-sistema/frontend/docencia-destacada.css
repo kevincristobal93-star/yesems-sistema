@@ -1,0 +1,59 @@
+/* Campaña Docencia 2027. Estilos acotados; no modifica el catálogo ni el acceso. */
+.docencia { position:relative; overflow:hidden; padding:32px max(24px,calc((100vw - 1164px)/2)) 30px; color:#f6fcff; background:radial-gradient(ellipse at 90% 25%,#12626788,transparent 48%),#071f35; }
+.docencia::before { content:""; position:absolute; inset:0; pointer-events:none; opacity:.13; background-image:linear-gradient(#acd8df22 1px,transparent 1px),linear-gradient(90deg,#acd8df22 1px,transparent 1px); background-size:64px 64px; }
+.docencia > * { position:relative; }
+.docencia-topline { display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:16px; padding-bottom:25px; border-bottom:1px solid #ffffff26; font:700 .65rem "Montserrat",sans-serif; letter-spacing:.15em; color:#adcad6; }
+.docencia-label { display:inline-flex; align-items:center; gap:10px; color:#bdf294; }
+.docencia-label > span { font-size:1.4rem; }
+.docencia-layout { display:grid; grid-template-columns:minmax(0,1.45fr) minmax(300px,1fr); gap:clamp(30px,6vw,90px); align-items:center; padding:54px 0 42px; }
+.docencia-kicker { margin:0 0 18px; font:700 .76rem "Montserrat",sans-serif; letter-spacing:.06em; color:#c4eea0; }
+.docencia h1 { max-width:740px; font-size:clamp(2.7rem,5.5vw,5rem); line-height:1.04; letter-spacing:-.065em; font-weight:800; }
+.docencia h1 em { display:inline-block; font-style:normal; color:#c4eea0; }
+.docencia h1 em::after { content:""; display:block; height:5px; margin:8px 0 0; border-radius:50%; background:#f5d75c; transform:rotate(-3deg); }
+.docencia-subtitle { margin:27px 0 0; font-size:clamp(.95rem,1.6vw,1.17rem); line-height:1.65; color:#d0e1e8; }
+.docencia-subtitle strong { color:#fff; }
+.docencia-description { max-width:490px; margin:16px 0 26px; color:#b0c6d1; line-height:1.7; font-size:.92rem; }
+.docencia-actions { display:flex; align-items:center; flex-wrap:wrap; gap:18px 24px; }
+.docencia-cta { display:inline-flex; align-items:center; justify-content:space-between; gap:24px; padding:17px 23px; border:2px solid transparent; border-radius:9px; background:#c4eea0; color:#102b2b; font:800 .9rem "Montserrat",sans-serif; box-shadow:0 8px 28px #0003; transition:transform .2s,background .2s,box-shadow .2s; }
+.docencia-cta > span { font-size:1.5rem; }
+.docencia-cta:hover { background:#d9ffb9; transform:translateY(-3px); box-shadow:0 12px 32px #a8e78422; }
+.docencia-more { font-size:.8rem; font-weight:700; padding:12px 0; border-bottom:1px solid #adc6d4; }
+.docencia-more:hover { color:#c4eea0; }
+.docencia a:focus-visible { outline:3px solid #f5d75c; outline-offset:5px; }
+.docencia-contact { font-size:.7rem; color:#adcad6; line-height:1.6; margin-top:18px; }
+.docencia-pass { position:relative; padding:25px 28px 17px; color:#10374a; background:#eff9f5; border:1px solid #ffffff; border-radius:18px; box-shadow:0 25px 60px #0004; transform:rotate(2deg); transition:transform .3s; }
+.docencia-pass:hover { transform:rotate(0); }
+.docencia-pass-top { display:flex; justify-content:space-between; align-items:center; gap:12px; font:800 .58rem/1.6 "Montserrat",sans-serif; letter-spacing:.15em; }
+.docencia-year { padding:10px 0 22px; font:800 clamp(4.5rem,7.8vw,7.2rem)/1 "Montserrat",sans-serif; letter-spacing:-.09em; color:#12504d; }
+.docencia-year > span { display:block; margin-top:9px; font:800 .62rem "Montserrat",sans-serif; letter-spacing:.16em; }
+.docencia-start { display:flex; gap:13px; align-items:center; padding:19px 0; border-top:1px dashed #9cbbb6; }
+.docencia-calendar { display:flex; flex-direction:column; min-width:49px; align-items:center; padding:6px; border:1px solid #bdd1c9; border-radius:7px; font:800 1.5rem "Montserrat",sans-serif; }
+.docencia-calendar small { font-size:.58rem; margin-top:3px; }
+.docencia-start div > span { font:800 .6rem "Montserrat",sans-serif; letter-spacing:.12em; }
+.docencia-start strong { display:block; font-size:.91rem; margin:5px 0; }
+.docencia-start div > small { font-size:.69rem; color:#4b6a70; }
+.docencia-investment { padding:17px 20px; border-radius:10px; background:#0b3547; color:#fff; }
+.docencia-investment > span { font:700 .58rem "Montserrat",sans-serif; letter-spacing:.12em; color:#c4eea0; }
+.docencia-investment p { margin:7px 0; }
+.docencia-investment strong { font:800 clamp(2.5rem,4vw,3.6rem)/1.2 "Montserrat",sans-serif; letter-spacing:-.065em; }
+.docencia-investment p > span { font-size:.8rem; }
+.docencia-investment > small { font-size:.65rem; color:#bfd4db; }
+.docencia-installments { font-size:.65rem; line-height:1.7; text-align:center; color:#466168; margin:13px 0 0; }
+.docencia-installments strong { color:#153f45; }
+.docencia-benefits { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:20px; padding:27px 0; border-top:1px solid #ffffff26; border-bottom:1px solid #ffffff26; }
+.docencia-benefits > div { display:flex; align-items:flex-start; gap:12px; }
+.docencia-benefit-icon { display:grid; place-items:center; flex-shrink:0; width:33px; height:33px; border-radius:50%; border:1px solid #bdf29455; color:#c4eea0; font:700 .7rem "Montserrat",sans-serif; }
+.docencia-benefits strong { display:block; font-size:.78rem; line-height:1.5; }
+.docencia-benefits div div > span { display:block; margin-top:6px; color:#adcad6; font-size:.7rem; line-height:1.65; }
+.docencia-details { display:grid; grid-template-columns:1fr 1.65fr; gap:36px; padding:34px 0 12px; scroll-margin-top:25px; }
+.docencia-details .docencia-kicker { font-size:.6rem; margin-bottom:12px; }
+.docencia-details h2 { font-size:1.55rem; line-height:1.3; }
+.docencia-includes { display:grid; grid-template-columns:1fr 1fr; gap:14px 22px; margin:0; padding:0; list-style:none; }
+.docencia-includes li { display:flex; gap:10px; color:#d3e3e9; font-size:.76rem; line-height:1.5; }
+.docencia-includes li::before { content:"✓"; color:#c4eea0; font-weight:800; }
+.docencia-disclaimer { max-width:1000px; margin:22px 0 0; color:#9db8c5; font-size:.65rem; line-height:1.7; }
+/* El segundo programa conserva su lugar, sin competir con la campaña principal. */
+.docencia + .featured-program { margin:36px auto 0; }
+@media(max-width:1000px) { .docencia-benefits { grid-template-columns:repeat(2,minmax(0,1fr)); } .docencia-layout { gap:30px; } }
+@media(max-width:700px) { .docencia { padding:24px; } .docencia-topline { font-size:.57rem; gap:10px; } .docencia-layout { grid-template-columns:1fr; padding:30px 0; gap:30px; } .docencia h1 { font-size:clamp(2.7rem,10vw,4rem); } .docencia-pass { transform:none; width:100%; max-width:440px; margin:auto; } .docencia-year { font-size:5.5rem; } .docencia-details { grid-template-columns:1fr; gap:22px; } .docencia-details h2 br { display:none; } .docencia-benefits { gap:22px 16px; } .docencia-benefits > div { flex-direction:column; gap:8px; } .docencia-contact { max-width:290px; } .docencia + .featured-program { margin:24px; } }
+@media(prefers-reduced-motion:reduce) { .docencia-pass,.docencia-cta { transition:none; transform:none; } .docencia-cta:hover { transform:none; } }

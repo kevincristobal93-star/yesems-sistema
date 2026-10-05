@@ -45,6 +45,19 @@ test('el detalle conserva todo el texto y separa el plus sin inventar contenido'
 test('el detalle también escapa contenido no confiable', () => {
   expect(details({ ...course, nombre: '<script>x</script>', descripcion: 'Plus: <img onerror=bad()>' })).not.toMatch(/<script>|<img/);
 });
+
+test.each(['Reparación de celulares', 'Sublimación y diseño (crea tu marca)', 'Corte y grabado láser', 'Impresión 3D'])('tarifa y duración actualizadas: %s', (nombre) => {
+  const updated = { ...course, nombre, oferta_provisional: false, precio: 1000, duracion_horas: 60, duracion_aproximada: true, cupo_confirmado: false };
+  for (const html of [card(updated), card(updated, true), details(updated)]) {
+    expect(html).toContain('$1,000.00');
+    expect(html).toContain('60 horas aproximadamente');
+    expect(html).not.toContain('4 semanas');
+    expect(html).not.toContain('$1,200.00');
+    expect(html).not.toContain('clase individual');
+    expect(html).not.toContain('$100.00');
+  }
+  expect(details(updated)).toContain('es necesario estar inscrito al curso completo');
+});
 test.each([['Reparación de celulares', 'phone'], ['Sublimación y diseño', 'shirt'], ['Corte y grabado láser', 'laser'], ['Impresión 3D', 'printer']])('icono de %s', (nombre, type) => {
   expect(icon({ nombre })).toContain(`data-icon="${type}"`);
   expect(icon({ nombre })).toContain('aria-hidden="true"');

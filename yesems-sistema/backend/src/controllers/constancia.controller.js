@@ -77,7 +77,7 @@ const autorizarConstancia = async (req, res) => {
       // Se vuelven a comprobar al autorizar, no solo cuando se solicitó.
       await comprobarRequisitos(client, row.id_inscripcion);
       const datos = (await client.query(`SELECT u.nombre AS alumno_nombre, u.apellido AS alumno_apellido,
-        c.nombre AS curso_nombre, c.duracion_horas, i.fecha_inscripcion, i.estado AS estado_inscripcion,
+        c.nombre AS curso_nombre, c.duracion_horas, c.duracion_aproximada, i.fecha_inscripcion, i.estado AS estado_inscripcion,
         i.concluida_at AS fecha_conclusion FROM inscripciones i
         JOIN usuarios u ON u.id_usuario = i.id_usuario JOIN cursos c ON c.id_curso = i.id_curso
         WHERE i.id_inscripcion = $1`, [row.id_inscripcion])).rows[0];

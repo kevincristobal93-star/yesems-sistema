@@ -10,6 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="./cursos.css" />
     <link rel="stylesheet" href="./catalogo-propuestas.css" />
+    <link rel="stylesheet" href="./docencia-destacada.css" />
+    <script src="./docencia-destacada.js" defer></script>
   </head>
   <body>
     <header class="site-header">
@@ -24,17 +26,44 @@
     </header>
 
     <main>
-      <section class="hero">
-        <div>
-          <p class="eyebrow">Capacitación YES EMS</p>
-          <h1>Prepárate hoy para alcanzar tus metas.</h1>
-          <p>Conoce nuestros programas de preparación y la oferta de cursos disponible para ti.</p>
+      <section class="docencia" aria-labelledby="docencia-title">
+        <div class="docencia-topline"><span class="docencia-label"><span aria-hidden="true">✦</span> EL PROGRAMA DESTACADO DE YES EMS</span><span>EDUCACIÓN MEDIA SUPERIOR</span></div>
+        <div class="docencia-layout">
+          <div class="docencia-copy">
+            <p class="docencia-kicker">Tu talento transforma el futuro.</p>
+            <h1 id="docencia-title">Tu próximo paso:<br>ser <em>docente.</em></h1>
+            <p class="docencia-subtitle">Programa Integral de Preparación<br><strong>Ingreso a la Docencia 2027</strong></p>
+            <p class="docencia-description">Prepárate con expertos, estudia a tu ritmo y fortalece tu perfil con acompañamiento durante el proceso.</p>
+            <div class="docencia-actions">
+              <a class="docencia-cta" href="https://wa.me/525648666596?text=Hola%2C%20quiero%20informaci%C3%B3n%20e%20inscribirme%20al%20programa%20Ingreso%20a%20la%20Docencia%202027." target="_blank" rel="noopener noreferrer">Quiero prepararme <span aria-hidden="true">↗</span></a>
+              <a class="docencia-more" href="#docencia-detalles">Ver todo lo que incluye <span aria-hidden="true">↓</span></a>
+            </div>
+            <p class="docencia-contact">Informes e inscripción por WhatsApp · 56 4866 6596</p>
+          </div>
+          <aside class="docencia-pass" aria-label="Fechas e inversión del programa">
+            <div class="docencia-pass-top"><span>PREPARA TU SIGUIENTE CAPÍTULO</span><svg viewBox="0 0 32 32" width="38" height="38" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m3 11 13-7 13 7-13 7-13-7Z M8 15v9q8 6 16 0v-9 M29 11v12"/></svg></div>
+            <div class="docencia-year" aria-hidden="true">2027<span>INGRESO A LA DOCENCIA</span></div>
+            <div class="docencia-start"><span class="docencia-calendar" aria-hidden="true">19<small>OCT</small></span><div><span>INICIAMOS</span><strong>19 de octubre de 2026</strong><small>Modalidad virtual · Plataforma 24/7</small></div></div>
+            <div class="docencia-investment"><span id="docencia-price-label">PRECIO DE LANZAMIENTO</span><p><strong id="docencia-price">$1,990</strong> <span id="docencia-currency">MXN</span></p><small id="docencia-validity">Vigente hasta el 15 de octubre de 2026.</small></div>
+            <p class="docencia-installments"><strong>Opción anunciada: 3 MSI</strong><br>Consulta condiciones y medios de pago con YES EMS.</p>
+          </aside>
         </div>
+        <div class="docencia-benefits">
+          <div><span class="docencia-benefit-icon" aria-hidden="true">01</span><div><strong>40 horas en plataforma</strong><span>Aprende a tu ritmo.</span></div></div>
+          <div><span class="docencia-benefit-icon" aria-hidden="true">02</span><div><strong>Sábados de retroalimentación</strong><span>Del 24 oct. de 2026 a abril de 2027.</span></div></div>
+          <div><span class="docencia-benefit-icon" aria-hidden="true">03</span><div><strong>Seguimiento académico</strong><span>Organiza tus horas y evidencias.</span></div></div>
+          <div><span class="docencia-benefit-icon" aria-hidden="true">04</span><div><strong>Acompañamiento en trámites</strong><span>Orientación durante la convocatoria.</span></div></div>
+        </div>
+        <div class="docencia-details" id="docencia-detalles">
+          <div><p class="docencia-kicker">MÁS QUE UN CURSO</p><h2>Prepárate con un<br>programa integral.</h2></div>
+          <ul class="docencia-includes"><li>Acceso a plataforma</li><li>Materiales digitales</li><li>Sesiones en vivo</li><li>Banco de reactivos</li><li>Guías y casos prácticos</li><li>Seguimiento de horas y evidencias</li><li>Constancia de participación</li><li>Seguimiento académico y extracurricular</li></ul>
+        </div>
+        <p class="docencia-disclaimer">La participación en el programa no garantiza el ingreso, la asignación de plaza ni resultados del proceso oficial. Los contenidos, fechas y orientación se actualizarán conforme a las disposiciones de la autoridad educativa para el proceso de admisión docente 2027.</p>
       </section>
 
       <section class="featured-program" aria-labelledby="featured-title">
         <div class="featured-copy">
-          <p class="eyebrow">Programa destacado</p>
+          <p class="eyebrow">También en YES EMS</p>
           <h2 id="featured-title">Preparación Acredita-Bach CENEVAL</h2>
           <p>Te preparamos con clases, material de estudio, ejercicios, simulacros y asesoría para presentar tu examen en la sede oficial que elijas.</p>
           <ul>

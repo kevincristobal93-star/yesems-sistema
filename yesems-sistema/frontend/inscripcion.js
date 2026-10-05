@@ -58,8 +58,8 @@ async function loadCourse() {
     setText('#course-title', course.nombre || 'Curso seleccionado');
     setText('#course-category', course.categoria || 'Capacitación');
     setText('#course-description', course.descripcion || 'Consulta los detalles con nuestro equipo.');
-    setText('#course-duration', `${course.duracion_horas ?? '—'} horas${course.oferta_provisional ? ' sugeridas' : ''}`);
-    setText('#course-capacity', `${course.cupo ?? '—'} lugares${course.oferta_provisional ? ' sugeridos' : ''}`);
+    setText('#course-duration', `${course.duracion_horas ?? '—'} horas${course.duracion_aproximada ? ' aproximadamente' : course.oferta_provisional ? ' sugeridas' : ''}`);
+    setText('#course-capacity', course.cupo_confirmado === false ? 'Por confirmar con YES EMS' : `${course.cupo ?? '—'} lugares${course.oferta_provisional ? ' sugeridos' : ''}`);
     setText('#course-price', course.oferta_provisional || course.precio === null || course.precio === undefined ? 'Por confirmar' : new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(Number(course.precio)));
     document.querySelector('#course-loading').hidden = true;
     document.querySelector('#course-content').hidden = false;
