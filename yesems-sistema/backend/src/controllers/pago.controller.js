@@ -6,7 +6,7 @@ const { withEnrollmentLock } = require('../models/seguimiento.model');
 const { positiveId, httpError, sendError } = require('../utils/http-error');
 const fs = require('fs/promises');
 
-const METODOS_VALIDOS = ['efectivo', 'transferencia', 'tarjeta', 'otro'];
+const METODOS_VALIDOS = ['efectivo', 'transferencia'];
 const ESTADOS_VALIDOS = ['pendiente', 'completado', 'cancelado'];
 
 const obtenerPagoPropio = async (req, res) => {

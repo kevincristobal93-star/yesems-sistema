@@ -127,14 +127,15 @@ const obtenerPerfilPropio = async (req, res) => {
 
 const actualizarPerfilPropio = async (req, res) => {
   try {
-    const { nombre, apellido, telefono } = req.body;
-    if (!nombre || !apellido) return res.status(400).json({ ok: false, mensaje: 'nombre y apellido son obligatorios' });
-    const usuario = await usuarioModel.actualizarPerfilPropio(req.admin.id_usuario, { nombre: nombre.trim(), apellido: apellido.trim(), telefono: telefono?.trim() });
+    const perfil = require('../utils/perfil').validarPerfil(req.body);
+    const usuario = await usuarioModel.actualizarPerfilPropio(req.admin.id_usuario, perfil);
     if (!usuario) return res.status(404).json({ ok: false, mensaje: 'Cuenta no encontrada' });
     res.json({ ok: true, usuario });
   } catch (error) {
-    console.error('Error al actualizar perfil propio:', error);
-    res.status(500).json({ ok: false, error: error.message });
+    if (error.statusCode) return res.status(error.statusCode).json({ ok:false, mensaje:error.message });
+    if (error.code === '23505') return res.status(409).json({ ok:false, mensaje:'La CURP ya está registrada en otra cuenta.' });
+    console.error('Error al actualizar perfil propio:', error.code || error.name);
+    res.status(500).json({ ok: false, mensaje: 'No se pudo guardar tu ficha. Intenta nuevamente.' });
   }
 };
 

@@ -8,6 +8,14 @@ function validarMonto(monto) {
   }
 }
 
+async function sincronizarConfirmacion(client, idInscripcion) {
+  // Un comprobante o un abono no equivale al pago completo. Solo cuenta dinero validado.
+  await client.query(`UPDATE inscripciones i SET estado = CASE
+    WHEN COALESCE((SELECT SUM(p.monto) FROM pagos p WHERE p.id_inscripcion=i.id_inscripcion AND p.estado='completado'),0) >= i.monto_total
+    THEN 'confirmada' ELSE 'pendiente' END
+    WHERE i.id_inscripcion=$1 AND i.estado IN ('pendiente','confirmada') AND i.concluida_at IS NULL`, [idInscripcion]);
+}
+
 async function comprobarInscripcionAbierta(client, idInscripcion) {
   const result = await client.query('SELECT * FROM inscripciones WHERE id_inscripcion = $1', [idInscripcion]);
   const inscripcion = result.rows[0];
@@ -68,7 +76,7 @@ const crearPago = async (datos) => {
        VALUES ($1, $2, $3, $4, COALESCE($5, 'pendiente')) RETURNING *`,
       [id_inscripcion, monto, metodo_pago, referencia ?? null, estado]
     );
-    if (estado === 'completado') await client.query("UPDATE inscripciones SET estado = 'confirmada' WHERE id_inscripcion = $1 AND estado = 'pendiente'", [id_inscripcion]);
+    await sincronizarConfirmacion(client, id_inscripcion);
     return resultado.rows[0];
   });
 };
@@ -78,7 +86,7 @@ const actualizarEstadoPago = async (id, estado) => {
   return cambiarPago(id, async (client, idInscripcion) => {
     const result = await client.query("UPDATE pagos SET estado = $1 WHERE id_pago = $2 AND estado = 'pendiente' RETURNING *", [estado, id]);
     if (!result.rowCount) throw httpError(409, 'El pago ya fue revisado');
-    if (estado === 'completado') await client.query("UPDATE inscripciones SET estado = 'confirmada' WHERE id_inscripcion = $1 AND estado = 'pendiente'", [idInscripcion]);
+    await sincronizarConfirmacion(client, idInscripcion);
     return result.rows[0];
   });
 };

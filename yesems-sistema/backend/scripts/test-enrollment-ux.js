@@ -1,0 +1,52 @@
+// Interfaz real con datos ficticios y red externa bloqueada. No envía pagos reales.
+const express = require('express');
+const path = require('node:path');
+const assert = require('node:assert/strict');
+const { startBrowser } = require('../test/helpers/browser-client');
+(async()=>{
+  const app=express(); app.use(express.json());
+  let person={id_usuario:7,nombre:'Alumno',apellido:'Prueba',email:'alumno@example.test',telefono:'',curp:'',fecha_nacimiento:null,rol:'cliente'};
+  let payments=[]; let created=0;
+  const course={id_curso:1,nombre:'Curso de prueba',duracion_horas:60,precio:1000,activo:true};
+  app.get('/api/usuarios/mio',(_req,res)=>res.json({ok:true,usuario:person}));
+  app.put('/api/usuarios/mio',(req,res)=>{person={...person,...req.body};res.json({ok:true,usuario:person});});
+  app.get('/api/cursos/1',(_req,res)=>res.json({ok:true,curso:course}));
+  app.get('/api/cursos/1/disponibilidades',(_req,res)=>res.json({ok:true,disponibilidades:[]}));
+  app.get('/api/inscripciones/mias',(_req,res)=>res.json({ok:true,inscripciones:[]}));
+  app.post('/api/inscripciones/mia',(_req,res)=>{created++;res.status(201).json({ok:true,inscripcion:{id_inscripcion:42}});});
+  app.get('/api/pagos/mio/42',(_req,res)=>res.json({ok:true,inscripcion:{id_inscripcion:42,monto_total:1000,curso_nombre:course.nombre,estado_inscripcion:'pendiente',pagos:payments}}));
+  app.post('/api/pagos/mio',(_req,res)=>{payments=[{id_pago:1,monto:1000,estado:'pendiente'}];res.status(201).json({ok:true,pago:payments[0]});});
+  app.use(express.static(path.resolve(__dirname,'../../frontend')));
+  const server=app.listen(0,'127.0.0.1');await new Promise(r=>server.once('listening',r));let browser;
+  try {
+    const origin=`http://127.0.0.1:${server.address().port}`;
+    browser=await startBrowser(origin); await browser.navigate(origin+'/cursos.html');
+    await browser.evaluate(`localStorage.setItem('yesems_token','local-test');localStorage.setItem('yesems_usuario',${JSON.stringify(JSON.stringify(person))});`);
+    await browser.navigate(origin+'/inscripcion.html?curso=1');
+    await browser.waitFor("document.querySelector('#nombre').value==='Alumno'");
+    await browser.fill('#telefono','5500000000');await browser.click('#save-later');
+    await browser.waitFor("location.pathname==='/panel.html'");assert.equal(created,0);assert.equal(person.telefono,'5500000000');
+    await browser.navigate(origin+'/inscripcion.html?curso=1');
+    await browser.waitFor("document.querySelector('#telefono').value==='5500000000'");
+    await browser.fill('#fecha-nacimiento','2000-01-01');await browser.fill('#curp','TEST000101HDF00001');await browser.click('#terms');
+    await browser.click('#continue-button');await browser.waitFor("document.querySelector('#personal-step').hidden");
+    assert.equal(created,0);assert.equal(await browser.evaluate("JSON.parse(localStorage.getItem('yesems_usuario')).curp===undefined"),true);
+    await browser.click('#back-to-data');await browser.fill('#nombre','Nombre corregido');await browser.click('#continue-button');
+    await browser.waitFor("document.querySelector('#confirm-name').textContent==='Nombre corregido Prueba'");
+    await browser.click('#submit-button');await browser.waitFor("location.pathname==='/pago.html' && !document.querySelector('#payment-layout').hidden");assert.equal(created,1);
+    assert.deepEqual(await browser.evaluate("[...document.querySelector('#method').options].map(o=>o.value).filter(Boolean).sort()"),['efectivo','transferencia']);
+    assert.equal(await browser.evaluate("document.querySelector('#enrollment-status').textContent"),'Pago pendiente');
+    await browser.fill('#method','transferencia');
+    await browser.evaluate("(()=>{const dt=new DataTransfer();dt.items.add(new File(['%PDF-1.4 prueba'],'prueba.pdf',{type:'application/pdf'}));document.querySelector('#receipt').files=dt.files;})()");
+    await browser.click('#submit-button');await browser.waitFor("document.querySelector('#enrollment-status').textContent==='Pago en revisión'");
+    await browser.navigate(origin+'/pago.html?inscripcion=42');
+    await browser.waitFor("document.querySelector('#enrollment-status').textContent==='Pago en revisión'");
+    payments[0].estado='completado';await browser.navigate(origin+'/pago.html?inscripcion=42');
+    await browser.waitFor("document.querySelector('#enrollment-status').textContent==='Inscripción confirmada'");
+    await browser.navigate(origin+'/configuracion.html');await browser.waitFor("document.querySelector('#curp').value==='TEST000101HDF00001'");
+    await browser.fill('#apellido','Corregido');await browser.click('#settings-form button');await browser.waitFor("document.querySelector('#settings-message').textContent.includes('correctamente')");
+    assert.equal(person.apellido,'Corregido');
+    await browser.viewport(390,844);assert.equal(await browser.evaluate('document.documentElement.scrollWidth<=innerWidth+1'),true);
+    assert.deepEqual(browser.errors,[]);console.log('Correcto: guardar/reanudar ficha, tres pasos, corregir datos, dos métodos y estados de pago.');
+  } finally {await browser?.close();await new Promise(r=>server.close(r));}
+})().catch(e=>{console.error(e);process.exitCode=1;});

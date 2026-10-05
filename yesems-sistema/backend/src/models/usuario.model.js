@@ -82,10 +82,15 @@ const desactivarUsuario = async (id) => {
 };
 
 const actualizarPerfilPropio = async (id, datos) => {
-  const { nombre, apellido, telefono } = datos;
+  const { nombre, apellido, telefono, fecha_nacimiento, curp } = datos;
   const resultado = await pool.query(
-    `UPDATE usuarios SET nombre = $1, apellido = $2, telefono = $3 WHERE id_usuario = $4 AND activo = true RETURNING id_usuario, nombre, apellido, email, telefono, fecha_nacimiento, curp, folio, rol, activo`,
-    [nombre, apellido, telefono || null, id]
+    `UPDATE usuarios SET nombre = $1, apellido = $2,
+      telefono = CASE WHEN $5 THEN $3 ELSE telefono END,
+      fecha_nacimiento = CASE WHEN $6 THEN $7::date ELSE fecha_nacimiento END,
+      curp = CASE WHEN $8 THEN $9 ELSE curp END
+      WHERE id_usuario = $4 AND activo = true
+      RETURNING id_usuario, nombre, apellido, email, telefono, fecha_nacimiento, curp, folio, rol, activo`,
+    [nombre, apellido, telefono ?? null, id, telefono !== undefined, fecha_nacimiento !== undefined, fecha_nacimiento ?? null, curp !== undefined, curp ?? null]
   );
   return resultado.rows[0];
 };

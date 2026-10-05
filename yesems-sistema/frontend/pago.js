@@ -25,6 +25,7 @@ async function loadPayment() {
     const data = await response.json();
     if (!response.ok || !data.ok) throw new Error(data.mensaje || data.error || 'No se pudo cargar la inscripción.');
     enrollment = data.inscripcion;
+    setText('#enrollment-status', InscripcionEstado.estado(enrollment));
     setText('#course-name', enrollment.curso_nombre);
     setText('#course-description', enrollment.curso_descripcion);
     setText('#student-folio', enrollment.folio);
@@ -43,26 +44,32 @@ async function loadPayment() {
     if (enrollment.pagos.some((payment) => payment.estado === 'pendiente')) showPending();
   } catch (error) { pageMessage.textContent = error instanceof TypeError ? 'No se pudo conectar con el servidor.' : error.message; }
 }
-function showPending() { formMessage.classList.add('success'); formMessage.textContent = 'Ya registraste un pago pendiente de validación. Te avisaremos cuando sea revisado.'; form.querySelectorAll('input, select, button').forEach((element) => { element.disabled = true; }); }
+function showPending() { setText('#enrollment-status', 'Pago en revisión'); formMessage.classList.add('success'); formMessage.textContent = 'Comprobante recibido. Tu inscripción aún no está confirmada: administración debe verificar el dinero recibido. Consulta el resultado en Mi panel.'; form.querySelectorAll('input, select, button').forEach((element) => { element.disabled = true; }); }
 const form = document.querySelector('#payment-form');
 const cashInstructions=document.createElement('section');
 cashInstructions.className='receipt-field';
 cashInstructions.innerHTML='<h3>Pago en efectivo en YES EMS</h3><ol><li>Acude a YES EMS e indica tu curso y folio de alumno.</li><li>Realiza el pago y solicita tu comprobante.</li><li>Regresa aquí y adjunta una fotografía o escaneo legible.</li></ol><p>Subir un comprobante no aprueba el pago: la administración debe cotejarlo con el dinero recibido.</p><a href="./panel.html">Completar después · Volver al panel</a>';
 form.before(cashInstructions);
+const transferInstructions=document.createElement('section');
+transferInstructions.className='receipt-field';
+transferInstructions.hidden=true;
+transferInstructions.innerHTML='<h3>Transferencia bancaria</h3><ol><li>Solicita a YES EMS los datos bancarios oficiales y confirma el importe antes de transferir.</li><li>Realiza la transferencia y conserva el comprobante bancario.</li><li>Adjunta el comprobante e indica la referencia de la operación.</li></ol><p>El administrador confirmará el pago solo después de comprobar que el dinero llegó a la cuenta. No envíes contraseñas, NIP ni códigos bancarios.</p><a href="./panel.html">Completar después · Volver al panel</a>';
+form.before(transferInstructions);
 const methodSelect=document.querySelector('#method');
 methodSelect.querySelector('[value="efectivo"]').textContent='Efectivo en YES EMS';
 methodSelect.value='efectivo';
-methodSelect.addEventListener('change',()=>{cashInstructions.hidden=methodSelect.value!=='efectivo';});
+methodSelect.addEventListener('change',()=>{cashInstructions.hidden=methodSelect.value!=='efectivo';transferInstructions.hidden=methodSelect.value!=='transferencia';});
 submitButton.textContent='Enviar comprobante a revisión';
 const receiptField = document.createElement('div');
 receiptField.className = 'receipt-field';
-receiptField.innerHTML = '<label for="receipt">Comprobante de pago</label><input id="receipt" type="file" accept="application/pdf,image/jpeg,image/png" required /><p class="field-help">Escanea o fotografía el comprobante que recibiste en YES EMS. PDF, JPG o PNG legible · máximo 5 MB. También es obligatorio para efectivo.</p>';
+receiptField.innerHTML = '<label for="receipt">Comprobante de pago</label><input id="receipt" type="file" accept="application/pdf,image/jpeg,image/png" required /><p class="field-help">Adjunta el recibo de efectivo de YES EMS o tu comprobante bancario. PDF, JPG o PNG legible · máximo 5 MB. Obligatorio en ambos métodos.</p>';
 formMessage.before(receiptField);
 const receiptInput = document.querySelector('#receipt');
 form.addEventListener('submit', async (event) => {
   event.preventDefault(); formMessage.textContent = ''; formMessage.classList.remove('success');
   if (!form.checkValidity()) { formMessage.textContent = 'Selecciona un método y adjunta tu comprobante.'; form.reportValidity(); return; }
   const method = document.querySelector('#method').value;
+  if (!['efectivo','transferencia'].includes(method)) { formMessage.textContent = 'Solo se acepta efectivo o transferencia.'; return; }
   const receipt = receiptInput.files[0];
   if (!receipt) { formMessage.textContent = 'Adjunta tu comprobante de pago para continuar.'; return; }
   if (receipt && receipt.size > 5 * 1024 * 1024) { formMessage.textContent = 'El comprobante no puede superar 5 MB.'; return; }
@@ -77,6 +84,6 @@ form.addEventListener('submit', async (event) => {
     const data = await response.json();
     if (!response.ok || !data.ok) throw new Error(data.mensaje || data.error || 'No se pudo registrar el pago.');
     showPending();
-  } catch (error) { formMessage.textContent = error instanceof TypeError ? 'No se pudo conectar con el servidor.' : error.message; submitButton.disabled = false; submitButton.textContent = 'Registrar pago pendiente'; }
+  } catch (error) { formMessage.textContent = error instanceof TypeError ? 'No se pudo conectar con el servidor.' : error.message; submitButton.disabled = false; submitButton.textContent = 'Enviar comprobante a revisión'; }
 });
 document.querySelector('#logout-button').addEventListener('click', () => { localStorage.removeItem('yesems_token'); localStorage.removeItem('yesems_usuario'); window.location.href = './cursos.html'; });

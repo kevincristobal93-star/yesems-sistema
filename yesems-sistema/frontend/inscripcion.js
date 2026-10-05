@@ -11,6 +11,8 @@ const personalStep = document.querySelector('#personal-step');
 const confirmationStep = document.querySelector('#confirmation-step');
 const backButton = document.querySelector('#back-to-data');
 let submitting = false;
+let saving = false;
+let profileLoaded = false;
 document.querySelector('#footer-year').textContent = new Date().getFullYear();
 
 if (!courseId || !/^\d+$/.test(courseId)) {
@@ -29,6 +31,8 @@ async function loadProfile() {
     const response = await fetch(`${API_URL}/usuarios/mio`, {headers:{Authorization:`Bearer ${token}`}});
     const data = await response.json();
     if (!response.ok || !data.ok) throw new Error('No se pudieron recuperar tus datos. Puedes completarlos abajo.');
+    profileLoaded = true;
+    document.querySelector('#profile-email').textContent = data.usuario.email || '';
     for (const [field,key] of [['nombre','nombre'],['apellido','apellido'],['telefono','telefono'],['fecha-nacimiento','fecha_nacimiento'],['curp','curp']]) {
       const input=document.getElementById(field);
       if(!input.value) input.value=String(data.usuario[key] || '').slice(0,field==='fecha-nacimiento'?10:150);
@@ -104,7 +108,7 @@ async function loadAvailabilities() {
   }
 }
 function showPersonalStep() {
-  if (submitting) return;
+  if (submitting || saving) return;
   document.querySelector('#continue-button').before(message);
   confirmationStep.hidden = true;
   personalStep.hidden = false;
@@ -113,16 +117,19 @@ function showPersonalStep() {
   message.textContent = '';
 }
 
-function showConfirmationStep() {
+async function showConfirmationStep() {
+  if (saving || submitting) return;
   if (!form.checkValidity()) {
     message.textContent = 'Completa todos los datos antes de continuar.';
     form.reportValidity();
     return;
   }
+  if (!await saveProfile()) return;
   document.querySelector('#confirm-phone').textContent = document.querySelector('#telefono').value.trim();
   document.querySelector('#confirm-name').textContent = `${document.querySelector('#nombre').value.trim()} ${document.querySelector('#apellido').value.trim()}`;
   document.querySelector('#confirm-birthdate').textContent = new Intl.DateTimeFormat('es-MX', { dateStyle: 'long' }).format(new Date(`${document.querySelector('#fecha-nacimiento').value}T00:00:00`));
   document.querySelector('#confirm-curp').textContent = document.querySelector('#curp').value.trim().toUpperCase();
+  document.querySelector('#confirm-course').textContent = `${document.querySelector('#course-title').textContent} · ${document.querySelector('#course-price').textContent} · ${document.querySelector('#course-duration').textContent}`;
   const hasAvailability = !availabilitySelect.disabled && availabilitySelect.value;
   document.querySelector('#confirm-availability-row').hidden = !hasAvailability;
   if (hasAvailability) document.querySelector('#confirm-availability').textContent = availabilitySelect.options[availabilitySelect.selectedIndex].textContent;
@@ -138,9 +145,37 @@ function showConfirmationStep() {
 document.querySelector('#continue-button').addEventListener('click', showConfirmationStep);
 backButton.addEventListener('click', showPersonalStep);
 
+async function saveProfile() {
+  if (!profileLoaded) { message.textContent = 'No se ha cargado tu ficha. Recarga la página antes de guardar para no sobrescribir datos existentes.'; return false; }
+  saving = true;
+  const status = document.querySelector('#save-status');
+  status.textContent = 'Guardando tus datos…';
+  document.querySelector('#continue-button').disabled = true;
+  document.querySelector('#save-later').disabled = true;
+  try {
+    const fields = { nombre: '#nombre', apellido: '#apellido', telefono: '#telefono', fecha_nacimiento: '#fecha-nacimiento', curp: '#curp' };
+    const body = Object.fromEntries(Object.entries(fields).map(([key, selector]) => [key, document.querySelector(selector).value.trim()]));
+    const response = await fetch(`${API_URL}/usuarios/mio`, { method:'PUT', headers:{'Content-Type':'application/json', Authorization:`Bearer ${token}`}, body:JSON.stringify(body) });
+    const data = await response.json();
+    if (!response.ok || !data.ok) throw new Error(data.mensaje || 'No se pudieron guardar tus datos.');
+    // No guardar fecha de nacimiento ni CURP en el navegador.
+    const { id_usuario, nombre, apellido, email, rol, folio } = data.usuario;
+    localStorage.setItem('yesems_usuario', JSON.stringify({ id_usuario, nombre, apellido, email, rol, folio }));
+    status.textContent = 'Ficha guardada en tu cuenta. Puedes continuar después sin volver a capturarla.';
+    message.textContent = '';
+    return true;
+  } catch (error) { status.textContent = 'No se confirmó el guardado.'; message.textContent = error.message; return false; }
+  finally { saving = false; document.querySelector('#continue-button').disabled = false; document.querySelector('#save-later').disabled = false; }
+}
+document.querySelector('#save-later').addEventListener('click', async () => {
+  if (saving || submitting) return;
+  if (await saveProfile()) window.location.href = `./panel.html?curso=${encodeURIComponent(courseId)}`;
+});
+
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
-  if (submitting) return;
+  if (submitting || saving) return;
+  if (!personalStep.hidden) { await showConfirmationStep(); return; }
   if (!form.checkValidity()) {
     showPersonalStep();
     message.textContent = 'Completa todos los datos antes de continuar.';
@@ -175,7 +210,10 @@ form.addEventListener('submit', async (event) => {
       throw new Error('No se recibió el número de inscripción. Vuelve a intentarlo o revisa Mi panel.');
     }
 
-    if (data.usuario) localStorage.setItem('yesems_usuario', JSON.stringify({ ...user, ...data.usuario }));
+    if (data.usuario) {
+      const { id_usuario, nombre, apellido, email, rol, folio } = data.usuario;
+      localStorage.setItem('yesems_usuario', JSON.stringify({ id_usuario, nombre, apellido, email, rol, folio }));
+    }
     // currentTarget deja de estar disponible después de await; usar el formulario estable.
     form.querySelectorAll('input, button, select').forEach((element) => { element.disabled = true; });
     completed = true;

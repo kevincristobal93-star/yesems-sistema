@@ -46,7 +46,7 @@ async function screen(reply = { ok: true, inscripcion: { id_inscripcion: 42 } },
     setTimeout: (fn) => { fn(); },
   });
   await new Promise(setImmediate);
-  node('#continue-button').handlers.click();
+  await node('#continue-button').handlers.click();
   function submit() {
     const event = { preventDefault: jest.fn(), currentTarget: node('#enrollment-form') };
     const pending = node('#enrollment-form').handlers.submit(event);

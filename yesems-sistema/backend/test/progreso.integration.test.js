@@ -193,6 +193,42 @@ integration('Proceso real de inscripción, avance y constancia (PostgreSQL aisla
     expect(await progress(id)).toMatchObject({ monto_total: 1000, total_pagado: 1000, pago_completo: true, puede_solicitar_constancia: false });
   });
 
+  test('ficha guardada antes de inscribirse, edición propia y campos protegidos', async () => {
+    const person = await register('ficha');
+    const basic = { nombre:'Ficha', apellido:'Prueba', telefono:'5500000000' };
+    await request('PUT', '/usuarios/mio', { body:basic, status:401 });
+    const saved = await request('PUT', '/usuarios/mio', { token:person.token, body:{...basic,fecha_nacimiento:'2000-01-01',curp:'FICH000101HDF00001',rol:'admin',email:'no@example.test'},status:200 });
+    expect(saved.json.usuario).toMatchObject({rol:'cliente',email:person.email,folio:null});
+    expect((await pool.query('SELECT count(*)::int AS n FROM inscripciones WHERE id_usuario=$1',[person.id])).rows[0].n).toBe(0);
+    await request('PUT', '/usuarios/mio', {token:person.token,body:{...basic,fecha_nacimiento:'2026-02-30'},status:400});
+    const profile = (await request('GET','/usuarios/mio',{token:person.token,status:200})).json.usuario;
+    expect(profile.curp).toBe('FICH000101HDF00001');
+    const corrected=await request('PUT','/usuarios/mio',{token:person.token,body:{...basic,nombre:'Ficha corregida',curp:'FICH000101HDF00002'},status:200});
+    expect(corrected.json.usuario.fecha_nacimiento).toBe(profile.fecha_nacimiento);
+    await request('PUT','/usuarios/mio',{token:otroAlumno.token,body:{...basic,curp:'FICH000101HDF00002'},status:409});
+  });
+
+  test('solo efectivo y transferencia; subir comprobante no confirma y un abono tampoco', async () => {
+    const course=await createCourse({price:1000});
+    const id=await enroll(course);
+    for(const method of ['tarjeta','otro']) {
+      await request('POST','/pagos/mio',{token:alumno.token,body:{id_inscripcion:id,metodo_pago:method},status:400});
+      await request('POST','/pagos',{token:admin.token,body:{id_inscripcion:id,monto:1000,metodo_pago:method},status:400});
+    }
+    const partial=await payment(id,100,false);
+    await request('PATCH',`/administradores/pagos/${partial}/validar`,{token:alumno.token,body:{estado:'completado'},status:403});
+    await request('PATCH',`/administradores/pagos/${partial}/validar`,{token:admin.token,body:{estado:'completado'},status:200});
+    expect((await progress(id)).estado).toBe('pendiente');
+    const receipt=new FormData();
+    receipt.set('id_inscripcion',String(id)); receipt.set('metodo_pago','transferencia'); receipt.set('estado','completado');
+    receipt.set('comprobante',new Blob(['%PDF-1.4\nRecibo ficticio\n%%EOF'],{type:'application/pdf'}),'transferencia.pdf');
+    const pending=await request('POST','/pagos/mio',{token:alumno.token,body:receipt,status:201});
+    expect(pending.json.pago).toMatchObject({estado:'pendiente',monto:'900.00'});
+    expect((await progress(id)).estado).toBe('pendiente');
+    await request('PATCH',`/administradores/pagos/${pending.json.pago.id_pago}/validar`,{token:admin.token,body:{estado:'completado'},status:200});
+    expect(await progress(id)).toMatchObject({estado:'confirmada',pago_completo:true});
+  });
+
   test('propuestas bloquean inscripción en ambas rutas; solo administración puede validarlas', async () => {
     const body = { id_categoria: category, nombre: `Propuesta ${tag}`, descripcion: 'Datos sugeridos', duracion_horas: 24, precio: 0, cupo: 10, oferta_provisional: true };
     const created = await request('POST', '/cursos', { token: admin.token, body, status: 201 });

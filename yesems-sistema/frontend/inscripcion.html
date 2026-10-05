@@ -22,7 +22,8 @@
       <div class="enrollment-layout">
         <form id="enrollment-form" class="details-card" novalidate>
           <div id="personal-step"><h2>Datos del alumno</h2>
-          <p class="card-intro">Estos datos son necesarios para formalizar la inscripción.</p>
+          <p class="card-intro">Crear tu cuenta no confirma una inscripción. Revisa tu ficha; la CURP y la fecha de nacimiento se solicitan para identificar tu inscripción y constancia.</p>
+          <p class="field-help">Correo de tu cuenta: <strong id="profile-email"></strong></p>
           <div class="two-columns"><div><label for="nombre">Nombre(s)</label><input id="nombre" autocomplete="given-name" maxlength="100" required /></div><div><label for="apellido">Apellidos</label><input id="apellido" autocomplete="family-name" maxlength="100" required /></div></div>
           <div class="two-columns">
             <div><label for="telefono">Teléfono</label><input id="telefono" name="telefono" type="tel" autocomplete="tel" required /></div>
@@ -33,11 +34,14 @@
           <p class="folio-note"><strong>Tu folio de alumno se generará automáticamente</strong> al confirmar tus datos.</p>
           <label class="check-label"><input id="terms" type="checkbox" required /><span>Confirmo que mis datos son correctos.</span></label>
           <p id="form-message" class="form-message" role="alert" aria-live="polite"></p>
-          <button id="continue-button" class="primary-button" type="button">Continuar a confirmación</button></div>
+          <button id="continue-button" class="primary-button" type="button">Guardar datos y continuar</button>
+          <button id="save-later" class="secondary-button" type="button">Guardar y continuar después</button>
+          <p id="save-status" class="field-help" role="status" aria-live="polite">Tus datos se guardan en tu cuenta, no se crea una inscripción hasta el paso 2.</p></div>
           <div id="confirmation-step" hidden>
             <p class="eyebrow">Paso 2 de 3</p><h2>Confirma tu inscripción</h2><p class="card-intro">Revisa tus datos antes de reservar tu lugar.</p>
             <dl class="confirmation-data"><div><dt>Nombre completo</dt><dd id="confirm-name"></dd></div><div><dt>Teléfono</dt><dd id="confirm-phone"></dd></div><div><dt>Fecha de nacimiento</dt><dd id="confirm-birthdate"></dd></div><div><dt>CURP</dt><dd id="confirm-curp"></dd></div><div id="confirm-availability-row" hidden><dt>Disponibilidad</dt><dd id="confirm-availability"></dd></div></dl>
-            <p class="folio-note"><strong>Al confirmar,</strong> se creará tu inscripción y continuarás al pago.</p>
+            <p id="confirm-course" class="folio-note"></p>
+            <p class="folio-note"><strong>Al confirmar,</strong> se creará una inscripción pendiente de pago. Subir el comprobante no confirma tu lugar: administración debe verificar el pago completo recibido.</p>
             <div class="confirmation-actions"><button id="back-to-data" class="secondary-button" type="button">Regresar</button><button id="submit-button" class="primary-button" type="submit">Confirmar inscripción</button></div>
           </div>
         </form>

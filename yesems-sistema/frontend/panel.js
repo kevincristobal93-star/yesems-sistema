@@ -27,7 +27,7 @@ function renderCompletion(items) {
   if(!needsCourse && active.length && (!pending || paymentComplete(pending) || pending.tiene_pago_pendiente)){banner.hidden=true;return;}
   banner.hidden=false;
   const href=needsCourse?`./inscripcion.html?curso=${encodeURIComponent(validCourse)}`:pending?`./pago.html?inscripcion=${encodeURIComponent(pending.id_inscripcion)}`:'./catalogo-alumno.html';
-  const detail=needsCourse || !pending?'Elige tu curso, completa tus datos personales y revisa las opciones de pago.':'Tu inscripción está guardada. Puedes pagar en efectivo en YES EMS y regresar a subir tu comprobante.';
+  const detail=needsCourse || !pending?'Datos pendientes: tener una cuenta no significa estar inscrito. Completa o revisa tu ficha, confirma el curso y continúa al pago.':'Tu inscripción está pendiente de pago. Paga en efectivo o transferencia y sube tu comprobante; administración confirmará cuando reciba el importe completo.';
   const content=`<p class="eyebrow">SIGUIENTE PASO</p><h2>Completa tu inscripción</h2><p>${detail}</p><a class="payment-button" href="${href}">${pending && !needsCourse?'Continuar con mi pago':'Continuar inscripción'}</a>`;
   banner.innerHTML=content;
   if(completionPromptShown)return;
@@ -89,7 +89,7 @@ function availabilityLabel(item) {
 function renderFeaturedCourse(item) {
   const featured = document.querySelector('#featured-course');
   document.querySelector('#featured-status').textContent = item.progreso?.conclusion_validada === true
-    ? 'Conclusión validada' : statusLabel(item.estado);
+    ? 'Conclusión validada' : InscripcionEstado.estado(item);
   featured.className = 'featured-course';
   featured.innerHTML = `<div><span class="featured-label">Avance académico</span><h3>${escapeHtml(item.curso_nombre)}</h3><p>${escapeHtml(item.curso_descripcion || 'Curso YES EMS')}</p>${PanelProgreso.renderMeter(item.progreso)}<p class="progress-note">El avance corresponde a las sesiones o actividades que la administración ha registrado como cumplidas.</p></div>
     <div class="featured-meta"><strong class="${paymentComplete(item) ? '' : 'payment-pending'}">${paymentLabel(item)}</strong><a class="payment-button" href="#inscripcion-${escapeHtml(item.id_inscripcion)}">Ver mi seguimiento</a></div>`;
@@ -167,7 +167,7 @@ function constanciaAction(item) {
 
 function renderEnrollment(item) {
   return `<article class="enrollment-card" id="inscripcion-${escapeHtml(item.id_inscripcion)}"><div><h3>${escapeHtml(item.curso_nombre)}</h3><p>${escapeHtml(item.curso_descripcion || 'Curso YES EMS')}</p><div class="enrollment-info"><span>Inscripción: ${escapeHtml(formatDate(item.fecha_inscripcion))}</span><span>Disponibilidad: ${escapeHtml(availabilityLabel(item))}</span></div></div>
-    <div class="enrollment-side"><span class="badge">${escapeHtml(statusLabel(item.estado))}</span><strong class="constancia-status">${paymentLabel(item)}</strong><p class="payment-summary">Confirmado: ${amount(item.total_pagado)} de ${amount(item.monto_total)}</p><a class="payment-button" href="./pago.html?inscripcion=${encodeURIComponent(item.id_inscripcion)}">Ver pago</a><div class="constancia-actions">${constanciaAction(item)}</div><p class="panel-feedback" role="status" aria-live="polite"></p></div>
+    <div class="enrollment-side"><span class="badge">${escapeHtml(InscripcionEstado.estado(item))}</span><strong class="constancia-status">${paymentLabel(item)}</strong><p class="payment-summary">Confirmado: ${amount(item.total_pagado)} de ${amount(item.monto_total)}</p><a class="payment-button" href="./pago.html?inscripcion=${encodeURIComponent(item.id_inscripcion)}">Ver pago</a><div class="constancia-actions">${constanciaAction(item)}</div><p class="panel-feedback" role="status" aria-live="polite"></p></div>
     ${PanelProgreso.render(item.progreso, item.estado)}</article>`;
 }
 
