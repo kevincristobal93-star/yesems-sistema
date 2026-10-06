@@ -9,6 +9,10 @@ dist/
 .DS_Store
 .vscode/
 .idea/
+*.yesemsbak
+*.yesemsbak.partial
+*.dump
+backups/
 
 # Archivos generados por la aplicación
 yesems-sistema/backend/uploads/constancias/*

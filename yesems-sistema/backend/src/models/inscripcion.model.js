@@ -6,7 +6,7 @@ const { httpError, positiveId } = require('../utils/http-error');
 const obtenerInscripciones = async () => {
   const resultado = await pool.query(`
     SELECT i.*,
-           u.nombre AS usuario_nombre, u.apellido AS usuario_apellido,
+           u.nombre AS usuario_nombre, u.apellido AS usuario_apellido, u.folio AS alumno_folio, u.email AS alumno_email,
            c.nombre AS curso_nombre
     FROM inscripciones i
     JOIN usuarios u ON i.id_usuario = u.id_usuario

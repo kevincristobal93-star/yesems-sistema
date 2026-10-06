@@ -193,6 +193,7 @@ async function loadPanel() {
     renderActivity(items);
     if (!items.length) {
       list.innerHTML = '<div class="empty">Aún no tienes inscripciones. <a href="./catalogo-alumno.html">Explora los cursos disponibles</a> para comenzar.</div>';
+      ListFilters.attach(list, [], {title:'mis inscripciones'});
       document.querySelector('#featured-status').textContent = 'Sin cursos inscritos';
       document.querySelector('#featured-course').className = 'featured-course empty';
       document.querySelector('#featured-course').textContent = 'Aún no tienes un curso destacado. Explora nuestro catálogo para comenzar.';
@@ -200,6 +201,7 @@ async function loadPanel() {
     }
     renderFeaturedCourse(items.find((item) => item.estado !== 'cancelada') || items[0]);
     list.innerHTML = items.map(renderEnrollment).join('');
+    ListFilters.attach(list, items, {title:'mis inscripciones', map:item=>({search:[item.curso_nombre,item.folio_constancia,item.id_inscripcion].filter(Boolean).join(' '),course:item.curso_nombre||'',state:InscripcionEstado.estado(item),date:String(item.fecha_inscripcion||'').slice(0,10)})});
     list.querySelectorAll('.enrollment-card').forEach((card) => {
       if (openDetails.has(card.id) && card.querySelector('details')) card.querySelector('details').open = true;
     });
@@ -208,6 +210,7 @@ async function loadPanel() {
     panelMessage.hidden = false;
     panelMessage.textContent = error.message;
     list.innerHTML = '';
+    ListFilters.attach(list, [], {title:'mis inscripciones'});
     document.querySelector('#activity-list').textContent = 'No se pudieron consultar los movimientos. Usa “Actualizar” para volver a intentar.';
     document.querySelector('#featured-course').className = 'featured-course empty';
     document.querySelector('#featured-course').textContent = 'No se pudo consultar tu avance. No se mostrarán porcentajes hasta obtener los registros.';

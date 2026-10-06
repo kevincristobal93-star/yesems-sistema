@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="./admin.css" /><link rel="stylesheet" href="./admin-dashboard.css" /><link rel="stylesheet" href="./admin-actions.css" /><link rel="stylesheet" href="./admin-footer.css" /><link rel="stylesheet" href="./admin-reports.css" /><link rel="stylesheet" href="./admin-redesign.css" /><link rel="stylesheet" href="./admin-courses.css" /><link rel="stylesheet" href="./admin-motion.css" />
   <link rel="stylesheet" href="./admin-seguimiento.css" />
   <link rel="stylesheet" href="./admin-report-detail.css" />
-</head>
+<link rel="stylesheet" href="./list-filters.css"><script src="./list-filters.js"></script></head>
 <body class="dashboard-body">
   <header class="admin-topbar">
     <a class="topbar-brand" href="./admin.html"><img src="./assets/yesems-logo.png" alt="YES EMS" width="1254" height="1254" /><span>Administración</span></a>
@@ -27,6 +27,7 @@
       <a href="#constancias"><svg viewBox="0 0 24 24"><path d="M6 2h12v20l-6-3-6 3V2Zm4 5v6l5-3-5-3Z"/></svg>Constancias</a>
       <a href="#cursos"><svg viewBox="0 0 24 24"><path d="M4 3h15a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm0 2v14h14V5H4Zm3 3h8v2H7V8Zm0 4h8v2H7v-2Z"/></svg>Cursos y disponibilidad</a>
       <a href="#seguimiento"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3h18v18H3V3Zm2 2v14h14V5H5Zm2 4h3v2H7V9Zm0 4h3v2H7v-2Zm5-4h5v2h-5V9Zm0 4h5v2h-5v-2Z"/></svg>Sesiones y avance</a>
+      <a href="#respaldos"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3h16v18H4V3Zm3 3v5h10V6H7Zm0 9v3h10v-3H7Z"/></svg>Respaldos y recuperación</a>
     </nav>
     <button id="logout-button" class="drawer-logout" type="button">Cerrar sesión</button>
   </aside>
@@ -47,7 +48,7 @@
       </div>
       <p class="report-footnote">Datos guardados en el sistema. Actualiza para consultar los últimos cambios; los pagos pendientes no se suman a los confirmados.</p>
     </section>
-    <section id="inscripciones" class="data-section"><div class="section-heading"><div><p class="eyebrow blue">Actividad reciente</p><h2>Últimas inscripciones</h2></div></div><p id="dashboard-message" class="form-message">Cargando información...</p><div class="table-wrap"><table><thead><tr><th>Alumno</th><th>Curso</th><th>Fecha</th><th>Monto</th><th>Estado</th><th></th></tr></thead><tbody id="inscription-table"></tbody></table></div></section>
+    <section id="inscripciones" class="data-section"><div class="section-heading"><div><p class="eyebrow blue">Actividad reciente</p><h2>Todas las inscripciones</h2></div></div><p id="dashboard-message" class="form-message">Cargando información...</p><div class="table-wrap"><table><thead><tr><th>Alumno</th><th>Curso</th><th>Fecha</th><th>Monto</th><th>Estado</th><th></th></tr></thead><tbody id="inscription-table"></tbody></table></div></section>
     <section id="pagos" class="data-section payments-section"><div class="section-heading"><div><p class="eyebrow blue">Validación de pagos</p><h2>Pagos pendientes</h2></div><span id="pending-payment-count" class="pending-count"></span></div><p id="payments-message" class="form-message">Cargando pagos...</p><div class="table-wrap"><table><thead><tr><th>Alumno</th><th>Curso</th><th>Monto</th><th>Método / referencia</th><th>Fecha</th><th>Acciones</th></tr></thead><tbody id="payment-table"></tbody></table></div></section>
     <section id="constancias" class="data-section certificates-section"><div class="section-heading"><div><p class="eyebrow blue">Documentos académicos</p><h2>Solicitudes de constancia</h2></div><span id="pending-certificate-count" class="pending-count"></span></div><div class="certificate-guide"><span class="certificate-guide-icon">✓</span><p id="certificate-guide-text">Las solicitudes pendientes muestran el botón <strong>Autorizar y generar PDF</strong>.</p></div><p id="certificates-message" class="form-message" aria-live="polite">Cargando solicitudes...</p><div class="table-wrap"><table><thead><tr><th>Alumno</th><th>Curso</th><th>Folio</th><th>Solicitud</th><th>Estado</th><th>Acciones</th></tr></thead><tbody id="certificate-table"></tbody></table></div></section>
     <section id="cursos" class="data-section courses-management">
@@ -55,6 +56,12 @@
       <p id="courses-message" class="form-message" aria-live="polite">Cargando cursos...</p>
       <div id="courses-admin-list" class="course-admin-list"></div>
       <div class="availability-management"><div class="section-heading courses-heading"><div><p class="eyebrow blue">Atención y acceso</p><h3>Disponibilidad del servicio</h3><p>Define cómo, cuándo y por dónde se brinda cada capacitación o servicio.</p></div><button id="new-availability-button" class="primary-action" type="button">Nueva disponibilidad</button></div><p id="availability-message" class="form-message" aria-live="polite">Cargando disponibilidad...</p><div id="availability-list" class="availability-list"></div></div>
+    </section>
+    <section id="respaldos" class="data-section" aria-labelledby="backup-title">
+      <p class="eyebrow blue">Protección de la información</p><h2 id="backup-title">Respaldos y recuperación</h2>
+      <p><strong>Requiere configuración:</strong> las herramientas están disponibles, pero esta pantalla no confirma que exista una copia de producción ni una tarea automática.</p>
+      <details><summary>Cómo crear una copia segura</summary><p>Desde un equipo autorizado, configura la conexión, una carpeta privada externa y la clave de cifrado; ejecuta <code>npm run backup:create</code> en la carpeta backend. Verifica el archivo con <code>npm run backup:verify -- RUTA</code>.</p><p>Guarda la copia cifrada fuera de Render y conserva la clave por separado. No subas respaldos ni claves a GitHub.</p></details>
+      <details><summary>Cómo recuperar sin perder datos actuales</summary><p>Recupera únicamente en una base vacía de ensayo con nombre <code>yesems_restore_...</code>. Comprueba la copia antes de cambiar cualquier conexión de producción. El procedimiento completo está en <code>docs/RESPALDOS_RECUPERACION.md</code>.</p><p>La copia de PostgreSQL incluye referencias a comprobantes y constancias, pero sus archivos de Cloudinary o uploads requieren una copia separada. No confundas un respaldo de datos con una recuperación completa de archivos.</p></details>
     </section>
     <section id="seguimiento" class="data-section tracking-section" aria-labelledby="tracking-title">
       <div class="section-heading courses-heading"><div><p class="eyebrow blue">Seguimiento del aprendizaje</p><h2 id="tracking-title">Sesiones y avance</h2><p>Define el plan del curso, registra el cumplimiento y revisa los requisitos para concluir.</p></div><button id="tracking-refresh" class="secondary-action" type="button">Actualizar</button></div>

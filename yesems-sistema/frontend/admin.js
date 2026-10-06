@@ -316,14 +316,15 @@ async function request(path, options = {}) {
 
 async function loadDashboard() {
   try {
-    const data = await request('/administradores/resumen');
+    const [data, enrollmentData] = await Promise.all([request('/administradores/resumen'), request('/inscripciones')]);
     document.querySelector('#metric-courses').textContent = data.metricas.cursos;
     document.querySelector('#metric-students').textContent = data.metricas.alumnos;
     document.querySelector('#metric-payments').textContent = data.metricas.pagos_pendientes;
     document.querySelector('#metric-certificates').textContent = data.metricas.constancias_pendientes;
     message.hidden = true;
-    const rows = data.ultimas_inscripciones || [];
+    const rows = enrollmentData.inscripciones || [];
     document.querySelector('#inscription-table').innerHTML = rows.length ? rows.map((item) => `<tr><td>${escapeHtml(item.usuario_nombre)} ${escapeHtml(item.usuario_apellido)}</td><td>${escapeHtml(item.curso_nombre)}</td><td>${new Date(item.fecha_inscripcion).toLocaleDateString('es-MX')}</td><td>${money.format(Number(item.monto_total))}</td><td><span class="badge">${escapeHtml(item.estado)}</span></td><td>${!['cancelada', 'completada'].includes(item.estado) ? `<button class="table-action cancel" data-cancel-inscription="${item.id_inscripcion}">Cancelar</button>` : ''}</td></tr>`).join('') : '<tr><td colspan="6">Aún no hay inscripciones.</td></tr>';
+    ListFilters.attach(document.querySelector('#inscription-table'), rows, {map:(item)=>({search:[item.usuario_nombre,item.usuario_apellido,item.curso_nombre,item.alumno_folio,item.alumno_email,item.folio,item.referencia,item.id_inscripcion].filter(Boolean).join(' '),course:item.curso_nombre||'',state:item.estado||'pendiente',method:item.metodo_pago||'',date:String(item.fecha_inscripcion||item.fecha_pago||item.fecha_emision||'').slice(0,10)})});
   } catch (error) { message.hidden = false; message.textContent = error.message; }
 }
 
@@ -335,6 +336,7 @@ async function loadPendingPayments() {
     document.querySelector('#pending-payment-count').textContent = `${payments.length} pendientes`;
     paymentMessage.hidden = true;
     document.querySelector('#payment-table').innerHTML = payments.length ? payments.map((payment) => `<tr><td>${escapeHtml(payment.usuario_nombre)} ${escapeHtml(payment.usuario_apellido)}<br><small>${escapeHtml(payment.folio || '')}</small></td><td>${escapeHtml(payment.curso_nombre)}</td><td>${money.format(Number(payment.monto))}</td><td>${escapeHtml(payment.metodo_pago)}<br><small>${escapeHtml(payment.referencia || 'Sin referencia')}</small>${payment.comprobante_url ? `<br><button class="receipt-button" data-payment-receipt="${payment.id_pago}">Ver comprobante</button>` : '<br><small>Sin archivo adjunto</small>'}</td><td>${new Date(payment.fecha_pago).toLocaleDateString('es-MX')}</td><td class="action-group"><button class="table-action approve" data-payment="${payment.id_pago}" data-state="completado">Aprobar</button><button class="table-action cancel" data-payment="${payment.id_pago}" data-state="cancelado">Cancelar</button></td></tr>`).join('') : '<tr><td colspan="6">No hay pagos pendientes de validación.</td></tr>';
+    ListFilters.attach(document.querySelector('#payment-table'), payments, {method:true,map:(item)=>({search:[item.usuario_nombre,item.usuario_apellido,item.curso_nombre,item.alumno_folio,item.alumno_email,item.folio,item.referencia,item.id_inscripcion].filter(Boolean).join(' '),course:item.curso_nombre||'',state:item.estado||'pendiente',method:item.metodo_pago||'',date:String(item.fecha_inscripcion||item.fecha_pago||item.fecha_emision||'').slice(0,10)})});
   } catch (error) { paymentMessage.textContent = error.message; }
 }
 
@@ -350,6 +352,7 @@ async function loadCertificates() {
       : 'No hay solicitudes pendientes por autorizar. Las constancias autorizadas se pueden descargar desde esta tabla.';
     certificatesMessage.hidden = true;
     document.querySelector('#certificate-table').innerHTML = certificates.length ? certificates.map((item) => `<tr><td>${escapeHtml(item.usuario_nombre)} ${escapeHtml(item.usuario_apellido)}</td><td>${escapeHtml(item.curso_nombre)}</td><td>${escapeHtml(item.folio)}</td><td>${new Date(item.fecha_emision).toLocaleDateString('es-MX')}</td><td><span class="badge certificate-status ${item.estado === 'autorizada' ? 'authorized' : item.estado === 'rechazada' ? 'rejected' : ''}">${escapeHtml(item.estado)}</span></td><td class="action-group">${item.estado === 'pendiente' ? `<button class="table-action approve certificate-approve" data-certificate="${item.id_constancia}" data-certificate-action="autorizar">Autorizar y generar PDF</button><button class="table-action cancel" data-certificate="${item.id_constancia}" data-certificate-action="rechazar">Rechazar</button>` : item.estado === 'autorizada' ? `<a class="table-action certificate-download" href="${API_URL}/constancias/${item.id_constancia}/descargar" data-certificate-download="${item.id_constancia}">Descargar PDF</a>` : '<span>Sin acciones</span>'}</td></tr>`).join('') : '<tr><td colspan="6">No hay solicitudes de constancia.</td></tr>';
+    ListFilters.attach(document.querySelector('#certificate-table'), certificates, {map:(item)=>({search:[item.usuario_nombre,item.usuario_apellido,item.curso_nombre,item.alumno_folio,item.alumno_email,item.folio,item.referencia,item.id_inscripcion].filter(Boolean).join(' '),course:item.curso_nombre||'',state:item.estado||'pendiente',method:item.metodo_pago||'',date:String(item.fecha_inscripcion||item.fecha_pago||item.fecha_emision||'').slice(0,10)})});
   } catch (error) {
     certificatesMessage.hidden = false;
     certificatesMessage.textContent = error.message;

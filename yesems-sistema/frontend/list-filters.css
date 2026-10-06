@@ -1,0 +1,8 @@
+.list-filters { display:flex; flex-wrap:wrap; align-items:flex-end; gap:12px; margin:20px 0; padding:16px; border:1px solid #dce5ed; border-radius:12px; background:#f6f9fb; }
+.list-filters label { display:flex; flex:1 1 125px; min-width:0; flex-direction:column; gap:6px; color:#244258; font-size:.78rem; font-weight:700; }
+.list-filters label:first-child { flex:2 1 200px; }
+.list-filters input,.list-filters select { width:100%; min-width:0; height:42px; padding:8px; border:1px solid #c5d6e1; border-radius:7px; background:white; color:#18364b; font:inherit; }
+.list-filters button { padding:11px 14px; border:1px solid #176b87; border-radius:7px; background:#fff; color:#12556c; cursor:pointer; font:inherit; }
+.list-filter-count { flex-basis:100%; margin:0; color:#476174; font-size:.8rem; }
+.list-filters :focus-visible { outline:3px solid #f5b942; outline-offset:2px; }
+[hidden] { display:none !important; }
