@@ -16,6 +16,7 @@ router.post('/codigo', wrap(async(req,res)=>{await access.sendCode(req.body.emai
 router.post('/correo', wrap(async(req,res)=>res.json(await access.byEmail(req.body,req.ip))));
 router.post('/google/reto', wrap(async(req,res)=>{await access.limit('challenge:'+access.digest(req.ip),30,900);res.json({ok:true,...access.challenge()});}));
 router.post('/google', wrap(async(req,res)=>res.json(await access.byGoogle(req.body,req.ip))));
+router.post('/password/crear', wrap(async(req,res)=>res.json(await require('../services/password-setup.service').complete(req.body,req.ip))));
 router.post('/password/codigo', wrap(async(req,res)=>res.json(await passwords.requestCode(req.body.email,req.ip))));
 router.post('/password/restablecer', wrap(async(req,res)=>res.json(await passwords.update(req.body,req.ip))));
 router.post('/password/mio/codigo', auth, wrap(async(req,res)=>res.json(await passwords.requestCode(null,req.ip,req.usuario.id_usuario))));

@@ -15,4 +15,5 @@ describe('Revocación de sesiones después de cambiar contraseña',()=>{
   test('token anterior sin versión sigue válido antes del primer cambio',async()=>{expect((await check({},0)).next).toHaveBeenCalled();});
   test('token anterior deja de funcionar al cambiar la versión',async()=>{const result=await check({},1);expect(result.res.status).toHaveBeenCalledWith(401);expect(result.next).not.toHaveBeenCalled();});
   test('token nuevo con la versión actual permite el acceso',async()=>{expect((await check({token_version:1},1)).next).toHaveBeenCalled();});
+  test('permiso de crear contraseña no se acepta como sesión aunque su firma sea válida',async()=>{const result=await check({purpose:'password_setup',aud:'yesems-password-setup'},0);expect(result.res.status).toHaveBeenCalledWith(401);expect(result.next).not.toHaveBeenCalled();});
 });

@@ -35,6 +35,8 @@
 #verified-access[data-mode=register] .access-intro{margin-bottom:20px}
 #verified-access :is(button,a):focus-visible{outline:3px solid #168da6;outline-offset:3px}
 #verified-access #access-registration{margin-bottom:18px}
+#verified-access #access-verified-email{background:#eff8f5;border-color:#b8d9cb;color:#174c3e}
+#verified-access #access-verify-again{display:block;margin:6px auto 12px;border:0;background:transparent;color:#176c83;text-decoration:underline;text-underline-offset:3px;cursor:pointer;font:inherit}
 #verified-access #access-google{min-height:44px}
 #verified-access .access-admin{border-top:1px solid #e7edf2;padding-top:16px;margin-bottom:0}
 #verified-access button[type=submit]{transition:background .18s,box-shadow .18s}

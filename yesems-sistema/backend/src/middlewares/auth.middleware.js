@@ -18,6 +18,9 @@ async function verificarToken(req, res, next) {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET, { algorithms: ['HS256'] });
+    if (decoded.purpose || decoded.aud) {
+      return res.status(401).json({ ok: false, mensaje: 'Completa la creación de tu contraseña antes de entrar.' });
+    }
     if (!Number.isSafeInteger(decoded.id_usuario) || decoded.id_usuario <= 0 || decoded.id_administrador) {
       return res.status(403).json({ ok: false, mensaje: 'Se requiere una cuenta de alumno o cliente' });
     }

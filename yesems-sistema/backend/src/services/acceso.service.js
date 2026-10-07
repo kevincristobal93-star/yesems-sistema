@@ -84,6 +84,15 @@ async function consumeCode(address, code, onVerified) {
   finally { client.release(); }
 }
 function session(user) {
+  if (!user.password_hash) {
+    return {
+      ok: true, setup_required: true,
+      setup_token: jwt.sign({ id_usuario: user.id_usuario, token_version: user.token_version || 0, purpose: 'password_setup' },
+        process.env.JWT_SECRET, { expiresIn: '10m', audience: 'yesems-password-setup', algorithm: 'HS256' }),
+      email: user.email,
+      needs_profile: !user.google_sub && (!user.nombre || !user.apellido),
+    };
+  }
   return { ok: true, token: jwt.sign({ id_usuario: user.id_usuario, email: user.email, rol: user.rol, token_version: user.token_version || 0 }, process.env.JWT_SECRET, { expiresIn: '8h' }),
     usuario: { id_usuario: user.id_usuario, nombre: user.nombre, apellido: user.apellido, email: user.email, rol: user.rol } };
 }
@@ -98,7 +107,9 @@ async function account(address, data, googleSub = null, googleProfile = null) {
   } else {
     // Los datos de Google provienen exclusivamente del token verificado.
     // El nombre legal y el teléfono se completan al inscribirse, no al acceder.
-    const p = googleProfile || profile(data);
+    // La ficha por correo se completa después de verificar la dirección.
+    // Una cuenta sin contraseña solo recibe una autorización limitada de alta.
+    const p = googleProfile || { nombre: '', apellido: '', telefono: null };
     user = (await pool.query(`INSERT INTO usuarios(nombre,apellido,email,telefono,rol,email_verificado_at,google_sub)
       VALUES($1,$2,$3,$4,'cliente',now(),$5) RETURNING *`, [p.nombre,p.apellido,address,p.telefono,googleSub])).rows[0];
   }
@@ -107,8 +118,6 @@ async function account(address, data, googleSub = null, googleProfile = null) {
 async function byEmail(body, ip) {
   const address = email(body.email);
   await limit('verify:' + digest(ip), 30, 900);
-  const found = await pool.query('SELECT id_usuario FROM usuarios WHERE lower(btrim(email))=$1', [address]);
-  if (!found.rows.length) profile(body);
   await consumeCode(address, body.codigo);
   return account(address, body);
 }
@@ -143,4 +152,4 @@ async function byGoogle(body, ip) {
     nombre: claim(payload.given_name || payload.name), apellido: claim(payload.family_name), telefono: null,
   });
 }
-module.exports = { config, email, profile, sendCode, consumeCode, byEmail, byGoogle, challenge, limit, digest };
+module.exports = { config, email, profile, sendCode, consumeCode, byEmail, byGoogle, challenge, limit, digest, session };
