@@ -3,6 +3,7 @@ describe('Correo transaccional por Gmail API (sin red)',()=>{
   const originalEnv=process.env;const originalFetch=global.fetch;
   const message={to:'alumno@example.test',subject:'Cambio de contraseña de YES EMS',text:'Código ficticio 123456. Vence en 10 minutos.'};
   beforeEach(()=>{
+    jest.spyOn(console,'error').mockImplementation(()=>{});
     process.env={...originalEnv,EMAIL_PROVIDER:'gmail',GMAIL_CLIENT_ID:'test-id',GMAIL_CLIENT_SECRET:'test-secret',GMAIL_REFRESH_TOKEN:'test-refresh',GMAIL_SENDER_EMAIL:'yesems@example.test'};
     global.fetch=jest.fn(async url=>{
       if(url==='https://oauth2.googleapis.com/token')return {ok:true,json:async()=>({access_token:'test-access'})};
@@ -10,7 +11,7 @@ describe('Correo transaccional por Gmail API (sin red)',()=>{
       throw new Error('Red no permitida');
     });
   });
-  afterEach(()=>{process.env=originalEnv;global.fetch=originalFetch;});
+  afterEach(()=>{process.env=originalEnv;global.fetch=originalFetch;jest.restoreAllMocks();});
   test('renueva autorización privada y envía MIME UTF-8 sin contraseñas ni tokens en el correo',async()=>{
     expect(mail.configured()).toBe(true);await mail.send(message);
     expect(global.fetch).toHaveBeenCalledTimes(2);
@@ -59,5 +60,42 @@ describe('Correo transaccional por Gmail API (sin red)',()=>{
     process.env.EMAIL_PROVIDER='resend';process.env.RESEND_API_KEY='test-resend';process.env.AUTH_EMAIL_FROM='test@example.test';
     global.fetch.mockResolvedValueOnce({ok:true});await mail.send(message);
     expect(global.fetch.mock.calls[0][0]).toBe('https://api.resend.com/emails');expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+  test('diagnóstico OAuth conserva solo etapa, estado, código permitido y referencia',async()=>{
+    global.fetch.mockResolvedValueOnce({ok:false,status:400,json:async()=>({error:'invalid_grant',error_description:'test-secret test-refresh alumno@example.test 123456'})});
+    let failure;try {await mail.send(message);} catch(error){failure=error;}
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.error.mock.calls[0][0]).toBe('[mail-diagnostic]');
+    const diagnostic=JSON.parse(console.error.mock.calls[0][1]);
+    expect(diagnostic).toEqual({event:'mail_delivery_failed',reference:failure.mailReference,provider:'gmail',stage:'oauth_refresh',status:400,code:'invalid_grant'});
+    expect(failure.mailReference).toMatch(/^[a-f0-9-]{36}$/);
+    expect(JSON.stringify(console.error.mock.calls)).not.toMatch(/test-secret|test-refresh|alumno@example.test|123456|error_description/);
+  });
+  test('diagnóstico Gmail distingue permisos sin registrar mensaje o token',async()=>{
+    global.fetch.mockResolvedValueOnce({ok:true,status:200,json:async()=>({access_token:'test-access'})})
+      .mockResolvedValueOnce({ok:false,status:403,json:async()=>({error:{message:'test-access '+message.text,errors:[{reason:'insufficientPermissions'}]}})});
+    await expect(mail.send(message)).rejects.toThrow('No se pudo enviar');
+    expect(JSON.parse(console.error.mock.calls[0][1])).toMatchObject({stage:'gmail_send',status:403,code:'insufficientPermissions'});
+    expect(JSON.stringify(console.error.mock.calls)).not.toMatch(/test-access|123456|alumno@example.test/);
+  });
+  test('errores desconocidos o cuerpos no JSON no se copian a los logs',async()=>{
+    for(const response of [
+      {ok:false,status:401,json:async()=>({error:'test-secret',error_description:message.text})},
+      {ok:false,status:502,json:async()=>{throw new Error('test-refresh');}},
+    ]) {
+      global.fetch.mockResolvedValueOnce(response);
+      await expect(mail.send(message)).rejects.toThrow('No se pudo enviar');
+    }
+    expect(console.error.mock.calls.every(call=>JSON.parse(call[1]).code==='provider_error')).toBe(true);
+    expect(JSON.stringify(console.error.mock.calls)).not.toMatch(/test-secret|test-refresh|123456/);
+  });
+  test('timeout se distingue del fallo de red sin registrar el error original',async()=>{
+    global.fetch.mockRejectedValueOnce(Object.assign(new Error('test-secret'),{name:'TimeoutError'}));
+    await expect(mail.send(message)).rejects.toThrow('No se pudo enviar');
+    expect(JSON.parse(console.error.mock.calls[0][1])).toMatchObject({stage:'oauth_refresh',code:'timeout'});
+    expect(JSON.stringify(console.error.mock.calls)).not.toContain('test-secret');
+  });
+  test('envíos correctos no registran contenido ni credenciales',async()=>{
+    await mail.send(message);expect(console.error).not.toHaveBeenCalled();
   });
 });

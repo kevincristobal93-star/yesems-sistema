@@ -8,7 +8,8 @@ const wrap = (fn) => async (req,res) => {
   catch(error) {
     const status = error.statusCode || (error.code === '23505' ? 409 : 500);
     if (status === 500) console.error('Error de acceso:', error.code || error.name);
-    res.status(status).json({ok:false,mensaje: error.statusCode ? error.message : status===409 ? 'La cuenta ya existe. Inicia sesión para continuar.' : 'No fue posible completar el acceso.'});
+    res.status(status).json({ok:false,mensaje: error.statusCode ? error.message : status===409 ? 'La cuenta ya existe. Inicia sesión para continuar.' : 'No fue posible completar el acceso.',
+      ...(typeof error.mailReference === 'string' && /^[a-f0-9-]{36}$/.test(error.mailReference) ? { referencia: error.mailReference } : {})});
   }
 };
 router.get('/config', wrap(async(req,res)=>res.json({ok:true,...access.config()})));

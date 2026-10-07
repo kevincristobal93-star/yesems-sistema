@@ -17,7 +17,7 @@ function profile(body) {
 }
 const digest = (value) => crypto.createHmac('sha256', process.env.JWT_SECRET).update(value).digest('hex');
 function config() {
-  return { correo: mail.configured(), google_client_id: process.env.GOOGLE_CLIENT_ID || null };
+  return { correo: mail.configured(), google_client_id: process.env.GOOGLE_CLIENT_ID || null, correo_diagnostico: mail.diagnosticVersion };
 }
 async function limit(key, max, seconds) {
   const result = await pool.query(`INSERT INTO acceso_limites(clave,cantidad,expira) VALUES($1,1,now()+$2*interval '1 second')
@@ -55,9 +55,9 @@ async function sendCode(address, ip, purpose = 'access') {
   try {
     await mail.send({to:address,subject:purpose === 'access' ? 'Tu código de acceso a YES EMS' : 'Cambio de contraseña de YES EMS',
       text:`Tu código es ${code}. ${purpose === 'access' ? 'Permite acceder a tu cuenta.' : 'Permite cambiar la contraseña de tu cuenta, si está registrada. NO es un código de inicio de sesión.'} Vence en 10 minutos y solo puede usarse una vez. No lo compartas. Si no lo solicitaste, ignora este mensaje.`});
-  } catch (_) {
+  } catch (error) {
     await pool.query('DELETE FROM acceso_codigos WHERE email=$1 AND hash=$2', [storageKey, hash]);
-    throw fail(503, 'No se pudo enviar el código. Intenta más tarde.');
+    throw Object.assign(fail(503, 'No se pudo enviar el código. Intenta más tarde.'), { mailReference: error.mailReference });
   }
 }
 async function consumeCode(address, code, onVerified) {

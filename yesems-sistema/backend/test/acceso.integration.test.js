@@ -54,13 +54,14 @@ const enabled=process.env.YES_EMS_ISOLATED_TEST==='1' && process.env.NODE_ENV===
     process.env.EMAIL_PROVIDER='gmail';process.env.GMAIL_CLIENT_ID='test-gmail-id';process.env.GMAIL_CLIENT_SECRET='test-gmail-secret';
     process.env.GMAIL_REFRESH_TOKEN='test-gmail-refresh';process.env.GMAIL_SENDER_EMAIL='test@example.test';
     try {
-      expect(access.config()).toEqual({correo:true,google_client_id:'test-client'});
+      expect(access.config()).toEqual({correo:true,google_client_id:'test-client',correo_diagnostico:'mail-v1'});
       await request('/acceso/password/codigo',{email});
       const password='Clave-ficticia-Gmail-2026';
       await request('/acceso/password/restablecer',{email,codigo:messages.get(email),password,confirmacion:password});
       await request('/usuarios/login',{email,password});
       await clearLimits();sendFails=true;
       const failure=await request('/acceso/password/codigo',{email},503);
+      expect(failure.referencia).toMatch(/^[a-f0-9-]{36}$/);
       expect(JSON.stringify(failure)).not.toMatch(/test-gmail-secret|test-gmail-refresh/);
       expect((await pool.query('SELECT 1 FROM acceso_codigos WHERE email=$1',['password:'+email])).rows).toHaveLength(0);
     } finally {
