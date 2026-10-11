@@ -6,6 +6,25 @@
   if (!admin) $('login').href = './cursos.html';
   const key = admin ? 'yesems_admin_token' : 'yesems_token';
   let state = null, editing = null, busy = false;
+  if ($('aula-year')) $('aula-year').textContent = new Date().getFullYear();
+  function updateOverview() {
+    if (!admin || !$('course-overview')) return;
+    $('course-overview').hidden = !state;
+    $('module-toolbar').hidden = !state;
+    $('aula-start').hidden = Boolean(state);
+    if (!state) return;
+    $('module-count').textContent = state.modulos.length;
+    $('published-count').textContent = state.modulos.filter(mod => mod.publicado).length;
+    $('document-count').textContent = state.modulos.reduce((total, mod) => total + (mod.documentos || []).length, 0);
+    $('course-mode').textContent = state.curso.activo ? 'Prepara, revisa y publica los materiales de tus alumnos.' : 'Curso desactivado · Solo consulta';
+  }
+  function closeHistory() {
+    if (!admin) return;
+    $('history').hidden = true;
+    $('history').replaceChildren();
+    $('history-toggle').setAttribute('aria-expanded', 'false');
+    $('history-toggle').textContent = 'Ver historial de PDF';
+  }
   const message = (text, error = false) => { $('feedback').textContent = text; $('feedback').classList.toggle('error', error); };
   function lock(value) {
     busy = value;
@@ -24,9 +43,10 @@
   }
   function resetEditor() {
     editing = null;
-    if (admin) { $('module-form').reset(); $('editor-title').textContent = 'Nuevo módulo'; }
+    if (admin) { $('module-form').reset(); $('editor-title').textContent = 'Nuevo módulo'; if ($('editor-help')) $('editor-help').textContent = 'Añade un tema al curso. Se guardará como borrador.'; }
   }
   function render() {
+    updateOverview();
     $('course-title').textContent = state.curso.nombre;
     $('modules').replaceChildren();
     if (admin) $('editor').hidden = !state.curso.activo;
@@ -53,12 +73,12 @@
       });
       if ((mod.documentos || []).length) article.append(documents);
       if (admin) {
-        const badge = document.createElement('span'); badge.className = 'badge'; badge.textContent = mod.publicado ? 'Publicado' : 'Borrador'; article.append(badge);
+        const badge = document.createElement('span'); badge.className = 'badge'; badge.dataset.published = String(mod.publicado); badge.textContent = mod.publicado ? 'Publicado' : 'Borrador'; article.prepend(badge);
         const actions = document.createElement('div'); actions.className = 'actions'; article.append(actions);
         function button(label, action, unavailable = false) {
           const b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.setAttribute('aria-label', `${label}: ${mod.titulo}`); b.dataset.unavailable = String(unavailable || !state.curso.activo); b.disabled = unavailable || !state.curso.activo; b.onclick = action; actions.append(b);
         }
-        button('Editar', () => { editing = mod.id_modulo; $('title').value = mod.titulo; $('description').value = mod.descripcion; $('editor-title').textContent = 'Editar módulo'; $('title').focus(); });
+        button('Editar', () => { editing = mod.id_modulo; $('title').value = mod.titulo; $('description').value = mod.descripcion; $('editor-title').textContent = 'Editar módulo'; if ($('editor-help')) $('editor-help').textContent = 'Actualiza el título o la descripción de este tema.'; $('title').focus(); });
         button(mod.publicado ? 'Ocultar' : 'Publicar', () => mutate(`/modulos/${mod.id_modulo}/publicacion`, 'PATCH', { publicado: !mod.publicado }));
         for (const [label, offset] of [['Subir', -1], ['Bajar', 1]]) button(label, () => {
           const ids = state.modulos.map(m => m.id_modulo); [ids[index], ids[index + offset]] = [ids[index + offset], ids[index]];
@@ -67,7 +87,7 @@
         const upload = document.createElement('form'); upload.className = 'upload-form';
         const label = document.createElement('label'); label.textContent = 'Nombre del PDF';
         const name = document.createElement('input'); name.maxLength = 150; name.required = true; name.name = 'titulo'; label.append(name);
-        const file = document.createElement('input'); file.type = 'file'; file.name = 'archivo'; file.accept = 'application/pdf,.pdf'; file.required = true;
+        const file = document.createElement('input'); file.type = 'file'; file.name = 'archivo'; file.accept = 'application/pdf,.pdf'; file.required = true; file.setAttribute('aria-label', `Seleccionar PDF para ${mod.titulo}`);
         const submit = document.createElement('button'); submit.type = 'submit'; submit.textContent = 'Subir PDF';
         upload.append(label, file, submit); upload.onsubmit = event => { event.preventDefault(); uploadDocument(mod, name.value, file.files[0]); }; article.append(upload);
       }
@@ -78,7 +98,7 @@
   async function mutate(path, method, body) {
     if (busy || !state) return;
     lock(true); message('Guardando…');
-    try { state = await request(`/admin/cursos/${state.curso.id_curso}${path}`, method, { ...body, revision: state.curso.aula_revision }); resetEditor(); render(); message('Cambios guardados.'); }
+    try { state = await request(`/admin/cursos/${state.curso.id_curso}${path}`, method, { ...body, revision: state.curso.aula_revision }); closeHistory(); resetEditor(); render(); message('Cambios guardados.'); }
     catch (error) { message(error.message, true); }
     finally { lock(false); $('refresh').focus(); }
   }
@@ -86,7 +106,7 @@
     if (busy || !file) return;
     const form = new FormData(); form.append('titulo', title); form.append('revision', String(state.curso.aula_revision)); form.append('archivo', file);
     lock(true); message('Subiendo PDF…');
-    try { state = await request(`/admin/cursos/${state.curso.id_curso}/modulos/${module.id_modulo}/documentos`, 'POST', form); render(); message('PDF guardado como borrador del módulo.'); }
+    try { state = await request(`/admin/cursos/${state.curso.id_curso}/modulos/${module.id_modulo}/documentos`, 'POST', form); closeHistory(); render(); message('PDF guardado. Su visibilidad depende de si el módulo está publicado.'); }
     catch (error) { message(error.message, true); }
     finally { lock(false); }
   }
@@ -94,14 +114,14 @@
     if (busy || !file) return;
     const form = new FormData(); form.append('titulo', title); form.append('revision', String(state.curso.aula_revision)); form.append('archivo', file);
     lock(true); message('Guardando nueva versión…');
-    try { state = await request(`/admin/cursos/${state.curso.id_curso}/documentos/${doc.id_documento}`, 'PUT', form); $('history').hidden = true; $('history').replaceChildren(); render(); message('Nueva versión guardada. La anterior se conserva en el historial.'); }
+    try { state = await request(`/admin/cursos/${state.curso.id_curso}/documentos/${doc.id_documento}`, 'PUT', form); closeHistory(); render(); message('Nueva versión guardada. La anterior se conserva en el historial.'); }
     catch (error) { message(error.message, true); }
     finally { lock(false); }
   }
   async function loadHistory() {
     if (busy || !state) return;
     const section = $('history');
-    if (!section.hidden) { section.hidden = true; return; }
+    if (!section.hidden) { closeHistory(); return; }
     lock(true); message('Consultando historial…');
     try {
       const result = await request(`/admin/cursos/${state.curso.id_curso}/historial-pdf`);
@@ -113,7 +133,7 @@
         item.textContent = `${doc.modulo} · ${doc.titulo} · ${doc.activo ? 'Versión actual' : doc.reemplazado_por ? 'Reemplazada' : 'Retirada'} · ${date} · ${doc.administrador}`;
         section.append(item);
       }
-      section.hidden = false; message('Historial actualizado.');
+      section.hidden = false; $('history-toggle').setAttribute('aria-expanded', 'true'); $('history-toggle').textContent = 'Ocultar historial de PDF'; message('Historial actualizado.');
     } catch (error) { message(error.message, true); }
     finally { lock(false); }
   }
@@ -133,7 +153,7 @@
   async function load() {
     if (busy) return;
     const id = admin ? $('courses').value : new URLSearchParams(location.search).get('inscripcion');
-    state = null; $('modules').replaceChildren(); if (admin) { $('editor').hidden = true; resetEditor(); $('course-title').textContent = ''; }
+    state = null; $('modules').replaceChildren(); if (admin) { closeHistory(); updateOverview(); $('editor').hidden = true; resetEditor(); $('course-title').textContent = ''; }
     if (!/^[1-9]\d*$/.test(id || '')) { message(admin ? 'Selecciona un curso.' : 'Abre el aula desde una inscripción de Mi panel.', !admin); return; }
     lock(true); message('Cargando aula…');
     try { state = await request(admin ? `/admin/cursos/${id}` : `/mia/${id}`); $('workspace').hidden = false; message(''); render(); }

@@ -1,6 +1,57 @@
 <!doctype html>
-<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Organizar aula | YES EMS</title><link rel="stylesheet" href="./aula.css"><script src="./aula.js" defer></script></head>
-<body data-admin="true"><main><header><a class="back" href="./admin.html">← Panel de administración</a><p>YES EMS · AULA VIRTUAL</p><h1>Contenido del curso</h1><p>Prepara módulos y materiales. Solo los módulos publicados serán visibles para alumnos con acceso autorizado.</p><p class="hint">Los PDF se guardan como borrador dentro de su módulo. Puedes publicar u ocultar el módulo sin borrar los materiales.</p></header>
-<p id="feedback" role="status" aria-live="polite"></p><a id="login" href="./admin-login.html" hidden>Iniciar sesión como administrador</a>
-<div id="workspace" hidden><label>Curso<select id="courses"><option value="">Selecciona un curso</option></select></label><button id="refresh" type="button">Actualizar aula</button><h2 id="course-title"></h2>
-<section id="editor" hidden><h2 id="editor-title">Nuevo módulo</h2><form id="module-form"><fieldset id="fields"><label>Título<input id="title" maxlength="150" required></label><label>Descripción<textarea id="description" maxlength="2000"></textarea></label><button type="submit">Guardar módulo</button><button type="button" id="cancel">Cancelar edición</button></fieldset></form></section><button id="history-toggle" type="button">Ver historial de PDF</button><section id="history" hidden aria-live="polite"></section><div id="modules"></div></div></main></body></html>
+<html lang="es-MX">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>YES EMS | Administrar aula virtual</title>
+  <link rel="icon" href="./assets/yesems-logo.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./admin-footer.css"><link rel="stylesheet" href="./admin-aula.css">
+  <script src="./aula.js" defer></script>
+</head>
+<body data-admin="true" class="aula-admin">
+  <a class="skip-link" href="#contenido">Saltar al contenido</a>
+  <header class="aula-topbar">
+    <a class="aula-brand" href="./admin.html"><img src="./assets/yesems-logo.png" alt="YES EMS" width="1254" height="1254"><span>Administración<small>Centro de capacitación y servicios educativos</small></span></a>
+    <nav aria-label="Navegación administrativa"><a href="./cursos.html">Ver sitio público ↗</a><a class="back" href="./admin.html">← Panel de administración</a></nav>
+  </header>
+  <main id="contenido" class="aula-main">
+    <nav class="aula-breadcrumb" aria-label="Ubicación"><a href="./admin.html">Administración</a><span aria-hidden="true">/</span><span aria-current="page">Aula virtual</span></nav>
+    <header class="aula-hero">
+      <div><p class="eyebrow">ENSEÑAR ES TRANSFORMAR</p><h1>Tu aula, lista para aprender.</h1><p>Organiza los módulos y materiales de cada curso. Acompaña a tus alumnos con todo lo que necesitan, en un mismo lugar.</p><span class="hero-label">Aula virtual · Gestión de contenido</span></div>
+      <div class="hero-illustration" aria-hidden="true"><svg viewBox="0 0 180 160" fill="none"><rect x="22" y="24" width="128" height="100" rx="12" fill="white" fill-opacity=".1" stroke="white" stroke-opacity=".35"/><path d="M40 49c18-6 32-2 46 6v55c-14-8-28-12-46-6V49Z" fill="#fff"/><path d="M86 55c14-8 28-12 46-6v55c-18-6-32-2-46 6V55Z" fill="#d5e9ef"/><path d="M52 65l22 5m-22 8 22 5m25-13 20-5m-20 18 20-5" stroke="#176b87" stroke-width="3" stroke-linecap="round"/><circle cx="140" cy="118" r="22" fill="#f5b942"/><path d="m130 118 7 7 13-15" stroke="#0d3d59" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Conocimiento que conecta.</span></div>
+    </header>
+    <p id="feedback" role="status" aria-live="polite"></p>
+    <a id="login" class="primary-link" href="./admin-login.html" hidden>Iniciar sesión como administrador</a>
+    <div id="workspace" hidden>
+      <section class="course-picker" aria-labelledby="picker-title">
+        <div><p class="eyebrow">TU ESPACIO DE TRABAJO</p><h2 id="picker-title">¿Qué curso vamos a preparar?</h2><p class="hint">Selecciona un curso para consultar y organizar su contenido.</p></div>
+        <div class="course-controls"><label for="courses">Curso<select id="courses"><option value="">Selecciona un curso</option></select></label><button id="refresh" type="button">↻ Actualizar aula</button></div>
+      </section>
+      <section id="aula-start" class="aula-guide" aria-labelledby="guide-title">
+        <p class="eyebrow">PASO A PASO</p><h2 id="guide-title">Del primer módulo al aprendizaje.</h2><p class="hint">Elige un curso arriba para comenzar.</p>
+        <ol><li><span>01</span><div><h3>Crea tus módulos</h3><p>Divide el curso en temas y añade una descripción para orientar a tus alumnos.</p></div></li><li><span>02</span><div><h3>Agrega materiales</h3><p>Sube los PDF de cada tema. Prepara y revisa el contenido antes de compartirlo.</p></div></li><li><span>03</span><div><h3>Publica cuando esté listo</h3><p>Los módulos publicados estarán disponibles para alumnos con acceso autorizado.</p></div></li></ol>
+      </section>
+      <section id="course-overview" class="course-overview" hidden aria-labelledby="course-title">
+        <div><p class="eyebrow">CONTENIDO DEL CURSO</p><h2 id="course-title"></h2><p id="course-mode" class="hint"></p></div>
+        <dl class="aula-counts"><div><dt>Módulos</dt><dd id="module-count">0</dd></div><div><dt>Publicados</dt><dd id="published-count">0</dd></div><div><dt>Materiales PDF</dt><dd id="document-count">0</dd></div></dl>
+      </section>
+      <div class="aula-work-grid">
+        <section id="editor" class="editor-card" hidden aria-labelledby="editor-title">
+          <p class="eyebrow">ORGANIZA EL APRENDIZAJE</p><h2 id="editor-title">Nuevo módulo</h2><p class="hint" id="editor-help">Añade un tema al curso. Se guardará como borrador.</p>
+          <form id="module-form"><fieldset id="fields"><label for="title">Título del módulo<input id="title" maxlength="150" placeholder="Ej. Introducción al curso" required></label><label for="description">Descripción <span class="optional">(opcional)</span><textarea id="description" maxlength="2000" placeholder="¿Qué aprenderán tus alumnos en este módulo?"></textarea></label><div class="editor-actions"><button type="submit">Guardar módulo</button><button type="button" id="cancel">Cancelar edición</button></div></fieldset></form>
+          <div class="publication-note"><strong>Tú decides cuándo compartirlo</strong><p>Los PDF tienen la misma visibilidad que su módulo. Si necesitas prepararlos en privado, oculta el módulo antes de subirlos. Publica cuando esté listo: ocultarlo no elimina sus materiales.</p></div>
+        </section>
+        <div class="module-column"><div id="module-toolbar" class="module-toolbar" hidden><h2>Módulos y materiales</h2><button id="history-toggle" type="button" aria-expanded="false" aria-controls="history">Ver historial de PDF</button></div><section id="history" hidden aria-label="Historial de PDF" aria-live="polite"></section><div id="modules"></div></div>
+      </div>
+    </div>
+  </main>
+  <footer class="admin-footer">
+    <section class="footer-company" aria-label="YES EMS"><a href="./cursos.html"><img src="./assets/yesems-logo.png" alt="YES EMS" width="1254" height="1254"></a><p>Capacitación, certificación y tecnología para transformar tu futuro.</p></section>
+    <section><h3>Oferta</h3><a href="https://plataformayesems.com/" target="_blank" rel="noopener noreferrer">Acredita-Bach</a><a href="https://plataformayesems.com/tecnologia-educativa.html" target="_blank" rel="noopener noreferrer">Tecnología Educativa</a><a href="https://plataformayesems.com/plataforma.html" target="_blank" rel="noopener noreferrer">Plataforma Digital</a></section>
+    <section><h3>Institución</h3><a href="https://www.servicioseducativosyesems.com/" target="_blank" rel="noopener noreferrer">Sobre nosotros</a><a href="https://api.whatsapp.com/send/?phone=5215648666596" target="_blank" rel="noopener noreferrer">Contacto</a><a href="https://www.servicioseducativosyesems.com/aviso-de-privacidad/" target="_blank" rel="noopener noreferrer">Aviso de privacidad</a></section>
+    <section><h3>Contáctanos</h3><a href="mailto:planeacionesyesems@gmail.com">planeacionesyesems@gmail.com</a><p>Lun – Vie · 9:00 – 18:00</p></section>
+    <div class="admin-footer-bottom"><span>© <span id="aula-year">2026</span> YES EMS · Servicios Educativos.</span><span>Hecho con dedicación para tu desarrollo.</span></div>
+  </footer>
+</body>
+</html>
