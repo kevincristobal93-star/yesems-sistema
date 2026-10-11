@@ -1,4 +1,4 @@
-$ErrorActionPreference = 'Stop'
+   $ErrorActionPreference = 'Stop'
 $source = 'C:\Users\kevin\Downloads\Reporte Adan 5SEM-09 (1).docx'
 $docs = 'C:\Users\kevin\sistema_inscripcion_a_cursos\yesems-sistema\docs'
 $destination = Join-Path $docs 'Reporte semanal 28 septiembre al 02 octubre 2026.docx'

@@ -59,6 +59,9 @@ async function runStartupMigrations() {
   await pool.query(await fs.readFile(path.resolve(__dirname, '../../database/migrations/007_proposed_courses.sql'), 'utf8'));
   await pool.query(await fs.readFile(path.resolve(__dirname, '../../database/migrations/008_retire_excel.sql'), 'utf8'));
   await pool.query(await fs.readFile(path.resolve(__dirname, '../../database/migrations/009_confirmed_courses.sql'), 'utf8'));
+  await pool.query(await fs.readFile(path.resolve(__dirname, '../../database/migrations/010_classroom_modules.sql'), 'utf8'));
+  await pool.query(await fs.readFile(path.resolve(__dirname, '../../database/migrations/011_classroom_documents.sql'), 'utf8'));
+  await pool.query(await fs.readFile(path.resolve(__dirname, '../../database/migrations/012_classroom_document_versions.sql'), 'utf8'));
   await seedCatalog();
   await bootstrapInitialAdmin();
 }

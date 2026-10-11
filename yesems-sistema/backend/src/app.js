@@ -41,6 +41,7 @@ app.use('/api/pagos', pagoRoutes);
 app.use('/api/constancias', constanciaRoutes);
 app.use('/api/administradores', administradorRoutes);
 app.use('/api/seguimiento', seguimientoRoutes);
+app.use('/api/aula', require('./routes/aula.routes'));
 
 app.use((error, req, res, next) => {
   if (error instanceof require('multer').MulterError || error.message === 'El comprobante debe ser PDF, JPG o PNG.') {
