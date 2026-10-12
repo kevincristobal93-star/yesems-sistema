@@ -20,13 +20,33 @@
         <img src="./assets/yesems-logo.png" alt="YES EMS" width="1254" height="1254" />
         <span class="system-brand-copy"><strong>YES EMS</strong><small>Capacitación y servicios educativos</small></span>
       </a>
-      <nav class="system-actions" aria-label="Navegación principal">
+      <nav id="public-navigation" class="system-actions" aria-label="Navegación principal">
         <a class="active" href="./cursos.html">Cursos</a>
         <a href="#como-funciona">Cómo funciona</a>
         <a href="#contacto">Contacto</a>
         <a id="open-login-dialog" class="login-link system-action--primary system-keep-mobile" href="./index.html">Iniciar sesión</a>
       </nav>
+      <nav id="student-navigation" class="student-navigation" aria-label="Menú de cuenta del alumno" hidden>
+        <button id="student-menu-button" class="header-icon-button" type="button" aria-label="Abrir menú" aria-controls="student-drawer" aria-expanded="false">☰</button>
+        <button id="account-button" class="account-button" type="button" aria-label="Ver mi cuenta" aria-haspopup="dialog">
+          <span id="account-initial" class="account-initial" aria-hidden="true">A</span><span id="account-name">Mi cuenta</span>
+        </button>
+      </nav>
     </header>
+    <div id="student-menu-overlay" class="student-menu-overlay" hidden></div>
+    <aside id="student-drawer" class="student-drawer" aria-label="Menú del alumno" aria-hidden="true">
+      <div class="drawer-heading"><strong>Mi espacio YES EMS</strong><button id="close-student-menu" type="button" aria-label="Cerrar menú">×</button></div>
+      <div class="drawer-profile"><span id="drawer-initial" class="account-initial" aria-hidden="true">A</span><div><strong id="drawer-name">Alumno</strong><small id="drawer-email"></small></div></div>
+      <nav class="drawer-links" aria-label="Opciones del alumno"><a href="./panel.html">Mi panel</a><a href="#course-grid">Explorar cursos</a><a href="./configuracion.html">Configuración</a></nav>
+      <button id="student-logout-button" class="drawer-logout" type="button">Cerrar sesión</button>
+    </aside>
+    <dialog id="account-dialog" class="account-dialog" aria-labelledby="account-dialog-title">
+      <div class="account-dialog-content"><button id="close-account-dialog" class="account-dialog-close" type="button" aria-label="Cerrar">×</button>
+        <span id="dialog-account-initial" class="account-initial large" aria-hidden="true">A</span><p class="eyebrow">Mi cuenta YES EMS</p>
+        <h2 id="account-dialog-title">Mi cuenta</h2><p id="account-dialog-email" class="account-dialog-email"></p>
+        <div class="account-actions"><a href="./panel.html">Ir a mi panel</a><a href="./configuracion.html">Configurar mi cuenta</a></div>
+      </div>
+    </dialog>
 
     <main>
       <section class="docencia" aria-labelledby="docencia-title">
