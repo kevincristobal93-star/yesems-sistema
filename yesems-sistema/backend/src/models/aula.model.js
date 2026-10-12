@@ -2,7 +2,7 @@ const pool = require('../config/db');
 const { withCourseLock } = require('./seguimiento.model');
 const { httpError } = require('../utils/http-error');
 const files = require('../services/aula-files.service');
-const documentosSql = `COALESCE((SELECT json_agg(json_build_object('id_documento',d.id_documento,'titulo',d.titulo,'bytes',d.bytes) ORDER BY d.id_documento) FROM aula_documentos d WHERE d.id_modulo=m.id_modulo AND d.activo), '[]'::json)`;
+const documentosSql = `COALESCE((SELECT json_agg(json_build_object('id_documento',d.id_documento,'titulo',d.titulo,'descripcion',d.descripcion,'bytes',d.bytes) ORDER BY d.id_documento) FROM aula_documentos d WHERE d.id_modulo=m.id_modulo AND d.activo), '[]'::json)`;
 
 async function listarCursos() {
   return (await pool.query('SELECT id_curso, nombre, activo FROM cursos ORDER BY nombre, id_curso')).rows;
@@ -11,7 +11,7 @@ async function obtenerCurso(idCurso, client = pool) {
   // Un snapshot evita combinar la revisión de un estado con los módulos de otro.
   const { rows } = await client.query(`SELECT c.id_curso, c.nombre, c.activo, c.aula_revision,
     COALESCE((SELECT json_agg(json_build_object('id_modulo', m.id_modulo, 'titulo', m.titulo,
-      'descripcion', m.descripcion, 'orden', m.orden, 'publicado', m.publicado, 'documentos', ${documentosSql})
+      'descripcion', m.descripcion, 'orden', m.orden, 'publicado', m.publicado, 'archivado_at',m.archivado_at,'documentos', ${documentosSql})
       ORDER BY m.orden, m.id_modulo) FROM aula_modulos m WHERE m.id_curso=c.id_curso), '[]'::json) AS modulos
     FROM cursos c WHERE c.id_curso=$1`, [idCurso]);
   if (!rows[0]) throw httpError(404, 'Curso no encontrado.');
@@ -45,9 +45,21 @@ async function editarModulo(idCurso, idModulo, revision, datos, admin) {
 }
 async function publicarModulo(idCurso, idModulo, revision, publicado, admin) {
   return modificar(idCurso, revision, async client => {
+    if (publicado) {
+      const materials = await client.query('SELECT count(*)::int AS total FROM aula_documentos WHERE id_modulo=$1 AND activo', [idModulo]);
+      if (!materials.rows[0]?.total) throw httpError(409, 'Agrega al menos un PDF activo antes de publicar este modulo.');
+    }
     const result = await client.query(`UPDATE aula_modulos SET publicado=$3, actualizado_por=$4, actualizado_at=now()
-      WHERE id_curso=$1 AND id_modulo=$2 RETURNING id_modulo`, [idCurso, idModulo, publicado, admin]);
+      WHERE id_curso=$1 AND id_modulo=$2 AND archivado_at IS NULL RETURNING id_modulo`, [idCurso, idModulo, publicado, admin]);
     if (!result.rowCount) throw httpError(404, 'Módulo no encontrado en este curso.');
+  });
+}
+async function archivarModulo(idCurso, idModulo, revision, archivado, admin) {
+  return modificar(idCurso, revision, async client => {
+    const result = await client.query(`UPDATE aula_modulos SET archivado_at=CASE WHEN $3 THEN COALESCE(archivado_at,now()) ELSE NULL END,
+      publicado=CASE WHEN $3 THEN false ELSE publicado END, actualizado_por=$4, actualizado_at=now()
+      WHERE id_curso=$1 AND id_modulo=$2 RETURNING id_modulo`, [idCurso,idModulo,archivado,admin]);
+    if (!result.rowCount) throw httpError(404, 'Modulo no encontrado en este curso.');
   });
 }
 async function ordenarModulos(idCurso, revision, ids, admin) {
@@ -75,41 +87,59 @@ async function obtenerAulaPropia(idInscripcion, idUsuario) {
     WHERE i.id_inscripcion=$1 AND i.id_usuario=$2
   ) SELECT a.*, CASE WHEN a.autorizado THEN COALESCE((
       SELECT json_agg(json_build_object('id_modulo',m.id_modulo,'titulo',m.titulo,
-        'descripcion',m.descripcion,'orden',m.orden,'documentos',${documentosSql}) ORDER BY m.orden, m.id_modulo)
-      FROM aula_modulos m WHERE m.id_curso=a.id_curso AND m.publicado=true
+        'descripcion',m.descripcion,'orden',m.orden,'documentos',${documentosSql},
+        'completado',COALESCE(p.completado_at IS NOT NULL,false),'completado_at',p.completado_at) ORDER BY m.orden, m.id_modulo)
+      FROM aula_modulos m LEFT JOIN aula_modulo_progreso p ON p.id_modulo=m.id_modulo AND p.id_inscripcion=a.id_inscripcion
+      WHERE m.id_curso=a.id_curso AND m.publicado=true AND m.archivado_at IS NULL
     ),'[]'::json) ELSE '[]'::json END AS modulos FROM acceso a`, [idInscripcion, idUsuario]);
   if (!rows[0]) throw httpError(404, 'Inscripción no encontrada.');
   if (!rows[0].autorizado) throw httpError(403, 'El aula requiere un curso disponible, una inscripción no cancelada y el pago completo aprobado. Revisa tu inscripción en Mi panel.');
   const { id_inscripcion, id_curso, nombre, modulos } = rows[0];
-  return { curso: { id_curso, nombre }, id_inscripcion, modulos };
+  const total = modulos.length;
+  const completados = modulos.filter(modulo => modulo.completado).length;
+  return { curso: { id_curso, nombre }, id_inscripcion, modulos, progreso: { completados, total, porcentaje: total ? Math.round(completados * 100 / total) : 0 } };
 }
-async function agregarDocumento(idCurso, idModulo, revision, titulo, buffer, admin) {
+async function actualizarProgreso(idInscripcion, idUsuario, idModulo, completado) {
+  const aula = await obtenerAulaPropia(idInscripcion,idUsuario);
+  if (!aula.modulos.some(modulo => modulo.id_modulo === idModulo)) throw httpError(404, 'Modulo no disponible.');
+  const { rows } = await pool.query(`INSERT INTO aula_modulo_progreso(id_inscripcion,id_modulo,completado_at)
+    SELECT i.id_inscripcion,m.id_modulo,CASE WHEN $4::boolean THEN now() ELSE NULL END
+    FROM inscripciones i JOIN cursos c ON c.id_curso=i.id_curso
+    JOIN aula_modulos m ON m.id_curso=c.id_curso AND m.id_modulo=$3 AND m.publicado=true AND m.archivado_at IS NULL
+    WHERE i.id_inscripcion=$1 AND i.id_usuario=$2 AND i.estado<>'cancelada' AND c.activo AND NOT c.oferta_provisional
+      AND COALESCE((SELECT SUM(p.monto) FROM pagos p WHERE p.id_inscripcion=i.id_inscripcion AND p.estado='completado'),0)>=i.monto_total
+    ON CONFLICT(id_inscripcion,id_modulo) DO UPDATE SET completado_at=EXCLUDED.completado_at,actualizado_at=now()
+    RETURNING completado_at`, [idInscripcion,idUsuario,idModulo,completado]);
+  if (!rows[0]) throw httpError(403, 'El acceso al curso cambio. Actualiza tu aula e intenta de nuevo.');
+  return obtenerAulaPropia(idInscripcion,idUsuario);
+}
+async function agregarDocumento(idCurso, idModulo, revision, titulo, descripcion, buffer, admin) {
   let url;
   try {
     return await modificar(idCurso, revision, async client => {
-      const module = await client.query('SELECT id_modulo FROM aula_modulos WHERE id_modulo=$1 AND id_curso=$2', [idModulo, idCurso]);
+      const module = await client.query('SELECT id_modulo FROM aula_modulos WHERE id_modulo=$1 AND id_curso=$2 AND archivado_at IS NULL', [idModulo, idCurso]);
       if (!module.rowCount) throw httpError(404, 'Módulo no encontrado.');
       const count = (await client.query('SELECT count(*)::int AS n FROM aula_documentos WHERE id_modulo=$1 AND activo', [idModulo])).rows[0].n;
       if (count >= 20) throw httpError(409, 'Cada módulo admite hasta 20 PDF activos.');
       url = await files.guardar(buffer);
-      await client.query('INSERT INTO aula_documentos(id_modulo,titulo,archivo_url,bytes,creado_por) VALUES ($1,$2,$3,$4,$5)', [idModulo,titulo,url,buffer.length,admin]);
+      await client.query('INSERT INTO aula_documentos(id_modulo,titulo,descripcion,archivo_url,bytes,creado_por) VALUES ($1,$2,$3,$4,$5,$6)', [idModulo,titulo,descripcion,url,buffer.length,admin]);
     });
   } catch (error) {
     if (url) { try { await files.descartar(url); } catch { console.error('No se pudo limpiar un archivo huérfano del aula. Revisar almacenamiento.'); } }
     throw error;
   }
 }
-async function reemplazarDocumento(idCurso, idDocumento, revision, titulo, buffer, admin) {
+async function reemplazarDocumento(idCurso, idDocumento, revision, titulo, descripcion, buffer, admin) {
   let url;
   try {
     return await modificar(idCurso, revision, async client => {
       const previous = await client.query(`SELECT d.id_documento,d.id_modulo FROM aula_documentos d JOIN aula_modulos m USING(id_modulo)
-        WHERE d.id_documento=$1 AND m.id_curso=$2 AND d.activo FOR UPDATE OF d`, [idDocumento,idCurso]);
+        WHERE d.id_documento=$1 AND m.id_curso=$2 AND d.activo AND m.archivado_at IS NULL FOR UPDATE OF d`, [idDocumento,idCurso]);
       if (!previous.rowCount) throw httpError(404, 'PDF activo no encontrado en este curso.');
       const { id_modulo } = previous.rows[0];
       url = await files.guardar(buffer);
-      const result = await client.query(`INSERT INTO aula_documentos(id_modulo,titulo,archivo_url,bytes,creado_por,reemplaza_id)
-        VALUES($1,$2,$3,$4,$5,$6) RETURNING id_documento`, [id_modulo,titulo,url,buffer.length,admin,idDocumento]);
+      const result = await client.query(`INSERT INTO aula_documentos(id_modulo,titulo,descripcion,archivo_url,bytes,creado_por,reemplaza_id)
+        VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING id_documento`, [id_modulo,titulo,descripcion,url,buffer.length,admin,idDocumento]);
       await client.query('UPDATE aula_documentos SET activo=false WHERE id_documento=$1', [idDocumento]);
     });
   } catch (error) {
@@ -124,10 +154,14 @@ async function historialCurso(idCurso) {
     WHERE m.id_curso=$1 ORDER BY d.creado_at DESC,d.id_documento DESC`, [idCurso]);
   return rows;
 }
-async function retirarDocumento(idCurso, idDocumento, revision) {
+async function retirarDocumento(idCurso, idDocumento, revision, admin) {
   return modificar(idCurso, revision, async client => {
-    const result = await client.query('UPDATE aula_documentos d SET activo=false FROM aula_modulos m WHERE d.id_documento=$1 AND d.id_modulo=m.id_modulo AND m.id_curso=$2 AND d.activo RETURNING d.id_documento', [idDocumento,idCurso]);
-    if (!result.rowCount) throw httpError(404, 'Documento no encontrado.');
+    const target = await client.query('SELECT d.id_modulo FROM aula_documentos d JOIN aula_modulos m USING(id_modulo) WHERE d.id_documento=$1 AND m.id_curso=$2 AND d.activo FOR UPDATE OF d', [idDocumento,idCurso]);
+    if (!target.rowCount) throw httpError(404, 'Documento no encontrado.');
+    const moduleId = target.rows[0].id_modulo;
+    const activeCount = (await client.query('SELECT count(*)::int AS total FROM aula_documentos WHERE id_modulo=$1 AND activo', [moduleId])).rows[0].total;
+    await client.query('UPDATE aula_documentos SET activo=false WHERE id_documento=$1', [idDocumento]);
+    if (activeCount === 1) await client.query('UPDATE aula_modulos SET publicado=false,actualizado_por=$2,actualizado_at=now() WHERE id_modulo=$1 AND publicado', [moduleId,admin]);
   });
 }
 async function documentoAdmin(idCurso, idDocumento) {
@@ -139,4 +173,4 @@ async function documentoAlumno(inscripcion, usuario, documento) {
   if (!aula.modulos.some(m => m.documentos.some(d => d.id_documento === documento))) throw httpError(404, 'Documento no disponible.');
   return documentoAdmin(aula.curso.id_curso, documento);
 }
-module.exports = { listarCursos, obtenerCurso, crearModulo, editarModulo, publicarModulo, ordenarModulos, obtenerAulaPropia, agregarDocumento, reemplazarDocumento, historialCurso, retirarDocumento, documentoAdmin, documentoAlumno };
+module.exports = { listarCursos, obtenerCurso, crearModulo, editarModulo, publicarModulo, archivarModulo, ordenarModulos, obtenerAulaPropia, actualizarProgreso, agregarDocumento, reemplazarDocumento, historialCurso, retirarDocumento, documentoAdmin, documentoAlumno };

@@ -8,7 +8,25 @@
   let state = null, editing = null, busy = false;
   if ($('aula-year')) $('aula-year').textContent = new Date().getFullYear();
   function updateOverview() {
-    if (!admin || !$('course-overview')) return;
+    if (!admin) {
+      if (!state || !$('workspace')) return;
+      let overview = $('student-overview');
+      if (!overview) {
+        overview = document.createElement('section'); overview.id = 'student-overview'; overview.className = 'student-overview';
+        const copy = document.createElement('div'); copy.className = 'student-progress-copy';
+        const title = document.createElement('h2'); title.textContent = 'Tu avance en el curso';
+        const count = document.createElement('p'); count.id = 'student-progress-count';
+        const track = document.createElement('div'); track.className = 'progress-track'; track.setAttribute('role', 'progressbar'); track.setAttribute('aria-label', 'Avance de modulos'); track.setAttribute('aria-valuemin', '0'); track.setAttribute('aria-valuemax', '100');
+        const bar = document.createElement('span'); bar.id = 'student-progress-bar'; track.append(bar); copy.append(title, count); overview.append(copy, track);
+        $('workspace').insertBefore(overview, $('refresh'));
+      }
+      const progress = state.progreso || { completados: 0, total: state.modulos.length, porcentaje: 0 };
+      $('student-progress-count').textContent = `${progress.completados} de ${progress.total} modulos completados`;
+      $('student-progress-bar').style.width = `${progress.porcentaje}%`;
+      overview.querySelector('.progress-track').setAttribute('aria-valuenow', String(progress.porcentaje));
+      return;
+    }
+    if (!$('course-overview')) return;
     $('course-overview').hidden = !state;
     $('module-toolbar').hidden = !state;
     $('aula-start').hidden = Boolean(state);
@@ -16,6 +34,7 @@
     $('module-count').textContent = state.modulos.length;
     $('published-count').textContent = state.modulos.filter(mod => mod.publicado).length;
     $('document-count').textContent = state.modulos.reduce((total, mod) => total + (mod.documentos || []).length, 0);
+    if ($('archived-count')) $('archived-count').textContent = state.modulos.filter(mod => mod.archivado_at).length;
     $('course-mode').textContent = state.curso.activo ? 'Prepara, revisa y publica los materiales de tus alumnos.' : 'Curso desactivado · Solo consulta';
   }
   function closeHistory() {
@@ -28,7 +47,7 @@
   const message = (text, error = false) => { $('feedback').textContent = text; $('feedback').classList.toggle('error', error); };
   function lock(value) {
     busy = value;
-    document.querySelectorAll('button,select,.upload-form input').forEach(el => { el.disabled = value || el.dataset.unavailable === 'true'; });
+    document.querySelectorAll('button,select,.upload-form input,.upload-form textarea').forEach(el => { el.disabled = value || el.dataset.unavailable === 'true'; });
     if (admin) $('fields').disabled = value || !state?.curso.activo;
   }
   async function request(path, method = 'GET', body) {
@@ -59,6 +78,8 @@
     const file = document.createElement('input'); file.type = 'file'; file.name = 'archivo'; file.accept = 'application/pdf,.pdf'; file.required = true; fileLabel.append(file);
     const titleLabel = document.createElement('label'); titleLabel.textContent = 'Nombre del PDF';
     const name = document.createElement('input'); name.name = 'titulo'; name.maxLength = 150; name.required = true; name.value = doc?.titulo || ''; name.placeholder = 'Se completa al seleccionar el archivo'; titleLabel.append(name);
+    const descriptionLabel = document.createElement('label'); descriptionLabel.textContent = 'Descripcion del PDF (opcional)';
+    const description = document.createElement('textarea'); description.name = 'descripcion'; description.maxLength = 1000; description.value = doc?.descripcion || ''; description.placeholder = 'Describe brevemente este material.'; descriptionLabel.append(description);
     let suggestedTitle = name.value;
     file.onchange = () => {
       const selected = file.files[0];
@@ -71,9 +92,9 @@
     };
     const submit = document.createElement('button'); submit.type = 'submit'; submit.textContent = doc ? 'Reemplazar PDF' : 'Subir PDF';
     const status = document.createElement('p'); status.className = 'upload-status'; status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite'); status.hidden = true;
-    form.append(heading, help, fileLabel, titleLabel, submit, status);
-    for (const control of [file, name, submit]) { control.dataset.unavailable = String(!state.curso.activo); control.disabled = !state.curso.activo; }
-    form.onsubmit = event => { event.preventDefault(); saveDocument(mod, doc, form, name, file); };
+    form.append(heading, help, fileLabel, titleLabel, descriptionLabel, submit, status);
+    for (const control of [file, name, description, submit]) { control.dataset.unavailable = String(!state.curso.activo || Boolean(mod.archivado_at)); control.disabled = !state.curso.activo || Boolean(mod.archivado_at); }
+    form.onsubmit = event => { event.preventDefault(); saveDocument(mod, doc, form, name, description, file); };
     return form;
   }
   function render() {
@@ -90,8 +111,15 @@
       const documents = document.createElement('ul'); documents.className = 'documents';
       (mod.documentos || []).forEach(doc => {
         const item = document.createElement('li');
-        const link = document.createElement('button'); link.type = 'button'; link.textContent = `Abrir PDF: ${doc.titulo}`;
-        link.onclick = () => openDocument(doc); item.append(link);
+        const summary = document.createElement('div'); summary.className = 'document-summary';
+        const documentTitle = document.createElement('strong'); documentTitle.textContent = doc.titulo;
+        const size = document.createElement('span'); size.className = 'document-size'; size.textContent = `PDF - ${doc.bytes < 1024 * 1024 ? `${Math.max(1, Math.round(doc.bytes / 1024))} KB` : `${(doc.bytes / (1024 * 1024)).toFixed(1)} MB`}`;
+        summary.append(documentTitle, size);
+        if (doc.descripcion) { const detail = document.createElement('p'); detail.textContent = doc.descripcion; summary.append(detail); }
+        const documentActions = document.createElement('div'); documentActions.className = 'document-actions';
+        const view = document.createElement('button'); view.type = 'button'; view.textContent = 'Ver PDF'; view.onclick = () => openDocument(doc);
+        const download = document.createElement('button'); download.type = 'button'; download.textContent = 'Descargar'; download.onclick = () => openDocument(doc, true);
+        documentActions.append(view, download); item.append(summary, documentActions);
         if (admin) {
           const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Retirar PDF'; remove.onclick = () => mutate(`/documentos/${doc.id_documento}`, 'DELETE', {}); item.append(remove);
           remove.dataset.unavailable = String(!state.curso.activo); remove.disabled = !state.curso.activo;
@@ -100,14 +128,25 @@
         documents.append(item);
       });
       if ((mod.documentos || []).length) article.append(documents);
+      else if (!admin) { const empty = document.createElement('p'); empty.className = 'empty-materials'; empty.textContent = 'Este modulo aun no tiene materiales. El administrador los agregara pronto.'; article.append(empty); }
+      if (!admin) {
+        const completion = document.createElement('button'); completion.type = 'button'; completion.className = 'module-complete'; completion.setAttribute('aria-pressed', String(Boolean(mod.completado)));
+        completion.textContent = mod.completado ? 'Marcar como pendiente' : 'Marcar modulo como completado';
+        completion.onclick = () => setModuleCompleted(mod, !mod.completado); article.append(completion);
+      }
       if (admin) {
-        const badge = document.createElement('span'); badge.className = 'badge'; badge.dataset.published = String(mod.publicado); badge.textContent = mod.publicado ? 'Publicado' : 'Borrador'; article.prepend(badge);
+        const badge = document.createElement('span'); badge.className = 'badge'; badge.dataset.published = String(mod.publicado); badge.dataset.archived = String(Boolean(mod.archivado_at)); badge.textContent = mod.archivado_at ? 'Archivado' : mod.publicado ? 'Publicado' : 'Borrador'; article.prepend(badge);
         const actions = document.createElement('div'); actions.className = 'actions'; article.append(actions);
         function button(label, action, unavailable = false) {
           const b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.setAttribute('aria-label', `${label}: ${mod.titulo}`); b.dataset.unavailable = String(unavailable || !state.curso.activo); b.disabled = unavailable || !state.curso.activo; b.onclick = action; actions.append(b);
         }
         button('Editar', () => { editing = mod.id_modulo; $('title').value = mod.titulo; $('description').value = mod.descripcion; $('editor-title').textContent = 'Editar módulo'; if ($('editor-help')) $('editor-help').textContent = 'Actualiza el título o la descripción de este tema.'; $('title').focus(); });
-        button(mod.publicado ? 'Ocultar' : 'Publicar', () => mutate(`/modulos/${mod.id_modulo}/publicacion`, 'PATCH', { publicado: !mod.publicado }));
+        if (!mod.archivado_at) button(mod.publicado ? 'Ocultar' : 'Publicar', () => mutate(`/modulos/${mod.id_modulo}/publicacion`, 'PATCH', { publicado: !mod.publicado }), !mod.publicado && !(mod.documentos || []).length);
+        if (!mod.publicado && !mod.archivado_at && !(mod.documentos || []).length) { const note = document.createElement('p'); note.className = 'publish-requirement'; note.textContent = 'Agrega al menos un PDF para poder publicar este modulo.'; article.append(note); }
+        button(mod.archivado_at ? 'Restaurar modulo' : 'Archivar modulo', () => {
+          if (!mod.archivado_at && !window.confirm(`Se ocultara "${mod.titulo}" del aula. Los PDF y el avance se conservaran. ¿Archivar?`)) return;
+          mutate(`/modulos/${mod.id_modulo}/archivo`, 'PATCH', { archivado: !mod.archivado_at });
+        });
         for (const [label, offset] of [['Subir', -1], ['Bajar', 1]]) button(label, () => {
           const ids = state.modulos.map(m => m.id_modulo); [ids[index], ids[index + offset]] = [ids[index + offset], ids[index]];
           mutate('/orden', 'PUT', { modulos: ids });
@@ -125,7 +164,17 @@
     catch (error) { message(error.message, true); }
     finally { lock(false); $('refresh').focus(); }
   }
-  async function saveDocument(mod, doc, form, name, input) {
+  async function setModuleCompleted(mod, completado) {
+    if (busy || !state) return;
+    const enrollment = new URLSearchParams(location.search).get('inscripcion');
+    lock(true); message('Guardando tu avance...');
+    try {
+      state = await request(`/mia/${enrollment}/modulos/${mod.id_modulo}/progreso`, 'PATCH', { completado });
+      render(); message(completado ? 'Modulo marcado como completado.' : 'Modulo marcado como pendiente.');
+    } catch (error) { message(error.message, true); }
+    finally { lock(false); }
+  }
+  async function saveDocument(mod, doc, form, name, description, input) {
     if (busy || !state) return;
     const file = input.files[0];
     let problem = '';
@@ -134,7 +183,7 @@
     else if (!file.size || file.size > 5 * 1024 * 1024) problem = 'Selecciona un PDF con contenido y de hasta 5 MB.';
     else if (!name.value.trim() || name.value.trim().length > 150) problem = 'Escribe un nombre para el PDF de hasta 150 caracteres.';
     if (problem) { pdfStatus(form, problem, true); return; }
-    const body = new FormData(); body.append('titulo', name.value.trim()); body.append('revision', String(state.curso.aula_revision)); body.append('archivo', file);
+    const body = new FormData(); body.append('titulo', name.value.trim()); body.append('descripcion', description.value.trim()); body.append('revision', String(state.curso.aula_revision)); body.append('archivo', file);
     const submit = form.querySelector('button[type=submit]'); const originalLabel = submit.textContent;
     lock(true); form.setAttribute('aria-busy', 'true'); submit.textContent = 'Subiendo PDF…';
     pdfStatus(form, 'Subiendo PDF… Espera a que se confirme el guardado.');
@@ -172,15 +221,16 @@
     } catch (error) { message(error.message, true); }
     finally { lock(false); }
   }
-  async function openDocument(doc) {
+  async function openDocument(doc, downloadFile = false) {
     if (busy) return;
     lock(true); message('Abriendo PDF…');
     try {
       const path = admin ? `/admin/cursos/${state.curso.id_curso}/documentos/${doc.id_documento}` : `/mia/${new URLSearchParams(location.search).get('inscripcion')}/documentos/${doc.id_documento}`;
       const token = localStorage.getItem(key); const response = await fetch(API + path, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store', signal: AbortSignal.timeout(30000) });
       if (!response.ok || !response.headers.get('content-type')?.includes('application/pdf')) throw Error('No se pudo abrir el PDF.');
-      const url = URL.createObjectURL(await response.blob()); const popup = window.open(url, '_blank', 'noopener');
-      if (!popup) { const a = document.createElement('a'); a.href = url; a.download = `${doc.titulo}.pdf`; a.click(); }
+      const url = URL.createObjectURL(await response.blob());
+      if (downloadFile) { const a = document.createElement('a'); a.href = url; a.download = `${doc.titulo}.pdf`; a.click(); }
+      else { const popup = window.open(url, '_blank'); if (popup) popup.opener = null; else { const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener'; a.click(); } }
       setTimeout(() => URL.revokeObjectURL(url), 60000); message('');
     } catch (error) { message(error.message, true); }
     finally { lock(false); }

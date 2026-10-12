@@ -15,10 +15,19 @@ function modulo(body) {
   }
   return { titulo: body.titulo.trim(), descripcion: (body.descripcion || '').trim() };
 }
+function documento(body) {
+  if (!body || typeof body.titulo !== 'string' || !body.titulo.trim() || body.titulo.trim().length > 150) {
+    throw httpError(400, 'Escribe un titulo para el PDF de hasta 150 caracteres.');
+  }
+  if (body.descripcion !== undefined && (typeof body.descripcion !== 'string' || body.descripcion.trim().length > 1000)) {
+    throw httpError(400, 'La descripcion del PDF admite hasta 1000 caracteres.');
+  }
+  return { titulo: body.titulo.trim(), descripcion: (body.descripcion || '').trim() };
+}
 function orden(ids) {
   if (!Array.isArray(ids) || !ids.length || ids.length > 100) throw httpError(400, 'Envía el orden completo de los módulos.');
   const normalized = ids.map(positiveId);
   if (new Set(normalized).size !== normalized.length) throw httpError(400, 'El orden contiene módulos repetidos.');
   return normalized;
 }
-module.exports = { revision, modulo, orden };
+module.exports = { revision, modulo, documento, orden };
