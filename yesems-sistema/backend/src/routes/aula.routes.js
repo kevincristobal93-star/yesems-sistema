@@ -6,7 +6,7 @@ const auth = require('../middlewares/auth.middleware');
 const admin = require('../middlewares/admin.middleware');
 const files = require('../services/aula-files.service');
 const multer = require('multer');
-const parsePdf = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 1, fields: 3, parts: 4, fieldSize: 2000 } }).single('archivo');
+const parseDocument = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 1, fields: 3, parts: 4, fieldSize: 2000 } }).single('archivo');
 const wrap = fn => async (req, res) => {
   try { await fn(req, res); } catch (error) { sendError(res, error); }
 };
@@ -30,23 +30,24 @@ router.get('/mia/:inscripcion/documentos/:documento', auth, wrap(async (req, res
 router.get('/admin/cursos/:curso/documentos/:documento', wrap(async (req, res) => {
   await files.descargar(res, await model.documentoAdmin(positiveId(req.params.curso), positiveId(req.params.documento)));
 }));
-router.post('/admin/cursos/:curso/modulos/:modulo/documentos', (req, res, next) => parsePdf(req, res, error => {
-  if (error) return res.status(400).json({ ok: false, mensaje: 'Sube un solo PDF de hasta 5 MB, con título y revisión.' });
+router.post('/admin/cursos/:curso/modulos/:modulo/documentos', (req, res, next) => parseDocument(req, res, error => {
+  if (error) return res.status(400).json({ ok: false, mensaje: 'Sube un solo documento de hasta 5 MB, con título y revisión.' });
   next();
 }), wrap(async (req, res) => {
   if (!/^\d+$/.test(req.body.revision || '')) throw httpError(400, 'Revisión inválida.');
-  const buffer = files.validarPdf(req.file);
+  const { buffer, extension } = files.validarDocumento(req.file);
   const document = validate.documento(req.body);
-  const data = await model.agregarDocumento(positiveId(req.params.curso), positiveId(req.params.modulo), validate.revision(Number(req.body.revision)), document.titulo, document.descripcion, buffer, req.admin.id_administrador);
+  const data = await model.agregarDocumento(positiveId(req.params.curso), positiveId(req.params.modulo), validate.revision(Number(req.body.revision)), document.titulo, document.descripcion, buffer, req.admin.id_administrador, extension);
   res.status(201).json({ ok: true, ...data });
 }));
-router.put('/admin/cursos/:curso/documentos/:documento', (req, res, next) => parsePdf(req, res, error => {
-  if (error) return res.status(400).json({ ok: false, mensaje: 'Sube un solo PDF de hasta 5 MB, con título y revisión.' });
+router.put('/admin/cursos/:curso/documentos/:documento', (req, res, next) => parseDocument(req, res, error => {
+  if (error) return res.status(400).json({ ok: false, mensaje: 'Sube un solo documento de hasta 5 MB, con título y revisión.' });
   next();
 }), wrap(async (req, res) => {
   if (!/^\d+$/.test(req.body.revision || '')) throw httpError(400, 'Revisión inválida.');
   const document = validate.documento(req.body);
-  const data = await model.reemplazarDocumento(positiveId(req.params.curso), positiveId(req.params.documento), validate.revision(Number(req.body.revision)), document.titulo, document.descripcion, files.validarPdf(req.file), req.admin.id_administrador);
+  const { buffer, extension } = files.validarDocumento(req.file);
+  const data = await model.reemplazarDocumento(positiveId(req.params.curso), positiveId(req.params.documento), validate.revision(Number(req.body.revision)), document.titulo, document.descripcion, buffer, req.admin.id_administrador, extension);
   res.json({ ok: true, ...data });
 }));
 router.get('/admin/cursos/:curso/historial-pdf', wrap(async (req, res) => {

@@ -24,7 +24,7 @@ suite('Carga de PDF del aula en navegador', () => {
   }
   beforeAll(async () => {
     const app = express();
-    const parser = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 1, fields: 2, parts: 3, fieldSize: 1000 } }).single('archivo');
+    const parser = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 1, fields: 3, parts: 4, fieldSize: 1000 } }).single('archivo');
     app.get('/api/aula/admin/cursos', (_req, res) => res.json({ cursos: [state.curso] }));
     app.get('/api/aula/admin/cursos/1', (_req, res) => res.json(state));
     app.use('/api/aula', (req, res) => parser(req, res, error => {
@@ -67,9 +67,9 @@ suite('Carga de PDF del aula en navegador', () => {
   });
 
   test('rechaza archivos incorrectos y grandes antes de enviarlos', async () => {
-    await selectFile(upload + ' input[type=file]', 'nota.txt');
+    await selectFile(upload + ' input[type=file]', 'programa.exe');
     await browser.click(upload + ' button');
-    expect(await browser.evaluate(`document.querySelector('${upload} .upload-status').textContent`)).toContain('extensión .pdf');
+    expect(await browser.evaluate(`document.querySelector('${upload} .upload-status').textContent`)).toContain('Usa PDF');
     await selectFile(upload + ' input[type=file]', 'grande.pdf', 5 * 1024 * 1024 + 1);
     await browser.click(upload + ' button');
     expect(await browser.evaluate(`document.querySelector('${upload} .upload-status').textContent`)).toContain('hasta 5 MB');
@@ -94,7 +94,7 @@ suite('Carga de PDF del aula en navegador', () => {
 
   test('la carga real multipart muestra progreso y confirma el documento guardado', async () => {
     await browser.click(upload + ' button');
-    await browser.waitFor(`document.querySelector('${upload} button').textContent==='Subiendo PDF…'`);
+    await browser.waitFor(`document.querySelector('${upload} button').textContent==='Subiendo documento…'`);
     expect(await browser.evaluate(`document.querySelector('${upload} button').disabled`)).toBe(true);
     // Espera a que el servidor local reciba el archivo, sin tocar servicios externos.
     for (let i = 0; !release && i < 50; i++) await new Promise(r => setTimeout(r, 20));

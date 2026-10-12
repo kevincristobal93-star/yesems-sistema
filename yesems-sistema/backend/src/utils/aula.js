@@ -17,10 +17,10 @@ function modulo(body) {
 }
 function documento(body) {
   if (!body || typeof body.titulo !== 'string' || !body.titulo.trim() || body.titulo.trim().length > 150) {
-    throw httpError(400, 'Escribe un titulo para el PDF de hasta 150 caracteres.');
+    throw httpError(400, 'Escribe un titulo para el documento de hasta 150 caracteres.');
   }
   if (body.descripcion !== undefined && (typeof body.descripcion !== 'string' || body.descripcion.trim().length > 1000)) {
-    throw httpError(400, 'La descripcion del PDF admite hasta 1000 caracteres.');
+    throw httpError(400, 'La descripcion del documento admite hasta 1000 caracteres.');
   }
   return { titulo: body.titulo.trim(), descripcion: (body.descripcion || '').trim() };
 }

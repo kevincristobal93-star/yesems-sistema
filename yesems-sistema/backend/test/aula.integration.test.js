@@ -102,7 +102,7 @@ integration('Aula virtual: permisos, edición y publicación en PostgreSQL aisla
     state = await upload(`/admin/cursos/${course}/modulos/${published.id_modulo}/documentos`, { revision: state.curso.aula_revision, titulo: 'Guía inicial' }, { bytes: validPdf });
     const document = state.modulos.find(m => m.id_modulo === published.id_modulo).documentos.find(d => d.titulo === 'Guía inicial');
     expect(document).toBeDefined();
-    await upload(`/admin/cursos/${course}/modulos/${published.id_modulo}/documentos`, { revision: state.curso.aula_revision, titulo: 'No PDF' }, { bytes: Buffer.from('texto'), type: 'text/plain', name: 'texto.txt' }, admin, 400);
+    await upload(`/admin/cursos/${course}/modulos/${published.id_modulo}/documentos`, { revision: state.curso.aula_revision, titulo: 'No permitido' }, { bytes: Buffer.from('MZ'), type: 'application/octet-stream', name: 'programa.exe' }, admin, 400);
     const unauthorized = await fetch(`${origin}/api/aula/mia/${enrollment}/documentos/${document.id_documento}`, { headers: { Authorization: `Bearer ${other}` } });
     expect(unauthorized.status).toBe(404);
     const allowed = await fetch(`${origin}/api/aula/mia/${enrollment}/documentos/${document.id_documento}`, { headers: { Authorization: `Bearer ${alumno}` } });
@@ -191,4 +191,21 @@ integration('Aula virtual: permisos, edición y publicación en PostgreSQL aisla
       expect(browser.errors).toEqual([]);
     } finally { await browser.close(); }
   }, 90000);
+  test('subir, descargar y reemplazar texto conserva permisos y extensión', async () => {
+    state = await api(`/admin/cursos/${course}`);
+    const mod = state.modulos.find(m => m.publicado && !m.archivado_at);
+    const bytes = Buffer.from('Guía del curso para practicar');
+    state = await upload(`/admin/cursos/${course}/modulos/${mod.id_modulo}/documentos`, { revision: state.curso.aula_revision, titulo: 'Guía TXT' }, { bytes, name: 'guia.txt', type: 'text/plain' });
+    const doc = state.modulos.find(m => m.id_modulo === mod.id_modulo).documentos.find(d => d.titulo === 'Guía TXT');
+    expect(doc.extension).toBe('txt');
+    const url = `${origin}/api/aula/mia/${enrollment}/documentos/${doc.id_documento}`;
+    const response = await fetch(url, { headers: { Authorization: `Bearer ${alumno}` } });
+    expect(response.status).toBe(200);
+    expect(response.headers.get('content-disposition')).toContain('.txt');
+    expect(await response.text()).toBe(bytes.toString());
+    expect((await fetch(url, { headers: { Authorization: `Bearer ${other}` } })).status).toBe(404);
+    state = await upload(`/admin/cursos/${course}/documentos/${doc.id_documento}`, { revision: state.curso.aula_revision, titulo: 'Datos CSV' }, { bytes: Buffer.from('tema,actividad\nuno,lectura'), name: 'datos.csv', type: 'text/csv' }, admin, 200, 'PUT');
+    expect(state.modulos.find(m => m.id_modulo === mod.id_modulo).documentos.find(d => d.titulo === 'Datos CSV').extension).toBe('csv');
+    expect((await fetch(url, { headers: { Authorization: `Bearer ${alumno}` } })).status).toBe(404);
+  });
 });

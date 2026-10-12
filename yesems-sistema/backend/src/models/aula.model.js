@@ -2,7 +2,7 @@ const pool = require('../config/db');
 const { withCourseLock } = require('./seguimiento.model');
 const { httpError } = require('../utils/http-error');
 const files = require('../services/aula-files.service');
-const documentosSql = `COALESCE((SELECT json_agg(json_build_object('id_documento',d.id_documento,'titulo',d.titulo,'descripcion',d.descripcion,'bytes',d.bytes) ORDER BY d.id_documento) FROM aula_documentos d WHERE d.id_modulo=m.id_modulo AND d.activo), '[]'::json)`;
+const documentosSql = `COALESCE((SELECT json_agg(json_build_object('id_documento',d.id_documento,'titulo',d.titulo,'descripcion',d.descripcion,'bytes',d.bytes,'extension',regexp_replace(d.archivo_url, '^.*[.]', '')) ORDER BY d.id_documento) FROM aula_documentos d WHERE d.id_modulo=m.id_modulo AND d.activo), '[]'::json)`;
 
 async function listarCursos() {
   return (await pool.query('SELECT id_curso, nombre, activo FROM cursos ORDER BY nombre, id_curso')).rows;
@@ -47,7 +47,7 @@ async function publicarModulo(idCurso, idModulo, revision, publicado, admin) {
   return modificar(idCurso, revision, async client => {
     if (publicado) {
       const materials = await client.query('SELECT count(*)::int AS total FROM aula_documentos WHERE id_modulo=$1 AND activo', [idModulo]);
-      if (!materials.rows[0]?.total) throw httpError(409, 'Agrega al menos un PDF activo antes de publicar este modulo.');
+      if (!materials.rows[0]?.total) throw httpError(409, 'Agrega al menos un documento activo antes de publicar este modulo.');
     }
     const result = await client.query(`UPDATE aula_modulos SET publicado=$3, actualizado_por=$4, actualizado_at=now()
       WHERE id_curso=$1 AND id_modulo=$2 AND archivado_at IS NULL RETURNING id_modulo`, [idCurso, idModulo, publicado, admin]);
@@ -113,15 +113,15 @@ async function actualizarProgreso(idInscripcion, idUsuario, idModulo, completado
   if (!rows[0]) throw httpError(403, 'El acceso al curso cambio. Actualiza tu aula e intenta de nuevo.');
   return obtenerAulaPropia(idInscripcion,idUsuario);
 }
-async function agregarDocumento(idCurso, idModulo, revision, titulo, descripcion, buffer, admin) {
+async function agregarDocumento(idCurso, idModulo, revision, titulo, descripcion, buffer, admin, extension = 'pdf') {
   let url;
   try {
     return await modificar(idCurso, revision, async client => {
       const module = await client.query('SELECT id_modulo FROM aula_modulos WHERE id_modulo=$1 AND id_curso=$2 AND archivado_at IS NULL', [idModulo, idCurso]);
       if (!module.rowCount) throw httpError(404, 'Módulo no encontrado.');
       const count = (await client.query('SELECT count(*)::int AS n FROM aula_documentos WHERE id_modulo=$1 AND activo', [idModulo])).rows[0].n;
-      if (count >= 20) throw httpError(409, 'Cada módulo admite hasta 20 PDF activos.');
-      url = await files.guardar(buffer);
+      if (count >= 20) throw httpError(409, 'Cada módulo admite hasta 20 documentos activos.');
+      url = await files.guardar(buffer, extension);
       await client.query('INSERT INTO aula_documentos(id_modulo,titulo,descripcion,archivo_url,bytes,creado_por) VALUES ($1,$2,$3,$4,$5,$6)', [idModulo,titulo,descripcion,url,buffer.length,admin]);
     });
   } catch (error) {
@@ -129,15 +129,15 @@ async function agregarDocumento(idCurso, idModulo, revision, titulo, descripcion
     throw error;
   }
 }
-async function reemplazarDocumento(idCurso, idDocumento, revision, titulo, descripcion, buffer, admin) {
+async function reemplazarDocumento(idCurso, idDocumento, revision, titulo, descripcion, buffer, admin, extension = 'pdf') {
   let url;
   try {
     return await modificar(idCurso, revision, async client => {
       const previous = await client.query(`SELECT d.id_documento,d.id_modulo FROM aula_documentos d JOIN aula_modulos m USING(id_modulo)
         WHERE d.id_documento=$1 AND m.id_curso=$2 AND d.activo AND m.archivado_at IS NULL FOR UPDATE OF d`, [idDocumento,idCurso]);
-      if (!previous.rowCount) throw httpError(404, 'PDF activo no encontrado en este curso.');
+      if (!previous.rowCount) throw httpError(404, 'Documento activo no encontrado en este curso.');
       const { id_modulo } = previous.rows[0];
-      url = await files.guardar(buffer);
+      url = await files.guardar(buffer, extension);
       const result = await client.query(`INSERT INTO aula_documentos(id_modulo,titulo,descripcion,archivo_url,bytes,creado_por,reemplaza_id)
         VALUES($1,$2,$3,$4,$5,$6,$7) RETURNING id_documento`, [id_modulo,titulo,descripcion,url,buffer.length,admin,idDocumento]);
       await client.query('UPDATE aula_documentos SET activo=false WHERE id_documento=$1', [idDocumento]);

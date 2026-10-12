@@ -52,3 +52,16 @@ El segundo comando crea una base PostgreSQL temporal y usa Edge local para compr
 ## Siguiente etapa
 
 Validar la carga y consulta de un PDF privado con las credenciales de Cloudinary del entorno autorizado y completar el recorrido del alumno en Render. El reemplazo conserva la versión anterior en la base y en el almacenamiento; la administración puede ver el historial sin exponer direcciones privadas en la respuesta. La posible medición de consultas sería independiente del progreso académico.
+# Documentos admitidos en el aula
+
+Solo el administrador puede subir o reemplazar materiales. Se admiten PDF, DOC/DOCX,
+XLS/XLSX, PPT/PPTX, ODT/ODS/ODP, RTF, TXT, CSV, Markdown, EPUB, ZIP, JPG/JPEG, PNG y WebP,
+con un máximo de 5 MB por archivo y 20 documentos activos por módulo.
+El contenido tiene una validación básica de formato y tamaño, no un análisis antivirus.
+Los archivos ZIP se almacenan sin extraerlos. Los formatos ejecutables no están permitidos.
+
+Los PDF mantienen la vista previa; otros formatos se descargan para abrirlos con una
+aplicación compatible. La extensión se conserva en almacenamiento y descarga, y se
+deriva de la URL privada al listar materiales, sin exponer esa URL al alumno.
+Los PDF anteriores, permisos, publicación de módulos e historial siguen funcionando
+sin migraciones de base de datos. Los documentos de texto deben estar codificados en UTF-8.

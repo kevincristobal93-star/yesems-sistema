@@ -42,7 +42,7 @@
     $('history').hidden = true;
     $('history').replaceChildren();
     $('history-toggle').setAttribute('aria-expanded', 'false');
-    $('history-toggle').textContent = 'Ver historial de PDF';
+    $('history-toggle').textContent = 'Ver historial de documentos';
   }
   const message = (text, error = false) => { $('feedback').textContent = text; $('feedback').classList.toggle('error', error); };
   function lock(value) {
@@ -64,7 +64,7 @@
     editing = null;
     if (admin) { $('module-form').reset(); $('editor-title').textContent = 'Nuevo módulo'; if ($('editor-help')) $('editor-help').textContent = 'Añade un tema al curso. Se guardará como borrador.'; }
   }
-  function pdfStatus(form, text, error = false) {
+  function documentStatus(form, text, error = false) {
     const status = form.querySelector('.upload-status');
     status.textContent = text;
     status.classList.toggle('error', error);
@@ -72,25 +72,25 @@
   }
   function createPdfForm(mod, doc) {
     const form = document.createElement('form'); form.className = 'upload-form'; form.noValidate = true;
-    const heading = document.createElement('h3'); heading.textContent = doc ? 'Reemplazar este PDF' : 'Agregar un PDF al módulo';
-    const help = document.createElement('p'); help.className = 'hint'; help.textContent = '1. Selecciona un PDF de hasta 5 MB. 2. Revisa su nombre. 3. Pulsa el botón para guardarlo.';
-    const fileLabel = document.createElement('label'); fileLabel.textContent = 'Archivo PDF';
-    const file = document.createElement('input'); file.type = 'file'; file.name = 'archivo'; file.accept = 'application/pdf,.pdf'; file.required = true; fileLabel.append(file);
-    const titleLabel = document.createElement('label'); titleLabel.textContent = 'Nombre del PDF';
+    const heading = document.createElement('h3'); heading.textContent = doc ? 'Reemplazar este documento' : 'Agregar un documento al módulo';
+    const help = document.createElement('p'); help.className = 'hint'; help.textContent = '1. Selecciona un documento de hasta 5 MB (PDF, Office, OpenDocument, texto, EPUB, ZIP o imágenes). 2. Revisa su nombre. 3. Pulsa el botón para guardarlo.';
+    const fileLabel = document.createElement('label'); fileLabel.textContent = 'Archivo';
+    const file = document.createElement('input'); file.type = 'file'; file.name = 'archivo'; file.accept = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.rtf,.txt,.csv,.md,.epub,.zip,.jpg,.jpeg,.png,.webp'; file.required = true; fileLabel.append(file);
+    const titleLabel = document.createElement('label'); titleLabel.textContent = 'Nombre del documento';
     const name = document.createElement('input'); name.name = 'titulo'; name.maxLength = 150; name.required = true; name.value = doc?.titulo || ''; name.placeholder = 'Se completa al seleccionar el archivo'; titleLabel.append(name);
-    const descriptionLabel = document.createElement('label'); descriptionLabel.textContent = 'Descripcion del PDF (opcional)';
+    const descriptionLabel = document.createElement('label'); descriptionLabel.textContent = 'Descripcion del documento (opcional)';
     const description = document.createElement('textarea'); description.name = 'descripcion'; description.maxLength = 1000; description.value = doc?.descripcion || ''; description.placeholder = 'Describe brevemente este material.'; descriptionLabel.append(description);
     let suggestedTitle = name.value;
     file.onchange = () => {
       const selected = file.files[0];
-      if (!selected) { pdfStatus(form, 'Selecciona el PDF que quieres subir.'); return; }
+      if (!selected) { documentStatus(form, 'Selecciona el documento que quieres subir.'); return; }
       if (!name.value.trim() || name.value === suggestedTitle) {
-        suggestedTitle = selected.name.replace(/\.pdf$/i, '').replace(/[_-]+/g, ' ').slice(0, 150);
+        suggestedTitle = selected.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').slice(0, 150);
         name.value = suggestedTitle;
       }
-      pdfStatus(form, `Archivo seleccionado: ${selected.name}. Pulsa ${doc ? 'Reemplazar PDF' : 'Subir PDF'} para guardarlo.`);
+      documentStatus(form, `Archivo seleccionado: ${selected.name}. Pulsa ${doc ? 'Reemplazar documento' : 'Subir documento'} para guardarlo.`);
     };
-    const submit = document.createElement('button'); submit.type = 'submit'; submit.textContent = doc ? 'Reemplazar PDF' : 'Subir PDF';
+    const submit = document.createElement('button'); submit.type = 'submit'; submit.textContent = doc ? 'Reemplazar documento' : 'Subir documento';
     const status = document.createElement('p'); status.className = 'upload-status'; status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite'); status.hidden = true;
     form.append(heading, help, fileLabel, titleLabel, descriptionLabel, submit, status);
     for (const control of [file, name, description, submit]) { control.dataset.unavailable = String(!state.curso.activo || Boolean(mod.archivado_at)); control.disabled = !state.curso.activo || Boolean(mod.archivado_at); }
@@ -113,15 +113,15 @@
         const item = document.createElement('li');
         const summary = document.createElement('div'); summary.className = 'document-summary';
         const documentTitle = document.createElement('strong'); documentTitle.textContent = doc.titulo;
-        const size = document.createElement('span'); size.className = 'document-size'; size.textContent = `PDF - ${doc.bytes < 1024 * 1024 ? `${Math.max(1, Math.round(doc.bytes / 1024))} KB` : `${(doc.bytes / (1024 * 1024)).toFixed(1)} MB`}`;
+        const size = document.createElement('span'); size.className = 'document-size'; size.textContent = `${(doc.extension || 'pdf').toUpperCase()} - ${doc.bytes < 1024 * 1024 ? `${Math.max(1, Math.round(doc.bytes / 1024))} KB` : `${(doc.bytes / (1024 * 1024)).toFixed(1)} MB`}`;
         summary.append(documentTitle, size);
         if (doc.descripcion) { const detail = document.createElement('p'); detail.textContent = doc.descripcion; summary.append(detail); }
         const documentActions = document.createElement('div'); documentActions.className = 'document-actions';
-        const view = document.createElement('button'); view.type = 'button'; view.textContent = 'Ver PDF'; view.onclick = () => openDocument(doc);
+        const view = document.createElement('button'); view.type = 'button'; view.textContent = 'Ver documento'; view.onclick = () => openDocument(doc);
         const download = document.createElement('button'); download.type = 'button'; download.textContent = 'Descargar'; download.onclick = () => openDocument(doc, true);
-        documentActions.append(view, download); item.append(summary, documentActions);
+        if ((doc.extension || 'pdf') === 'pdf') documentActions.append(view); documentActions.append(download); item.append(summary, documentActions);
         if (admin) {
-          const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Retirar PDF'; remove.onclick = () => mutate(`/documentos/${doc.id_documento}`, 'DELETE', {}); item.append(remove);
+          const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Retirar documento'; remove.onclick = () => mutate(`/documentos/${doc.id_documento}`, 'DELETE', {}); item.append(remove);
           remove.dataset.unavailable = String(!state.curso.activo); remove.disabled = !state.curso.activo;
           item.append(createPdfForm(mod, doc));
         }
@@ -142,9 +142,9 @@
         }
         button('Editar', () => { editing = mod.id_modulo; $('title').value = mod.titulo; $('description').value = mod.descripcion; $('editor-title').textContent = 'Editar módulo'; if ($('editor-help')) $('editor-help').textContent = 'Actualiza el título o la descripción de este tema.'; $('title').focus(); });
         if (!mod.archivado_at) button(mod.publicado ? 'Ocultar' : 'Publicar', () => mutate(`/modulos/${mod.id_modulo}/publicacion`, 'PATCH', { publicado: !mod.publicado }), !mod.publicado && !(mod.documentos || []).length);
-        if (!mod.publicado && !mod.archivado_at && !(mod.documentos || []).length) { const note = document.createElement('p'); note.className = 'publish-requirement'; note.textContent = 'Agrega al menos un PDF para poder publicar este modulo.'; article.append(note); }
+        if (!mod.publicado && !mod.archivado_at && !(mod.documentos || []).length) { const note = document.createElement('p'); note.className = 'publish-requirement'; note.textContent = 'Agrega al menos un documento para poder publicar este modulo.'; article.append(note); }
         button(mod.archivado_at ? 'Restaurar modulo' : 'Archivar modulo', () => {
-          if (!mod.archivado_at && !window.confirm(`Se ocultara "${mod.titulo}" del aula. Los PDF y el avance se conservaran. ¿Archivar?`)) return;
+          if (!mod.archivado_at && !window.confirm(`Se ocultara "${mod.titulo}" del aula. Los documentos y el avance se conservaran. ¿Archivar?`)) return;
           mutate(`/modulos/${mod.id_modulo}/archivo`, 'PATCH', { archivado: !mod.archivado_at });
         });
         for (const [label, offset] of [['Subir', -1], ['Bajar', 1]]) button(label, () => {
@@ -178,28 +178,28 @@
     if (busy || !state) return;
     const file = input.files[0];
     let problem = '';
-    if (!file) problem = 'Primero selecciona un archivo PDF en el campo Archivo PDF.';
-    else if (!/\.pdf$/i.test(file.name)) problem = 'El archivo debe tener extensión .pdf.';
-    else if (!file.size || file.size > 5 * 1024 * 1024) problem = 'Selecciona un PDF con contenido y de hasta 5 MB.';
-    else if (!name.value.trim() || name.value.trim().length > 150) problem = 'Escribe un nombre para el PDF de hasta 150 caracteres.';
-    if (problem) { pdfStatus(form, problem, true); return; }
+    if (!file) problem = 'Primero selecciona un documento en el campo Archivo.';
+    else if (!/\.(pdf|docx?|xlsx?|pptx?|odt|ods|odp|rtf|txt|csv|md|epub|zip|jpe?g|png|webp)$/i.test(file.name)) problem = 'Usa PDF, Office, OpenDocument, texto, EPUB, ZIP o imágenes JPG, PNG y WebP.';
+    else if (!file.size || file.size > 5 * 1024 * 1024) problem = 'Selecciona un documento con contenido y de hasta 5 MB.';
+    else if (!name.value.trim() || name.value.trim().length > 150) problem = 'Escribe un nombre para el documento de hasta 150 caracteres.';
+    if (problem) { documentStatus(form, problem, true); return; }
     const body = new FormData(); body.append('titulo', name.value.trim()); body.append('descripcion', description.value.trim()); body.append('revision', String(state.curso.aula_revision)); body.append('archivo', file);
     const submit = form.querySelector('button[type=submit]'); const originalLabel = submit.textContent;
-    lock(true); form.setAttribute('aria-busy', 'true'); submit.textContent = 'Subiendo PDF…';
-    pdfStatus(form, 'Subiendo PDF… Espera a que se confirme el guardado.');
+    lock(true); form.setAttribute('aria-busy', 'true'); submit.textContent = 'Subiendo documento…';
+    documentStatus(form, 'Subiendo documento… Espera a que se confirme el guardado.');
     try {
       const path = doc ? `/documentos/${doc.id_documento}` : `/modulos/${mod.id_modulo}/documentos`;
       state = await request(`/admin/cursos/${state.curso.id_curso}${path}`, doc ? 'PUT' : 'POST', body);
       closeHistory(); render();
       const article = [...$('modules').children].find(el => el.dataset.moduleId === String(mod.id_modulo));
       const notice = document.createElement('p'); notice.className = 'upload-status success'; notice.setAttribute('role', 'status'); notice.tabIndex = -1;
-      notice.textContent = doc ? 'PDF reemplazado. La versión anterior se conserva en el historial.' : 'PDF guardado correctamente. Ya aparece en los materiales de este módulo.';
+      notice.textContent = doc ? 'Documento reemplazado. La versión anterior se conserva en el historial.' : 'Documento guardado correctamente. Ya aparece en los materiales de este módulo.';
       article?.prepend(notice); notice.focus({ preventScroll: true }); notice.scrollIntoView({ block: 'nearest' });
       message(notice.textContent);
     } catch (error) {
       const detail = error.name === 'TimeoutError' || error.name === 'AbortError' || error instanceof TypeError
         ? 'No se pudo confirmar la carga. Pulsa Actualizar aula para comprobar si se guardó antes de volver a subirlo.' : error.message;
-      pdfStatus(form, detail, true); message(detail, true);
+      documentStatus(form, detail, true); message(detail, true);
     } finally { form.removeAttribute('aria-busy'); submit.textContent = originalLabel; lock(false); }
   }
   async function loadHistory() {
@@ -210,26 +210,26 @@
     try {
       const result = await request(`/admin/cursos/${state.curso.id_curso}/historial-pdf`);
       section.replaceChildren();
-      if (!result.documentos.length) { const p = document.createElement('p'); p.textContent = 'Aún no hay PDF en este curso.'; section.append(p); }
+      if (!result.documentos.length) { const p = document.createElement('p'); p.textContent = 'Aún no hay documentos en este curso.'; section.append(p); }
       for (const doc of result.documentos) {
         const item = document.createElement('p');
         const date = new Date(doc.creado_at).toLocaleString('es-MX');
         item.textContent = `${doc.modulo} · ${doc.titulo} · ${doc.activo ? 'Versión actual' : doc.reemplazado_por ? 'Reemplazada' : 'Retirada'} · ${date} · ${doc.administrador}`;
         section.append(item);
       }
-      section.hidden = false; $('history-toggle').setAttribute('aria-expanded', 'true'); $('history-toggle').textContent = 'Ocultar historial de PDF'; message('Historial actualizado.');
+      section.hidden = false; $('history-toggle').setAttribute('aria-expanded', 'true'); $('history-toggle').textContent = 'Ocultar historial de documentos'; message('Historial actualizado.');
     } catch (error) { message(error.message, true); }
     finally { lock(false); }
   }
   async function openDocument(doc, downloadFile = false) {
     if (busy) return;
-    lock(true); message('Abriendo PDF…');
+    lock(true); message('Abriendo documento…');
     try {
       const path = admin ? `/admin/cursos/${state.curso.id_curso}/documentos/${doc.id_documento}` : `/mia/${new URLSearchParams(location.search).get('inscripcion')}/documentos/${doc.id_documento}`;
       const token = localStorage.getItem(key); const response = await fetch(API + path, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store', signal: AbortSignal.timeout(30000) });
-      if (!response.ok || !response.headers.get('content-type')?.includes('application/pdf')) throw Error('No se pudo abrir el PDF.');
+      if (!response.ok) throw Error('No se pudo abrir el documento.');
       const url = URL.createObjectURL(await response.blob());
-      if (downloadFile) { const a = document.createElement('a'); a.href = url; a.download = `${doc.titulo}.pdf`; a.click(); }
+      if (downloadFile || (doc.extension || 'pdf') !== 'pdf') { const a = document.createElement('a'); a.href = url; a.download = `${doc.titulo.replace(/[\\/:*?"<>|\x00-\x1f]/g, '_')}.${doc.extension || 'pdf'}`; a.click(); }
       else { const popup = window.open(url, '_blank'); if (popup) popup.opener = null; else { const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener'; a.click(); } }
       setTimeout(() => URL.revokeObjectURL(url), 60000); message('');
     } catch (error) { message(error.message, true); }
