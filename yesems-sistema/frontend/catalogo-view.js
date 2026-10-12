@@ -34,7 +34,7 @@
     const title = student ? 'h2' : 'h3';
     const action = `<button class="course-more-button" type="button" data-course-details="${escapeHtml(course.id_curso)}" aria-haspopup="dialog" aria-label="Ver más información de ${escapeHtml(course.nombre || 'este curso')}">Ver más información <span aria-hidden="true">→</span></button>`;
     return `<article class="${cls('card')} catalog-tile">
-      ${icon(course)}
+      <div class="course-cover">${icon(course)}<span class="course-cover-tag">${student && course.ya_inscrito ? 'Inscrito' : provisional ? 'Propuesta' : 'Capacitación'}</span></div>
       <p class="${cls('category')}">${escapeHtml(course.categoria || 'Capacitación')}</p>
       ${provisional ? '<p class="proposal-badge">Propuesta · Por confirmar</p>' : ''}
       ${student && course.ya_inscrito ? '<p class="student-enrolled-badge">Ya estás inscrito</p>' : ''}
