@@ -7,6 +7,15 @@ const { httpError } = require('../utils/http-error');
 const root = path.join(require('../config/upload-path'), 'aula');
 const localTest = process.env.NODE_ENV === 'test' && process.env.YES_EMS_ISOLATED_TEST === '1' && Boolean(process.env.TEST_UPLOADS_DIR);
 const MAX = 5 * 1024 * 1024;
+function diagnosticoCloudinary(error) {
+  let message = String(error?.message || 'Error sin mensaje del proveedor');
+  for (const secret of [process.env.CLOUDINARY_API_SECRET, process.env.CLOUDINARY_API_KEY]) {
+    if (secret) message = message.split(secret).join('[redacted]');
+  }
+  message = message.replace(/(api[_ -]?(?:key|secret)|authorization|signature)\s*[:=]\s*[^\s,;]+/gi, '$1=[redacted]').slice(0, 300);
+  const httpCode = Number(error?.http_code || error?.error?.http_code);
+  return { http_code: Number.isInteger(httpCode) ? httpCode : null, name: String(error?.name || 'Error').slice(0, 60), message };
+}
 function validarPdf(file) {
   if (!file || file.mimetype !== 'application/pdf' || !/\.pdf$/i.test(file.originalname || '')) throw httpError(400, 'Selecciona un archivo PDF.');
   const b = file.buffer;
@@ -24,7 +33,10 @@ async function guardar(buffer) {
       stream.on('error', reject); stream.end(buffer);
     });
     return result.secure_url;
-  } catch { throw httpError(502, 'No se pudo guardar el PDF en el almacenamiento privado.'); }
+  } catch (error) {
+    console.error('[aula-cloudinary-upload]', diagnosticoCloudinary(error));
+    throw httpError(502, 'No se pudo guardar el PDF en el almacenamiento privado.');
+  }
 }
 function localName(url) {
   const name = String(url).slice('test-aula:'.length);
