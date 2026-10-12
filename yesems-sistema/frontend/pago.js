@@ -44,7 +44,14 @@ async function loadPayment() {
     if (enrollment.pagos.some((payment) => payment.estado === 'pendiente')) showPending();
   } catch (error) { pageMessage.textContent = error instanceof TypeError ? 'No se pudo conectar con el servidor.' : error.message; }
 }
-function showPending() { setText('#enrollment-status', 'Pago en revisión'); formMessage.classList.add('success'); formMessage.textContent = 'Comprobante recibido. Tu inscripción aún no está confirmada: administración debe verificar el dinero recibido. Consulta el resultado en Mi panel.'; form.querySelectorAll('input, select, button').forEach((element) => { element.disabled = true; }); }
+function showPending() {
+  setText('#enrollment-status', 'Pago en revisión');
+  formMessage.classList.add('success');
+  formMessage.textContent = 'Comprobante recibido. Tu inscripción aún no está confirmada: administración debe verificar el dinero recibido. Consulta el resultado en Mi panel.';
+  form.querySelectorAll('input, select, button').forEach((element) => { element.disabled = true; });
+  submitButton.textContent = 'Pago enviado a revisión';
+  submitButton.setAttribute('aria-label', 'Pago enviado a revisión');
+}
 const form = document.querySelector('#payment-form');
 const cashInstructions=document.createElement('section');
 cashInstructions.className='receipt-field';
