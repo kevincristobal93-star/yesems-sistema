@@ -28,10 +28,25 @@ async function guardar(buffer) {
   if (localTest) { await fs.mkdir(root, { recursive: true }); const name = path.basename(id); await fs.writeFile(path.join(root, name), buffer, { flag: 'wx' }); return `test-aula:${name}`; }
   if (!cloudinaryEnabled) throw httpError(503, 'Configura el almacenamiento privado antes de subir materiales.');
   try {
-    const result = await new Promise((resolve, reject) => {
-      const stream = cloudinary.uploader.upload_stream({ resource_type: 'raw', type: 'authenticated', public_id: id, overwrite: false, timeout: 30000 }, (error, result) => error ? reject(error) : resolve(result));
-      stream.on('error', reject); stream.end(buffer);
+    // El SDK descarta el cuerpo de errores HTTP 403 en upload_stream.
+    // La API oficial admite Basic Auth por HTTPS y devuelve el motivo en JSON.
+    const form = new FormData();
+    form.append('file', new Blob([buffer], { type: 'application/pdf' }), 'material.pdf');
+    form.append('public_id', id);
+    form.append('type', 'authenticated');
+    form.append('overwrite', 'false');
+    const credentials = Buffer.from(`${process.env.CLOUDINARY_API_KEY}:${process.env.CLOUDINARY_API_SECRET}`).toString('base64');
+    const response = await fetch(`https://api.cloudinary.com/v1_1/${encodeURIComponent(process.env.CLOUDINARY_CLOUD_NAME)}/raw/upload`, {
+      method: 'POST', headers: { Authorization: `Basic ${credentials}` }, body: form, redirect: 'error', signal: AbortSignal.timeout(30000),
     });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const reason = result?.error?.message || response.headers.get('x-cld-error') || `Cloudinary HTTP ${response.status}`;
+      throw Object.assign(new Error(String(reason)), { http_code: response.status });
+    }
+    if (!result.secure_url || result.public_id !== id || result.resource_type !== 'raw' || result.type !== 'authenticated') {
+      throw new Error('Cloudinary devolvio una respuesta de carga inesperada');
+    }
     return result.secure_url;
   } catch (error) {
     console.error('[aula-cloudinary-upload]', diagnosticoCloudinary(error));
