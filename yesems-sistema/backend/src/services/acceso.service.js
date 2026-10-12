@@ -115,6 +115,48 @@ async function account(address, data, googleSub = null, googleProfile = null) {
   }
   return session(user);
 }
+
+async function googleAccount(address, googleSub, googleProfile, nonceValue) {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    // Serializa el alta/vinculación para un correo y evita asociar dos cuentas
+    // Google distintas al mismo usuario en solicitudes concurrentes.
+    await client.query('SELECT pg_advisory_xact_lock(hashtextextended($1,0))', [address]);
+    const nonce = await client.query(
+      "INSERT INTO acceso_nonces(nonce,expira) VALUES($1,now()+interval '5 minutes') ON CONFLICT DO NOTHING RETURNING nonce",
+      [nonceValue]
+    );
+    if (!nonce.rows.length) throw fail(401, 'Acceso ya utilizado. Vuelve a intentarlo.');
+
+    const bySubject = await client.query('SELECT * FROM usuarios WHERE google_sub=$1 FOR UPDATE', [googleSub]);
+    let user = bySubject.rows[0];
+    if (!user) {
+      const matches = await client.query('SELECT * FROM usuarios WHERE lower(btrim(email))=$1 FOR UPDATE', [address]);
+      if (matches.rows.length > 1) throw fail(409, 'Esta cuenta requiere revisión del administrador. No se modificaron tus datos.');
+      user = matches.rows[0];
+      if (user) {
+        if (!user.activo || !['cliente', 'alumno'].includes(user.rol)) throw fail(403, 'No se puede acceder a esta cuenta por este medio.');
+        if (user.google_sub && user.google_sub !== googleSub) throw fail(409, 'Este correo ya está vinculado a otra cuenta de Google. Accede con el método que vinculaste originalmente.');
+        user = (await client.query(
+          'UPDATE usuarios SET google_sub=$2,email_verificado_at=COALESCE(email_verificado_at,now()) WHERE id_usuario=$1 RETURNING *',
+          [user.id_usuario, googleSub]
+        )).rows[0];
+      } else {
+        const p = googleProfile;
+        user = (await client.query(`INSERT INTO usuarios(nombre,apellido,email,telefono,rol,email_verificado_at,google_sub)
+          VALUES($1,$2,$3,$4,'cliente',now(),$5) RETURNING *`,
+        [p.nombre, p.apellido, address, p.telefono, googleSub])).rows[0];
+      }
+    }
+    if (!user.activo || !['cliente', 'alumno'].includes(user.rol)) throw fail(403, 'Cuenta no disponible.');
+    await client.query('COMMIT');
+    return session(user);
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally { client.release(); }
+}
 async function byEmail(body, ip) {
   const address = email(body.email);
   await limit('verify:' + digest(ip), 30, 900);
@@ -139,17 +181,9 @@ async function byGoogle(body, ip) {
   } catch (_) { throw fail(401, 'No se pudo verificar el acceso con Google. Intenta nuevamente.'); }
   const address = email(payload.email);
   if (!address.endsWith('@gmail.com') && !payload.hd) throw fail(400, 'Para este correo utiliza la opción de código por correo.');
-  const known = await pool.query('SELECT * FROM usuarios WHERE google_sub=$1', [payload.sub]);
-  const nonce = await pool.query("INSERT INTO acceso_nonces(nonce,expira) VALUES($1,now()+interval '5 minutes') ON CONFLICT DO NOTHING RETURNING nonce", [state.nonce]);
-  if (!nonce.rows.length) throw fail(401, 'Acceso ya utilizado. Vuelve a intentarlo.');
-  if (known.rows.length) {
-    const user = known.rows[0];
-    if (!user.activo || !['cliente','alumno'].includes(user.rol)) throw fail(403, 'Cuenta no disponible.');
-    return session(user);
-  }
   const claim = value => typeof value === 'string' ? value.trim().slice(0,100) : '';
-  return account(address, {}, payload.sub, {
+  return googleAccount(address, payload.sub, {
     nombre: claim(payload.given_name || payload.name), apellido: claim(payload.family_name), telefono: null,
-  });
+  }, state.nonce);
 }
 module.exports = { config, email, profile, sendCode, consumeCode, byEmail, byGoogle, challenge, limit, digest, session };

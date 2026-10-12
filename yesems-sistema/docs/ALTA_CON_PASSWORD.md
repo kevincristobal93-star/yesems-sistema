@@ -15,7 +15,7 @@ El permiso firmado dura 10 minutos, tiene audiencia y propósito exclusivos, se 
 
 La contraseña se valida con la política existente (12 caracteres como mínimo y 72 bytes como máximo) y se almacena con bcrypt. Al guardarla se incrementa la versión de sesión y se eliminan códigos anteriores. Solo entonces se emite una sesión normal. Cerrar el diálogo borra el permiso y los campos de contraseña; se puede volver a verificar la cuenta para continuar.
 
-La verificación puede reservar una cuenta incompleta en PostgreSQL antes de crear la contraseña, pero no emite acceso normal. Se conserva su identidad y puede retomarse sin duplicados. Las cuentas Google y locales existentes con el mismo correo no se vinculan automáticamente: se mantiene la protección previa.
+La verificación puede reservar una cuenta incompleta en PostgreSQL antes de crear la contraseña, pero no emite acceso normal. Se conserva su identidad y puede retomarse sin duplicados. Google puede vincularse a una cuenta local solo cuando su token confirma el mismo correo verificado y la cuenta no está vinculada a otro Google.
 
 ## Alcance operativo
 

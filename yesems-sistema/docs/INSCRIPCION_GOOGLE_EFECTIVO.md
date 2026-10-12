@@ -26,7 +26,8 @@
 ## Compatibilidad y seguridad
 
 - No se eliminan ni migran datos: el esquema existente admite este flujo.
-- Cuentas de correo existentes no se vinculan a Google automáticamente.
+- Google se vincula a una cuenta existente solo cuando confirma el mismo correo
+  y esa cuenta no tiene ya otro vínculo Google; se conserva su historial.
 - Inscripciones canceladas no se reanudan como activas. Un pago completo o en
   revisión no genera una solicitud de pago duplicada.
 - Los recibos antiguos sin archivo se conservan: la administración debe revisar

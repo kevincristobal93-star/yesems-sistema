@@ -168,7 +168,7 @@ const enabled=process.env.YES_EMS_ISOLATED_TEST==='1' && process.env.NODE_ENV===
       expect(browser.errors).toEqual([]);console.log('Capturas de registro ficticio:',artifacts);
     }finally{process.env.GOOGLE_CLIENT_ID='test-client';if(browser)await browser.close();}
   },60000);
-  test('Google crea cliente con sub único; rechaza replay y no vincula por correo una cuenta previa',async()=>{
+  test('Google crea cliente con sub único; rechaza replay y un sub distinto',async()=>{
     const state=await request('/acceso/google/reto',{});
     global.__googleTestPayload={sub:tag,email:`google-${tag}@gmail.com`,email_verified:true,nonce:state.nonce};
     const body={...profile,credential:'token-ficticio',challenge:state.challenge};
@@ -176,6 +176,18 @@ const enabled=process.env.YES_EMS_ISOLATED_TEST==='1' && process.env.NODE_ENV===
     await request('/acceso/google',body,401);
     const next=await request('/acceso/google/reto',{});global.__googleTestPayload={...global.__googleTestPayload,sub:tag+'other',nonce:next.nonce};
     await request('/acceso/google',{...body,challenge:next.challenge},409);
+  });
+  test('Google vincula una cuenta local existente solo por correo verificado y conserva su identidad',async()=>{
+    const email=address('google-link');
+    const original=(await pool.query(`INSERT INTO usuarios(nombre,apellido,email,password_hash,rol,email_verificado_at)
+      VALUES('Nombre original','Apellido original',$1,'hash-de-prueba','alumno',now()) RETURNING id_usuario`,[email])).rows[0];
+    const state=await request('/acceso/google/reto',{});
+    const sub=tag+'linked';global.__googleTestPayload={sub,email,email_verified:true,nonce:state.nonce,given_name:'Otro nombre',family_name:'No reemplazar'};
+    const result=await request('/acceso/google',{credential:'token-ficticio',challenge:state.challenge});
+    expect(result.usuario).toMatchObject({id_usuario:original.id_usuario,nombre:'Nombre original',apellido:'Apellido original',rol:'alumno'});
+    const saved=(await pool.query('SELECT google_sub,password_hash FROM usuarios WHERE id_usuario=$1',[original.id_usuario])).rows[0];
+    expect(saved).toEqual({google_sub:sub,password_hash:'hash-de-prueba'});
+    expect((await pool.query('SELECT count(*)::int AS n FROM usuarios WHERE lower(email)=lower($1)',[email])).rows[0].n).toBe(1);
   });
   test('Google permite crear cuenta sin teléfono y solo usa nombres del token verificado',async()=>{
     const state=await request('/acceso/google/reto',{});

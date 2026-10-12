@@ -57,7 +57,7 @@ const login = async (req, res) => {
     }
 
     const usuario = await usuarioModel.obtenerUsuarioPorEmail(email);
-    if (!usuario || !usuario.activo || !usuario.password_hash) {
+    if (!usuario || !usuario.activo || !['cliente', 'alumno'].includes(usuario.rol) || !usuario.password_hash) {
       return res.status(401).json({ ok: false, mensaje: 'Credenciales inválidas' });
     }
 

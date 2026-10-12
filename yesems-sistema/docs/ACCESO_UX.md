@@ -13,9 +13,10 @@ En `password.html` hay dos recorridos distintos:
   contraseña nueva con el mecanismo existente. Necesita el proveedor de
   correo configurado; configurar Google no activa el envío de correo.
 
-YES EMS no recibe ni cambia la contraseña de Google. No se vinculan cuentas
-existentes automáticamente por coincidencia de correo. Los permisos y la
-validación de identidad siguen a cargo del backend.
+YES EMS no recibe ni cambia la contraseña de Google. Google puede vincularse a
+una cuenta YES EMS existente únicamente si Google confirma el mismo correo y
+la cuenta aún no está vinculada a otro Google. Los permisos y la validación de
+identidad siguen a cargo del backend.
 
 ## Comprobación manual antes de publicar
 

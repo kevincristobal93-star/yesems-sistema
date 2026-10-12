@@ -10,12 +10,12 @@ Implementación preparada para publicación con autorización del usuario. No se
 ## Qué incluye
 
 - Ventana compartida en cursos, registro e inicio de sesión: Google y código por correo, sin Apple ni SMS. Conserva el curso elegido al continuar.
-- Las cuentas nuevas usan acceso sin contraseña. El teléfono se solicita como contacto; **no se considera verificado**. Las cuentas históricas conservan su contraseña y también pueden acceder demostrando control de su correo.
+- Una cuenta nueva por correo debe crear su contraseña YES EMS después de verificar el código; el teléfono se solicita como contacto y **no se considera verificado**. Las cuentas históricas conservan su contraseña y también pueden acceder demostrando control de su correo.
 - Los códigos duran 10 minutos, tienen un solo uso, cinco intentos máximos y no se almacenan en claro. No aparecen en respuestas ni logs. Un reenvío invalida el código previo.
 - Límites persistentes en PostgreSQL: un envío por correo por minuto, cinco por IP por hora; 30 verificaciones/intentos de contraseña por IP cada 15 minutos. No se confía automáticamente en cabeceras `X-Forwarded-For`. Detrás del proxy de Render el límite por IP puede agrupar usuarios: revisar la topología antes de configurar `trust proxy`, nunca habilitarlo indiscriminadamente.
 - Presupuesto global conservador: máximo 90 intentos de envío en 24 horas y 2700 en 32 días. Incluye fallos para evitar sobreconsumo. No se contratan planes de pago ni se habilitan sobrecostos. Se necesita usar el plan gratuito del proveedor y contabilizar otros sistemas que compartan esa cuenta: el límite local no conoce sus envíos.
 - Google usa la biblioteca oficial para comprobar firma, audiencia, emisor y vencimiento; además exige correo verificado y nonce propio de un solo uso. Se identifica por `sub`, no por nombre. Correos externos a Gmail/Workspace se verifican por código.
-- Una cuenta histórica no vinculada a Google **no se fusiona automáticamente**: el usuario debe acceder por correo o contraseña. La vinculación explícita de cuentas existentes queda fuera de esta entrega.
+- Google puede vincularse a una cuenta existente solo si el token de Google confirma el mismo correo y esa cuenta todavía no tiene otro `google_sub`. Se conserva el registro, su rol, contraseña e historial; no se fusionan duplicados.
 - Nombres/apellidos iguales están permitidos. CURP y correo normalizados quedan reservados en PostgreSQL incluso con escrituras simultáneas, cuentas inactivas o cambios posteriores. La validación de CURP es de formato básico, no una consulta de identidad a RENAPO.
 
 ## Conservación de datos
