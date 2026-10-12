@@ -1,10 +1,20 @@
 const pool = require('../config/db');
 
+const disponibilidadSql = `
+  SELECT c.*, cat.nombre AS categoria,
+         ocupacion.lugares_ocupados,
+         GREATEST(c.cupo - ocupacion.lugares_ocupados, 0)::int AS lugares_disponibles,
+         (ocupacion.lugares_ocupados >= c.cupo) AS cupo_lleno
+  FROM cursos c
+  JOIN categorias cat ON c.id_categoria = cat.id_categoria
+  CROSS JOIN LATERAL (
+    SELECT COUNT(*)::int AS lugares_ocupados
+    FROM inscripciones i
+    WHERE i.id_curso = c.id_curso AND i.estado <> 'cancelada'
+  ) ocupacion`;
+
 const obtenerCursos = async () => {
-  const resultado = await pool.query(`
-    SELECT c.*, cat.nombre AS categoria
-    FROM cursos c
-    JOIN categorias cat ON c.id_categoria = cat.id_categoria
+  const resultado = await pool.query(`${disponibilidadSql}
     WHERE c.activo = true
     ORDER BY c.id_curso DESC
   `);
@@ -13,7 +23,7 @@ const obtenerCursos = async () => {
 
 const obtenerCursoPorId = async (id) => {
   const resultado = await pool.query(
-    'SELECT * FROM cursos WHERE id_curso = $1',
+    `${disponibilidadSql} WHERE c.id_curso = $1`,
     [id]
   );
   return resultado.rows[0];

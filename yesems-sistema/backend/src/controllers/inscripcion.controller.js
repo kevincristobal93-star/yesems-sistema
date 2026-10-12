@@ -25,7 +25,7 @@ const crearInscripcionPropia = async (req, res) => {
 			throw require('../utils/http-error').httpError(400, 'Fecha de nacimiento inválida');
 		}
 		const cursoResult = await client.query(
-			'SELECT id_curso, precio, oferta_provisional FROM cursos WHERE id_curso = $1 AND activo = true FOR UPDATE',
+			'SELECT id_curso, precio, cupo, oferta_provisional FROM cursos WHERE id_curso = $1 AND activo = true FOR UPDATE',
 			[id_curso]
 		);
 		if (!cursoResult.rows[0]) {
@@ -57,6 +57,15 @@ const crearInscripcionPropia = async (req, res) => {
 		if (existente.rows[0]) {
 			await client.query('ROLLBACK');
 			return res.json({ ok: true, existente: true, mensaje: 'Ya cuentas con una inscripción activa para este curso.', inscripcion: existente.rows[0] });
+		}
+
+		const ocupacion = await client.query(
+			"SELECT COUNT(*)::int AS total FROM inscripciones WHERE id_curso = $1 AND estado <> 'cancelada'",
+			[id_curso]
+		);
+		if (ocupacion.rows[0].total >= cursoResult.rows[0].cupo) {
+			await client.query('ROLLBACK');
+			return res.status(409).json({ ok: false, mensaje: 'El curso alcanzó su cupo. Elige otro curso o consulta nuevas fechas con YES EMS.' });
 		}
 
 		const usuarioResult = await client.query(

@@ -63,15 +63,25 @@ async function loadCourse() {
     setText('#course-category', course.categoria || 'Capacitación');
     setText('#course-description', course.descripcion || 'Consulta los detalles con nuestro equipo.');
     setText('#course-duration', `${course.duracion_horas ?? '—'} horas${course.duracion_aproximada ? ' aproximadamente' : course.oferta_provisional ? ' sugeridas' : ''}`);
-    setText('#course-capacity', course.cupo_confirmado === false ? 'Por confirmar con YES EMS' : `${course.cupo ?? '—'} lugares${course.oferta_provisional ? ' sugeridos' : ''}`);
+    const available = Number(course.lugares_disponibles);
+    const capacityText = course.cupo_lleno
+      ? 'Cupo lleno'
+      : course.cupo_confirmado === false
+        ? 'Por confirmar con YES EMS'
+        : Number.isInteger(available)
+          ? `${available} ${available === 1 ? 'lugar disponible' : 'lugares disponibles'}`
+          : `${course.cupo ?? '—'} lugares${course.oferta_provisional ? ' sugeridos' : ''}`;
+    setText('#course-capacity', capacityText);
     setText('#course-price', course.oferta_provisional || course.precio === null || course.precio === undefined ? 'Por confirmar' : new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(Number(course.precio)));
     document.querySelector('#course-loading').hidden = true;
     document.querySelector('#course-content').hidden = false;
-    if (course.oferta_provisional || !course.activo) {
+    if (course.oferta_provisional || !course.activo || course.cupo_lleno) {
       form.hidden = true;
       const notice = document.createElement('p');
       notice.className = 'folio-note';
-      notice.textContent = 'Inscripciones no disponibles. Esta oferta requiere confirmación de YES EMS. Puedes consultar otros cursos con el enlace Cambiar curso.';
+      notice.textContent = course.cupo_lleno
+        ? 'Este curso alcanzó su cupo. Consulta otro curso o pregunta a YES EMS por nuevas fechas.'
+        : 'Inscripciones no disponibles. Esta oferta requiere confirmación de YES EMS. Puedes consultar otros cursos con el enlace Cambiar curso.';
       form.before(notice);
       submitButton.disabled = true;
       return;

@@ -46,6 +46,23 @@ test('el detalle también escapa contenido no confiable', () => {
   expect(details({ ...course, nombre: '<script>x</script>', descripcion: 'Plus: <img onerror=bad()>' })).not.toMatch(/<script>|<img/);
 });
 
+test('muestra lugares reales y bloquea la acción cuando el cupo está lleno', () => {
+  expect(card({ ...course, lugares_disponibles: 3 })).toContain('3 lugares disponibles');
+  expect(card({ ...course, lugares_disponibles: 1 })).toContain('1 lugar disponible');
+  const full = details({ ...course, oferta_provisional: false, cupo_lleno: true, lugares_disponibles: 0 });
+  expect(full).toContain('Cupo lleno');
+  expect(full).toContain('no hay lugares disponibles');
+  expect(full).not.toContain('data-detail-enroll');
+});
+
+test('el catálogo del alumno reconoce una inscripción existente', () => {
+  const enrolled = { ...course, oferta_provisional: false, ya_inscrito: true, cupo_lleno: true };
+  expect(card(enrolled, true)).toContain('Ya estás inscrito');
+  const html = details(enrolled);
+  expect(html).toContain('Ver mi inscripción');
+  expect(html).not.toContain('Por el momento no hay lugares disponibles');
+});
+
 test.each(['Reparación de celulares', 'Sublimación y diseño (crea tu marca)', 'Corte y grabado láser', 'Impresión 3D'])('tarifa y duración actualizadas: %s', (nombre) => {
   const updated = { ...course, nombre, oferta_provisional: false, precio: 1000, duracion_horas: 60, duracion_aproximada: true, cupo_confirmado: false };
   for (const html of [card(updated), card(updated, true), details(updated)]) {

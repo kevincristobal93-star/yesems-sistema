@@ -248,6 +248,34 @@ integration('Proceso real de inscripción, avance y constancia (PostgreSQL aisla
     expect(Number(accepted.json.inscripcion.monto_total)).toBe(600);
   });
 
+  test('el cupo se calcula, bloquea sobreinscripciones y libera lugares al cancelar', async () => {
+    const created = await request('POST', '/cursos', {
+      token: admin.token, status: 201,
+      body: { id_categoria: category, nombre: `Cupo real ${tag}`, descripcion: 'Control de disponibilidad', duracion_horas: 8, precio: 500, cupo: 1 },
+    });
+    const course = { id: created.json.curso.id_curso };
+    const firstEnrollment = await enroll(course, alumno);
+
+    const fullCatalog = await request('GET', `/cursos/${course.id}`, { status: 200 });
+    expect(fullCatalog.json.curso).toMatchObject({ lugares_ocupados: 1, lugares_disponibles: 0, cupo_lleno: true });
+
+    const adminRejected = await request('POST', '/inscripciones', {
+      token: admin.token, status: 409, body: { id_curso: course.id, id_usuario: otroAlumno.id },
+    });
+    expect(adminRejected.json.mensaje).toMatch(/alcanzó su cupo/i);
+
+    const rejected = await request('POST', '/inscripciones/mia', {
+      token: otroAlumno.token, status: 409,
+      body: { id_curso: course.id, telefono: '5500000001', fecha_nacimiento: '2000-01-01', curp: 'TEST000101HDF' + String(otroAlumno.id).padStart(5, '0') },
+    });
+    expect(rejected.json.mensaje).toMatch(/alcanzó su cupo/i);
+
+    await request('DELETE', `/inscripciones/${firstEnrollment}`, { token: admin.token, status: 200 });
+    await enroll(course, otroAlumno);
+    const reopened = await request('GET', `/cursos/${course.id}`, { status: 200 });
+    expect(reopened.json.curso).toMatchObject({ lugares_ocupados: 1, lugares_disponibles: 0, cupo_lleno: true });
+  });
+
   test('la migración agrega seguimiento a un esquema antiguo sin borrar inscripciones ni constancias y admite repetición', async () => {
     const { Pool } = require('pg');
     const dbName = 'yesems_progress_migration_test';

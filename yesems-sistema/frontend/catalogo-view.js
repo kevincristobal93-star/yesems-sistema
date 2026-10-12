@@ -19,7 +19,15 @@
     return `${money.format(Number(course.precio))} por curso completo`;
   }
   const duration = (course) => `${escapeHtml(course.duracion_horas ?? '—')} horas${course.duracion_aproximada ? ' aproximadamente' : ''}`;
-  const capacity = (course) => course.cupo_confirmado === false ? 'Cupo por confirmar' : `${escapeHtml(course.cupo ?? '—')} ${course.oferta_provisional ? 'personas por grupo' : 'lugares'}`;
+  const capacity = (course) => {
+    if (course.cupo_lleno === true) return 'Cupo lleno';
+    if (course.cupo_confirmado === false) return 'Cupo por confirmar';
+    if (Number.isInteger(Number(course.lugares_disponibles))) {
+      const available = Number(course.lugares_disponibles);
+      return `${available} ${available === 1 ? 'lugar disponible' : 'lugares disponibles'}`;
+    }
+    return `${escapeHtml(course.cupo ?? '—')} ${course.oferta_provisional ? 'personas por grupo' : 'lugares'}`;
+  };
   function card(course, student = false) {
     const provisional = course.oferta_provisional === true;
     const cls = (name) => student ? name : `course-${name}`;
@@ -29,6 +37,7 @@
       ${icon(course)}
       <p class="${cls('category')}">${escapeHtml(course.categoria || 'Capacitación')}</p>
       ${provisional ? '<p class="proposal-badge">Propuesta · Por confirmar</p>' : ''}
+      ${student && course.ya_inscrito ? '<p class="student-enrolled-badge">Ya estás inscrito</p>' : ''}
       <${title}>${escapeHtml(course.nombre || 'Curso YES EMS')}</${title}>
       <p class="${cls('description')} catalog-summary">${escapeHtml(course.descripcion || 'Consulta los detalles con nuestro equipo.')}</p>
       <div class="${cls('data')}"><span>${duration(course)}${provisional ? ' sugeridas' : ''}</span><span>${capacity(course)}${provisional ? ' sugeridas' : ''}</span></div>
@@ -55,7 +64,9 @@
       ${provisional ? '<p class="proposal-note">Duración y cupo sujetos a validación. Fechas, modalidad, equipo y materiales por confirmar. Inscripciones aún no abiertas.</p>' : ''}
       ${!provisional ? '<p class="proposal-note">Para obtener constancia es necesario estar inscrito al curso completo, cubrir el pago y cumplir los requisitos académicos y la validación administrativa.</p>' : ''}
       ${!provisional && course.duracion_aproximada ? '<p class="proposal-note">Fechas y horarios por acordar con YES EMS. Consulta la disponibilidad y los materiales antes de pagar.</p>' : ''}
-      ${!provisional && course.activo !== false ? '<button class="course-more-button" type="button" data-detail-enroll>Quiero inscribirme</button>' : ''}`;
+      ${!provisional && course.activo !== false && course.ya_inscrito ? '<button class="course-more-button" type="button" data-detail-enroll>Ver mi inscripción</button>' : ''}
+      ${!provisional && course.activo !== false && !course.cupo_lleno && !course.ya_inscrito ? '<button class="course-more-button" type="button" data-detail-enroll>Quiero inscribirme</button>' : ''}
+      ${!provisional && course.activo !== false && course.cupo_lleno && !course.ya_inscrito ? '<button class="course-more-button" type="button" disabled>Cupo lleno</button><p class="proposal-note">Por el momento no hay lugares disponibles. Consulta nuevas fechas con YES EMS.</p>' : ''}`;
   }
   function bindDetails(container, getCourses, onEnroll) {
     let dialog;
@@ -71,7 +82,7 @@
         dialog.setAttribute('aria-labelledby', 'course-detail-title');
         dialog.addEventListener('click', (e) => {
           if (e.target.closest('[data-close-details]')) dialog.close();
-          if (e.target.closest('[data-detail-enroll]') && !selected.oferta_provisional && selected.activo !== false) {
+          if (e.target.closest('[data-detail-enroll]') && !selected.oferta_provisional && selected.activo !== false && (!selected.cupo_lleno || selected.ya_inscrito)) {
             dialog.close(); onEnroll(selected);
           }
         });

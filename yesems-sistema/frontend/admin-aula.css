@@ -82,6 +82,12 @@ fieldset label+label { margin-top:20px; }
 .actions button { font-size:.76rem; min-height:40px; }
 .upload-form { border-top:1px solid var(--line); margin-top:20px; padding-top:18px; }
 .upload-form input { margin-bottom:12px; }
+.upload-form h3 { font-size:.9rem; }
+.upload-form .hint { margin:8px 0 16px; }
+.upload-status { padding:12px 14px; margin:12px 0 0; border-radius:8px; background:#eaf3f6; color:var(--navy); font-size:.82rem; overflow-wrap:anywhere; }
+.upload-status.error { color:#962626; background:#fff1f1; border-left:3px solid #b42318; }
+.upload-status.success { color:#176044; background:#e7f5ee; margin-bottom:16px; }
+.upload-form[aria-busy=true] { border-top-color:var(--blue); }
 input[type=file] { font-size:.78rem; padding:10px; background:#f6f9fb; }
 input[type=file]::file-selector-button { margin-right:10px; padding:7px 10px; border:0; border-radius:5px; color:var(--blue); background:#e3edf2; cursor:pointer; }
 .documents { padding:0; list-style:none; }
@@ -95,5 +101,5 @@ input[type=file]::file-selector-button { margin-right:10px; padding:7px 10px; bo
 .admin-footer a { overflow-wrap:anywhere; }
 .admin-footer .footer-company img { display:block; width:92px; height:92px; object-fit:contain; }
 @media(max-width:1000px) { .aula-brand small { display:none; } .course-picker { grid-template-columns:1fr; gap:20px; } .aula-work-grid { grid-template-columns:minmax(250px,.8fr) minmax(0,1.2fr); } .aula-counts { gap:16px; } .aula-counts div { padding-left:16px; } .aula-admin .admin-footer { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-@media(max-width:720px) { .aula-topbar { padding:12px 20px; gap:12px; } .aula-topbar nav>a:first-child { display:none; } .aula-brand { font-size:.78rem; gap:8px; } .aula-brand img { width:46px; height:46px; } .aula-topbar .back { padding:9px; font-size:.7rem; max-width:150px; } .aula-main { padding:22px 18px 0; } .aula-hero { padding:28px; } .hero-illustration { display:none; } .aula-guide ol { grid-template-columns:1fr; gap:24px; } .course-picker,.aula-guide { padding:22px; } .course-overview { flex-direction:column; align-items:flex-start; } .aula-counts { width:100%; justify-content:space-between; } .aula-counts div:first-child { padding-left:0; border:0; } .aula-work-grid { grid-template-columns:minmax(0,1fr); } .module-toolbar { flex-wrap:wrap; } }
+@media(max-width:720px) { .aula-topbar { padding:12px 20px; gap:12px; } .aula-brand { font-size:.78rem; gap:8px; } .aula-brand img { width:46px; height:46px; } .aula-topbar .back { padding:9px; font-size:.7rem; max-width:150px; } .aula-main { padding:22px 18px 0; } .aula-hero { padding:28px; } .hero-illustration { display:none; } .aula-guide ol { grid-template-columns:1fr; gap:24px; } .course-picker,.aula-guide { padding:22px; } .course-overview { flex-direction:column; align-items:flex-start; } .aula-counts { width:100%; justify-content:space-between; } .aula-counts div:first-child { padding-left:0; border:0; } .aula-work-grid { grid-template-columns:minmax(0,1fr); } .module-toolbar { flex-wrap:wrap; } }
 @media(max-width:440px) { .course-controls { flex-direction:column; align-items:stretch; } .course-controls button { width:100%; } .aula-hero { padding:26px 22px; } .aula-admin .admin-footer { grid-template-columns:1fr; padding:36px 24px 24px; } .editor-card,#modules article,#history { padding:20px; } .aula-counts { gap:8px; } .aula-counts div { padding-left:12px; } }

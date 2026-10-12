@@ -1,3 +1,18 @@
 <!doctype html>
-<html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Mi aula | YES EMS</title><link rel="stylesheet" href="./aula.css"><script src="./aula.js" defer></script></head>
-<body><main><header><a class="back" href="./panel.html">← Mi panel</a><p>YES EMS · AULA VIRTUAL</p><h1 id="course-title">Mi aula</h1><p>Consulta los módulos publicados de tu curso. Consultarlos no modifica tu asistencia ni tu avance académico.</p></header><p id="feedback" role="status" aria-live="polite"></p><a id="login" href="./login.html" hidden>Iniciar sesión</a><div id="workspace" hidden><button id="refresh" type="button">Actualizar aula</button><div id="modules"></div></div></main></body></html>
+<html lang="es-MX">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Mi aula | YES EMS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./aula.css"><link rel="stylesheet" href="./system-header.css">
+  <script src="./aula.js" defer></script>
+</head>
+<body>
+  <header class="system-topbar system-topbar--student">
+    <a class="system-brand" href="./panel.html"><img src="./assets/yesems-logo.png" alt="YES EMS" width="1254" height="1254"><span class="system-brand-copy"><strong>YES EMS</strong><small>Aula virtual</small></span></a>
+    <nav class="system-actions" aria-label="Navegación del alumno"><a class="system-action system-action--primary system-keep-mobile" href="./panel.html">← Mi panel</a></nav>
+  </header>
+  <main><header><p>YES EMS · AULA VIRTUAL</p><h1 id="course-title">Mi aula</h1><p>Consulta los módulos publicados de tu curso. Consultarlos no modifica tu asistencia ni tu avance académico.</p></header><p id="feedback" role="status" aria-live="polite"></p><a id="login" href="./index.html" hidden>Iniciar sesión</a><div id="workspace" hidden><button id="refresh" type="button">Actualizar aula</button><div id="modules"></div></div></main>
+</body>
+</html>

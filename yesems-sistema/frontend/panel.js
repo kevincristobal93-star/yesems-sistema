@@ -11,6 +11,17 @@ let sessionExpired = false;
 let loadingPanel = false;
 let completionPromptShown = false;
 
+function ensureJourney() {
+  if (!document.querySelector('link[href="./professional-flow.css"]')) {
+    const styles = document.createElement('link'); styles.rel = 'stylesheet'; styles.href = './professional-flow.css'; document.head.append(styles);
+  }
+  if (document.querySelector('.student-journey')) return;
+  const section = document.createElement('section');
+  section.className = 'student-journey'; section.setAttribute('aria-labelledby', 'journey-title');
+  section.innerHTML = `<div class="journey-heading"><div><p class="eyebrow">Tu ruta en YES EMS</p><h2 id="journey-title">Sigue tu proceso paso a paso.</h2></div><p id="journey-summary" role="status" aria-live="polite">Consultando el estado de tu capacitación…</p></div><ol class="journey-steps"><li id="journey-enrollment"><span>1</span><div><strong>Inscripción</strong><small>Elige un curso y completa tus datos.</small></div></li><li id="journey-payment"><span>2</span><div><strong>Pago</strong><small>Envía tu comprobante para revisión.</small></div></li><li id="journey-learning"><span>3</span><div><strong>Aprendizaje</strong><small>Accede al aula y consulta tu avance.</small></div></li><li id="journey-certificate"><span>4</span><div><strong>Constancia</strong><small>Solicítala después de concluir.</small></div></li></ol>`;
+  document.querySelector('.quick-summary').after(section);
+}
+
 function renderCompletion(items) {
   let banner=document.querySelector('#complete-enrollment-banner');
   if(!banner){
@@ -172,6 +183,40 @@ function renderEnrollment(item) {
     ${PanelProgreso.render(item.progreso, item.estado)}</article>`;
 }
 
+function renderJourney(items) {
+  const steps = ['enrollment', 'payment', 'learning', 'certificate'];
+  const elements = Object.fromEntries(steps.map((step) => [step, document.querySelector(`#journey-${step}`)]));
+  Object.values(elements).forEach((element) => { element.className = 'is-locked'; element.removeAttribute('aria-current'); });
+  const summary = document.querySelector('#journey-summary');
+  const item = items.find((entry) => entry.estado !== 'cancelada');
+  if (!item) {
+    elements.enrollment.className = 'is-current'; elements.enrollment.setAttribute('aria-current', 'step');
+    summary.textContent = 'Comienza eligiendo el curso que quieres estudiar.';
+    return;
+  }
+  elements.enrollment.className = 'is-complete';
+  if (!paymentComplete(item)) {
+    elements.payment.className = 'is-current'; elements.payment.setAttribute('aria-current', 'step');
+    summary.textContent = 'Tu inscripción está lista. El siguiente paso es completar o validar el pago.';
+    return;
+  }
+  elements.payment.className = 'is-complete';
+  const concluded = Boolean(item.progreso?.conclusion_validada || item.progreso?.concluida_at || item.estado === 'completada');
+  if (!concluded) {
+    elements.learning.className = 'is-current'; elements.learning.setAttribute('aria-current', 'step');
+    summary.textContent = 'Tu pago está confirmado. Continúa con los materiales y actividades del curso.';
+    return;
+  }
+  elements.learning.className = 'is-complete';
+  if (item.estado_constancia === 'autorizada') {
+    elements.certificate.className = 'is-complete';
+    summary.textContent = 'Proceso completado. Tu constancia ya está disponible para descarga.';
+  } else {
+    elements.certificate.className = 'is-current'; elements.certificate.setAttribute('aria-current', 'step');
+    summary.textContent = item.estado_constancia === 'pendiente' ? 'Tu constancia está en revisión administrativa.' : 'Ya puedes solicitar tu constancia de participación.';
+  }
+}
+
 async function loadPanel() {
   if (loadingPanel || sessionExpired) return;
   loadingPanel = true;
@@ -185,6 +230,7 @@ async function loadPanel() {
     const data = await apiRequest('/inscripciones/mias');
     if (!Array.isArray(data.inscripciones)) throw new Error('La información de las inscripciones no está disponible. Intenta actualizar.');
     const items = data.inscripciones;
+    renderJourney(items);
     renderCompletion(items);
     document.querySelector('#summary-courses').textContent = items.length;
     document.querySelector('#summary-payments').textContent = items.filter((item) => item.estado !== 'cancelada' && !paymentComplete(item)).length;
@@ -217,6 +263,7 @@ async function loadPanel() {
     document.querySelector('#featured-course').textContent = 'No se pudo consultar tu avance. No se mostrarán porcentajes hasta obtener los registros.';
     document.querySelector('#featured-status').textContent = 'Información no disponible';
     document.querySelector('#inscription-count').textContent = '';
+    document.querySelector('#journey-summary').textContent = 'No se pudo consultar tu ruta. Intenta actualizar nuevamente.';
     ['#summary-courses', '#summary-payments', '#summary-certificates'].forEach((selector) => { document.querySelector(selector).textContent = '—'; });
   } finally {
     loadingPanel = false;
@@ -311,6 +358,7 @@ document.querySelector('#logout-button').addEventListener('click', () => {
 reloadButton.addEventListener('click', loadPanel);
 
 document.querySelector('#footer-year').textContent = new Date().getFullYear();
+ensureJourney();
 if (!token || !user) window.location.replace('./cursos.html');
 else {
   setupPanelMotion();

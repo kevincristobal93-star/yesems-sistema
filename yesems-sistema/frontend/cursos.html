@@ -11,17 +11,20 @@
     <link rel="stylesheet" href="./cursos.css" />
     <link rel="stylesheet" href="./catalogo-propuestas.css" />
     <link rel="stylesheet" href="./docencia-destacada.css" />
+    <link rel="stylesheet" href="./professional-flow.css" /><link rel="stylesheet" href="./system-header.css" />
     <script src="./docencia-destacada.js" defer></script>
   </head>
   <body>
-    <header class="site-header">
-      <a class="brand" href="./cursos.html" aria-label="YES EMS, cursos disponibles">
+    <header class="site-header system-topbar system-topbar--public">
+      <a class="brand system-brand" href="./cursos.html" aria-label="YES EMS, cursos disponibles">
         <img src="./assets/yesems-logo.png" alt="YES EMS" width="1254" height="1254" />
+        <span class="system-brand-copy"><strong>YES EMS</strong><small>Capacitación y servicios educativos</small></span>
       </a>
-      <nav aria-label="Navegación principal">
+      <nav class="system-actions" aria-label="Navegación principal">
         <a class="active" href="./cursos.html">Cursos</a>
+        <a href="#como-funciona">Cómo funciona</a>
         <a href="#contacto">Contacto</a>
-        <a id="open-login-dialog" class="login-link" href="./index.html">Iniciar sesión</a>
+        <a id="open-login-dialog" class="login-link system-action--primary system-keep-mobile" href="./index.html">Iniciar sesión</a>
       </nav>
     </header>
 
@@ -77,6 +80,20 @@
           <strong>$150</strong>
           <small>MXN / mensual</small>
         </div>
+      </section>
+
+      <section id="como-funciona" class="public-process" aria-labelledby="process-title">
+        <div class="process-heading">
+          <div><p class="eyebrow">Un proceso claro de principio a fin</p><h2 id="process-title">Tu capacitación, en cuatro pasos.</h2></div>
+          <p>Desde tu registro hasta la constancia, siempre sabrás qué sigue y quién debe realizar cada acción.</p>
+        </div>
+        <ol class="process-grid">
+          <li><span>01</span><div><strong>Elige tu curso</strong><p>Consulta contenido, duración, precio y disponibilidad antes de inscribirte.</p></div></li>
+          <li><span>02</span><div><strong>Crea tu cuenta</strong><p>Verifica tu correo y protege tu acceso con una contraseña exclusiva de YES EMS.</p></div></li>
+          <li><span>03</span><div><strong>Confirma tu pago</strong><p>Sube tu comprobante. La administración lo revisará antes de habilitar el curso.</p></div></li>
+          <li><span>04</span><div><strong>Aprende y avanza</strong><p>Consulta materiales, revisa tu progreso y solicita tu constancia al concluir.</p></div></li>
+        </ol>
+        <div class="process-assurance" role="note"><strong>Seguimiento real.</strong><span>Tu pago, avance y constancia no se aprueban automáticamente: YES EMS valida cada etapa.</span></div>
       </section>
 
       <section class="catalog" aria-labelledby="catalog-title">

@@ -9,6 +9,8 @@
 .course-more-button { display: flex; gap: 16px; align-items: center; justify-content: center; width: 100%; padding: 14px 18px; border: 1px solid #176b87; border-radius: 8px; color: white; background: #176b87; font: 700 .9rem "Montserrat", sans-serif; cursor: pointer; }
 .course-more-button span { transition: transform .25s ease; }
 .course-more-button:hover { background: #10546c; }
+.course-more-button:disabled { border-color: #a8b5c0; color: #526273; background: #e7edf2; cursor: not-allowed; }
+.course-more-button:disabled:hover { background: #e7edf2; }
 .course-more-button:focus-visible, .course-detail-close:focus-visible { outline: 3px solid #bd7f00; outline-offset: 4px; }
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
   .catalog-tile:hover, .catalog-tile:focus-within { transform: translateY(-7px); border-color: #efbd40; box-shadow: 0 18px 36px rgba(23,35,61,.14); }

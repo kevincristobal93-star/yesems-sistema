@@ -321,6 +321,12 @@ async function loadDashboard() {
     document.querySelector('#metric-students').textContent = data.metricas.alumnos;
     document.querySelector('#metric-payments').textContent = data.metricas.pagos_pendientes;
     document.querySelector('#metric-certificates').textContent = data.metricas.constancias_pendientes;
+    document.querySelector('#operations-payments').textContent = data.metricas.pagos_pendientes
+      ? `${data.metricas.pagos_pendientes} pago${data.metricas.pagos_pendientes === 1 ? '' : 's'} por revisar.`
+      : 'No hay pagos pendientes.';
+    document.querySelector('#operations-certificates').textContent = data.metricas.constancias_pendientes
+      ? `${data.metricas.constancias_pendientes} solicitud${data.metricas.constancias_pendientes === 1 ? '' : 'es'} pendiente${data.metricas.constancias_pendientes === 1 ? '' : 's'}.`
+      : 'No hay solicitudes pendientes.';
     message.hidden = true;
     const rows = enrollmentData.inscripciones || [];
     document.querySelector('#inscription-table').innerHTML = rows.length ? rows.map((item) => `<tr><td>${escapeHtml(item.usuario_nombre)} ${escapeHtml(item.usuario_apellido)}</td><td>${escapeHtml(item.curso_nombre)}</td><td>${new Date(item.fecha_inscripcion).toLocaleDateString('es-MX')}</td><td>${money.format(Number(item.monto_total))}</td><td><span class="badge">${escapeHtml(item.estado)}</span></td><td>${!['cancelada', 'completada'].includes(item.estado) ? `<button class="table-action cancel" data-cancel-inscription="${item.id_inscripcion}">Cancelar</button>` : ''}</td></tr>`).join('') : '<tr><td colspan="6">Aún no hay inscripciones.</td></tr>';
