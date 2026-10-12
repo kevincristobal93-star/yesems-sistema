@@ -79,11 +79,14 @@ async function obtenerAulaPropia(idInscripcion, idUsuario) {
   // Autorización y contenido en una sentencia. No basta el estado "confirmada":
   // se comprueba el saldo real. Nunca se devuelven títulos ni descripciones de borradores.
   const { rows } = await pool.query(`WITH acceso AS (
-    SELECT i.id_inscripcion, c.id_curso, c.nombre,
+    SELECT i.id_inscripcion, i.monto_total, c.id_curso, c.nombre,
+      c.descripcion AS descripcion_curso, c.duracion_horas, c.precio,
+      cat.nombre AS categoria,
       (i.estado <> 'cancelada' AND c.activo AND NOT c.oferta_provisional AND
        COALESCE((SELECT SUM(p.monto) FROM pagos p WHERE p.id_inscripcion=i.id_inscripcion
                  AND p.estado='completado'),0) >= i.monto_total) AS autorizado
     FROM inscripciones i JOIN cursos c ON c.id_curso=i.id_curso
+    JOIN categorias cat ON cat.id_categoria=c.id_categoria
     WHERE i.id_inscripcion=$1 AND i.id_usuario=$2
   ) SELECT a.*, CASE WHEN a.autorizado THEN COALESCE((
       SELECT json_agg(json_build_object('id_modulo',m.id_modulo,'titulo',m.titulo,
@@ -94,10 +97,13 @@ async function obtenerAulaPropia(idInscripcion, idUsuario) {
     ),'[]'::json) ELSE '[]'::json END AS modulos FROM acceso a`, [idInscripcion, idUsuario]);
   if (!rows[0]) throw httpError(404, 'Inscripción no encontrada.');
   if (!rows[0].autorizado) throw httpError(403, 'El aula requiere un curso disponible, una inscripción no cancelada y el pago completo aprobado. Revisa tu inscripción en Mi panel.');
-  const { id_inscripcion, id_curso, nombre, modulos } = rows[0];
+  const { id_inscripcion, id_curso, nombre, descripcion_curso, duracion_horas,
+    precio, categoria, monto_total, modulos } = rows[0];
   const total = modulos.length;
   const completados = modulos.filter(modulo => modulo.completado).length;
-  return { curso: { id_curso, nombre }, id_inscripcion, modulos, progreso: { completados, total, porcentaje: total ? Math.round(completados * 100 / total) : 0 } };
+  return { curso: { id_curso, nombre, descripcion: descripcion_curso, duracion_horas,
+    precio, categoria, total_inscripcion: monto_total }, id_inscripcion, modulos,
+    progreso: { completados, total, porcentaje: total ? Math.round(completados * 100 / total) : 0 } };
 }
 async function actualizarProgreso(idInscripcion, idUsuario, idModulo, completado) {
   const aula = await obtenerAulaPropia(idInscripcion,idUsuario);

@@ -175,10 +175,27 @@ integration('Aula virtual: permisos, edición y publicación en PostgreSQL aisla
       await browser.waitFor(`document.querySelector('#modules article:last-child .badge').textContent === 'Publicado'`);
       await browser.click('#modules article:last-child .actions button[aria-label^="Subir"]');
       await browser.waitFor(`document.querySelector('#modules article:nth-child(2) h2').textContent.includes('Módulo desde navegador')`);
+      const galleryModule = await browser.evaluate(`Number(document.querySelector('#modules article:nth-child(2)').dataset.moduleId)`);
+      const currentAula = await api(`/admin/cursos/${course}`);
+      const previewPng = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/ZK0AAAAASUVORK5CYII=', 'base64');
+      const withImage = await upload(`/admin/cursos/${course}/modulos/${galleryModule}/documentos`,
+        { revision: currentAula.curso.aula_revision, titulo: 'Vista previa del curso' },
+        { bytes: previewPng, type: 'image/png', name: 'vista.png' });
+      expect(withImage.modulos.find(m => m.id_modulo === galleryModule).documentos.some(d => d.extension === 'png')).toBe(true);
+      await upload(`/admin/cursos/${course}/modulos/${galleryModule}/documentos`,
+        { revision: withImage.curso.aula_revision, titulo: 'Segunda vista del curso' },
+        { bytes: previewPng, type: 'image/png', name: 'vista-2.png' });
       await browser.viewport(390, 844);
       expect(await browser.evaluate('document.documentElement.scrollWidth <= innerWidth')).toBe(true);
       await browser.navigate(`${origin}/aula.html?inscripcion=${enrollment}`);
       await browser.waitFor(`document.querySelectorAll('#modules article').length === 2`);
+      await browser.waitFor(`!document.querySelector('#gallery-image').hidden && document.querySelector('#gallery-image').complete`);
+      expect(await browser.evaluate(`document.querySelector('#gallery-image').naturalWidth > 0`)).toBe(true);
+      expect(await browser.evaluate(`document.querySelector('#gallery-count').textContent === 'Imagen 1 de 2' && !document.querySelector('#gallery-next').hidden`)).toBe(true);
+      await browser.click('#gallery-next');
+      await browser.waitFor(`document.querySelector('#gallery-count').textContent === 'Imagen 2 de 2' && !document.querySelector('#gallery-image').hidden`);
+      expect(await browser.evaluate(`document.querySelector('#course-category').textContent === 'Aula prueba' && document.querySelector('#course-price').textContent.includes('1,000')`)).toBe(true);
+      expect(await browser.evaluate(`document.querySelectorAll('#modules .documents li[data-extension=png]').length`)).toBe(0);
       expect(await browser.evaluate(`document.querySelectorAll('#modules .actions').length === 0 && document.querySelectorAll('#modules button.module-complete').length === 2`)).toBe(true);
       expect(await browser.evaluate(`document.querySelector('#student-progress-count').textContent.includes('0 de 2')`)).toBe(true);
       await browser.click('#modules article:first-child button.module-complete');

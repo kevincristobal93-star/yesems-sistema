@@ -65,3 +65,19 @@ aplicación compatible. La extensión se conserva en almacenamiento y descarga, 
 deriva de la URL privada al listar materiales, sin exponer esa URL al alumno.
 Los PDF anteriores, permisos, publicación de módulos e historial siguen funcionando
 sin migraciones de base de datos. Los documentos de texto deben estar codificados en UTF-8.
+
+## Presentación visual del curso
+
+El administrador elige «Imagen para la galería del curso» dentro del formulario
+de materiales de cada módulo y sube JPG, PNG o WebP. Las imágenes de los módulos
+publicados forman la galería superior del aula del alumno; los PDF y demás
+documentos aparecen debajo de su módulo. Un módulo en borrador u oculto no
+aporta imágenes ni archivos a la vista del alumno. El historial de reemplazos
+y retiros se conserva.
+
+La ficha lateral muestra la descripción, categoría, duración y costo de la
+inscripción desde la base de datos. Las imágenes se recuperan mediante el
+endpoint autenticado existente y se muestran como vistas previas temporales;
+las direcciones privadas de almacenamiento nunca se entregan al navegador.
+Si todavía no hay imágenes o módulos publicados, el aula muestra estados vacíos
+claros sin inventar contenido. En móvil, galería y ficha se apilan.

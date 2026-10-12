@@ -6,14 +6,39 @@
   <link rel="icon" type="image/png" href="./assets/yesems-logo.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./aula.css"><link rel="stylesheet" href="./aula-progress.css"><link rel="stylesheet" href="./system-header.css">
+  <link rel="stylesheet" href="./aula.css"><link rel="stylesheet" href="./aula-progress.css"><link rel="stylesheet" href="./system-header.css"><link rel="stylesheet" href="./aula-showcase.css">
   <script src="./aula.js" defer></script>
 </head>
-<body>
+<body class="aula-student">
   <header class="system-topbar system-topbar--student">
     <a class="system-brand" href="./panel.html"><img src="./assets/yesems-logo.png" alt="YES EMS" width="1254" height="1254"><span class="system-brand-copy"><strong>YES EMS</strong><small>Aula virtual</small></span></a>
     <nav class="system-actions" aria-label="Navegación del alumno"><a class="system-action system-action--primary system-keep-mobile" href="./panel.html">← Mi panel</a></nav>
   </header>
-  <main><header><p>YES EMS · AULA VIRTUAL</p><h1 id="course-title">Mi aula</h1><p>Consulta los módulos publicados de tu curso. Consultarlos no modifica tu asistencia ni tu avance académico.</p></header><p id="feedback" role="status" aria-live="polite"></p><a id="login" href="./index.html" hidden>Iniciar sesión</a><div id="workspace" hidden><button id="refresh" type="button">Actualizar aula</button><div id="modules"></div></div></main>
+  <main class="student-aula-main">
+    <nav class="student-breadcrumb" aria-label="Ubicación"><a href="./panel.html">Mi panel</a><span aria-hidden="true">/</span><span aria-current="page">Aula virtual</span></nav>
+    <header class="student-course-heading"><p class="student-eyebrow">YES EMS · AULA VIRTUAL</p><h1 id="course-title">Mi aula</h1><p>Explora el contenido que tu docente preparó para este curso.</p></header>
+    <p id="feedback" role="status" aria-live="polite"></p><a id="login" href="./index.html" hidden>Iniciar sesión</a>
+    <div id="workspace" hidden>
+      <section class="course-showcase" aria-label="Vista previa e información del curso">
+        <div class="course-gallery">
+          <div class="gallery-stage">
+            <div id="gallery-fallback" class="gallery-fallback"><span>YES EMS</span><strong id="gallery-fallback-title">Tu aprendizaje comienza aquí</strong><p id="gallery-fallback-message">Las imágenes de los módulos publicados aparecerán en este espacio.</p></div>
+            <img id="gallery-image" alt="" hidden>
+            <button id="gallery-previous" class="gallery-arrow gallery-arrow--previous" type="button" aria-label="Imagen anterior" hidden>←</button>
+            <button id="gallery-next" class="gallery-arrow gallery-arrow--next" type="button" aria-label="Imagen siguiente" hidden>→</button>
+          </div>
+          <div class="gallery-footer"><div><strong id="gallery-count">Vista previa del curso</strong><span id="gallery-caption">Imágenes seleccionadas por administración</span></div><div id="gallery-dots" class="gallery-dots" aria-label="Seleccionar imagen"></div></div>
+        </div>
+        <aside class="course-facts" aria-labelledby="course-facts-title">
+          <span class="course-facts-badge">TU CURSO</span><h2 id="course-facts-title">Lo que aprenderás</h2><p id="course-description">Cargando descripción del curso…</p>
+          <dl><div><dt>Área</dt><dd id="course-category">—</dd></div><div><dt>Duración</dt><dd id="course-duration">—</dd></div><div><dt>Costo de tu inscripción</dt><dd id="course-price">—</dd></div><div><dt>Módulos disponibles</dt><dd id="course-module-count">0</dd></div></dl>
+          <a class="course-facts-link" href="#modules-title">Explorar módulos <span aria-hidden="true">→</span></a>
+        </aside>
+      </section>
+      <div id="student-progress-slot"></div>
+      <div class="student-modules-heading"><div><p class="student-eyebrow">TU RUTA DE APRENDIZAJE</p><h2 id="modules-title">Módulos y materiales</h2><p>Imágenes de vista previa arriba; PDF y archivos de estudio dentro de cada módulo.</p></div><button id="refresh" type="button">Actualizar aula</button></div>
+      <div id="modules"></div>
+    </div>
+  </main>
 </body>
 </html>

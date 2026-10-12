@@ -6,6 +6,80 @@
   if (!admin) $('login').href = './cursos.html';
   const key = admin ? 'yesems_admin_token' : 'yesems_token';
   let state = null, editing = null, busy = false;
+  const imageExtensions = new Set(['jpg', 'jpeg', 'png', 'webp']);
+  const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
+  let galleryItems = [], galleryIndex = 0, gallerySignature = null, galleryUrl = null, galleryAbort = null;
+  const isImageDocument = doc => imageExtensions.has(String(doc.extension || '').toLowerCase());
+  function clearGalleryImage() {
+    galleryAbort?.abort(); galleryAbort = null;
+    if (galleryUrl) URL.revokeObjectURL(galleryUrl);
+    galleryUrl = null;
+    if ($('gallery-image')) { $('gallery-image').removeAttribute('src'); $('gallery-image').hidden = true; }
+  }
+  function resetGallery() { clearGalleryImage(); galleryItems = []; galleryIndex = 0; gallerySignature = null; }
+  async function showGalleryImage(index) {
+    if (admin || !galleryItems.length) return;
+    galleryIndex = (index + galleryItems.length) % galleryItems.length;
+    clearGalleryImage();
+    const doc = galleryItems[galleryIndex];
+    $('gallery-count').textContent = `Imagen ${galleryIndex + 1} de ${galleryItems.length}`;
+    $('gallery-caption').textContent = `${doc.titulo} · ${doc.modulo}`;
+    $('gallery-fallback-title').textContent = doc.titulo;
+    $('gallery-fallback-message').textContent = 'Cargando vista previa segura…';
+    $('gallery-fallback').hidden = false;
+    $('gallery-dots').replaceChildren();
+    galleryItems.forEach((item, position) => {
+      const dot = document.createElement('button'); dot.type = 'button';
+      dot.setAttribute('aria-label', `Ver imagen ${position + 1}: ${item.titulo}`);
+      dot.setAttribute('aria-current', String(position === galleryIndex));
+      dot.onclick = () => showGalleryImage(position);
+      $('gallery-dots').append(dot);
+    });
+    const controller = new AbortController(); galleryAbort = controller;
+    const timeout = setTimeout(() => controller.abort(), 30000);
+    try {
+      const enrollment = new URLSearchParams(location.search).get('inscripcion');
+      const response = await fetch(`${API}/mia/${encodeURIComponent(enrollment)}/documentos/${doc.id_documento}`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem(key)}` }, cache: 'no-store', signal: controller.signal,
+      });
+      if (!response.ok) throw Error('No se pudo cargar esta imagen.');
+      const blob = await response.blob();
+      if (!blob.type.startsWith('image/')) throw Error('La vista previa no tiene un formato de imagen válido.');
+      if (controller.signal.aborted || galleryAbort !== controller) return;
+      galleryUrl = URL.createObjectURL(blob);
+      $('gallery-image').alt = `${doc.titulo}, imagen del módulo ${doc.modulo}`;
+      $('gallery-image').src = galleryUrl;
+      $('gallery-image').hidden = false;
+      $('gallery-fallback').hidden = true;
+    } catch (error) {
+      if (galleryAbort === controller) $('gallery-fallback-message').textContent = 'Vista previa no disponible. Puedes consultar los demás materiales del módulo.';
+    } finally { clearTimeout(timeout); }
+  }
+  function renderShowcase() {
+    if (admin || !state) return;
+    const course = state.curso;
+    $('course-description').textContent = course.descripcion?.trim() || 'La descripción de este curso estará disponible pronto.';
+    $('course-category').textContent = course.categoria || 'Formación YES EMS';
+    $('course-duration').textContent = course.duracion_horas ? `${course.duracion_horas} horas` : 'Por confirmar';
+    const price = Number(course.total_inscripcion ?? course.precio);
+    $('course-price').textContent = Number.isFinite(price) ? price ? money.format(price) : 'Sin costo' : 'Por confirmar';
+    $('course-module-count').textContent = String(state.modulos.length);
+    const items = state.modulos.flatMap(mod => (mod.documentos || []).filter(isImageDocument).map(doc => ({ ...doc, modulo: mod.titulo })));
+    const signature = items.map(doc => `${doc.id_documento}:${doc.modulo}`).join('|');
+    if (signature === gallerySignature) return;
+    resetGallery(); galleryItems = items; gallerySignature = signature;
+    const multiple = items.length > 1;
+    $('gallery-previous').hidden = !multiple; $('gallery-next').hidden = !multiple;
+    if (items.length) showGalleryImage(0);
+    else {
+      $('gallery-count').textContent = 'Vista previa del curso';
+      $('gallery-caption').textContent = 'El administrador aún no ha publicado imágenes.';
+      $('gallery-fallback-title').textContent = course.nombre;
+      $('gallery-fallback-message').textContent = 'Las imágenes de los módulos publicados aparecerán aquí.';
+      $('gallery-fallback').hidden = false;
+      $('gallery-dots').replaceChildren();
+    }
+  }
   if ($('aula-year')) $('aula-year').textContent = new Date().getFullYear();
   function updateOverview() {
     if (!admin) {
@@ -18,7 +92,7 @@
         const count = document.createElement('p'); count.id = 'student-progress-count';
         const track = document.createElement('div'); track.className = 'progress-track'; track.setAttribute('role', 'progressbar'); track.setAttribute('aria-label', 'Avance de modulos'); track.setAttribute('aria-valuemin', '0'); track.setAttribute('aria-valuemax', '100');
         const bar = document.createElement('span'); bar.id = 'student-progress-bar'; track.append(bar); copy.append(title, count); overview.append(copy, track);
-        $('workspace').insertBefore(overview, $('refresh'));
+        $('student-progress-slot').append(overview);
       }
       const progress = state.progreso || { completados: 0, total: state.modulos.length, porcentaje: 0 };
       $('student-progress-count').textContent = `${progress.completados} de ${progress.total} modulos completados`;
@@ -56,7 +130,7 @@
     const multipart = body instanceof FormData;
     const response = await fetch(API + path, { method, cache: 'no-store', signal: AbortSignal.timeout(multipart ? 90000 : 30000), headers: { Authorization: `Bearer ${token}`, ...(body !== undefined && !multipart ? { 'Content-Type': 'application/json' } : {}) }, ...(body !== undefined ? { body: multipart ? body : JSON.stringify(body) } : {}) });
     const data = response.headers.get('content-type')?.includes('application/json') ? await response.json() : null;
-    if (response.status === 401) { localStorage.removeItem(key); $('workspace').hidden = true; $('modules').replaceChildren(); $('login').hidden = false; }
+    if (response.status === 401) { localStorage.removeItem(key); $('workspace').hidden = true; $('modules').replaceChildren(); $('login').hidden = false; if (!admin) resetGallery(); }
     if (!response.ok) throw Error(data?.mensaje || 'No se pudo consultar el aula. Intenta nuevamente.');
     return data;
   }
@@ -72,8 +146,14 @@
   }
   function createPdfForm(mod, doc) {
     const form = document.createElement('form'); form.className = 'upload-form'; form.noValidate = true;
-    const heading = document.createElement('h3'); heading.textContent = doc ? 'Reemplazar este documento' : 'Agregar un documento al módulo';
-    const help = document.createElement('p'); help.className = 'hint'; help.textContent = '1. Selecciona un documento de hasta 5 MB (PDF, Office, OpenDocument, texto, EPUB, ZIP o imágenes). 2. Revisa su nombre. 3. Pulsa el botón para guardarlo.';
+    const heading = document.createElement('h3'); heading.textContent = doc ? 'Reemplazar este material' : 'Añadir contenido al módulo';
+    const help = document.createElement('p'); help.className = 'hint';
+    const kindLabel = document.createElement('label'); kindLabel.textContent = '¿Qué vas a subir?';
+    const kind = document.createElement('select'); kind.name = 'material_type';
+    for (const [value, label] of [['document', 'PDF u otro material de estudio'], ['image', 'Imagen para la galería del curso']]) {
+      const option = document.createElement('option'); option.value = value; option.textContent = label; kind.append(option);
+    }
+    kind.value = doc && isImageDocument(doc) ? 'image' : 'document'; kindLabel.append(kind);
     const fileLabel = document.createElement('label'); fileLabel.textContent = 'Archivo';
     const file = document.createElement('input'); file.type = 'file'; file.name = 'archivo'; file.accept = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.rtf,.txt,.csv,.md,.epub,.zip,.jpg,.jpeg,.png,.webp'; file.required = true; fileLabel.append(file);
     const titleLabel = document.createElement('label'); titleLabel.textContent = 'Nombre del documento';
@@ -88,29 +168,56 @@
         suggestedTitle = selected.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').slice(0, 150);
         name.value = suggestedTitle;
       }
-      documentStatus(form, `Archivo seleccionado: ${selected.name}. Pulsa ${doc ? 'Reemplazar documento' : 'Subir documento'} para guardarlo.`);
+      documentStatus(form, `Archivo seleccionado: ${selected.name}. Pulsa ${submit.textContent} para guardarlo.`);
     };
-    const submit = document.createElement('button'); submit.type = 'submit'; submit.textContent = doc ? 'Reemplazar documento' : 'Subir documento';
+    const submit = document.createElement('button'); submit.type = 'submit';
+    function updateKind() {
+      const image = kind.value === 'image';
+      file.accept = image ? '.jpg,.jpeg,.png,.webp' : '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.rtf,.txt,.csv,.md,.epub,.zip';
+      help.textContent = image
+        ? 'JPG, PNG o WebP de hasta 5 MB. Al publicar este módulo, la imagen aparecerá en la galería del curso.'
+        : 'PDF u otro material de hasta 5 MB. Los alumnos lo encontrarán debajo de este módulo.';
+      submit.textContent = doc ? (image ? 'Reemplazar imagen' : 'Reemplazar material') : (image ? 'Subir imagen' : 'Subir material');
+    }
+    kind.onchange = () => { file.value = ''; updateKind(); };
+    updateKind();
     const status = document.createElement('p'); status.className = 'upload-status'; status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite'); status.hidden = true;
-    form.append(heading, help, fileLabel, titleLabel, descriptionLabel, submit, status);
-    for (const control of [file, name, description, submit]) { control.dataset.unavailable = String(!state.curso.activo || Boolean(mod.archivado_at)); control.disabled = !state.curso.activo || Boolean(mod.archivado_at); }
+    form.append(heading, help, kindLabel, fileLabel, titleLabel, descriptionLabel, submit, status);
+    for (const control of [kind, file, name, description, submit]) { control.dataset.unavailable = String(!state.curso.activo || Boolean(mod.archivado_at)); control.disabled = !state.curso.activo || Boolean(mod.archivado_at); }
     form.onsubmit = event => { event.preventDefault(); saveDocument(mod, doc, form, name, description, file); };
     return form;
   }
   function render() {
     updateOverview();
     $('course-title').textContent = state.curso.nombre;
+    renderShowcase();
     $('modules').replaceChildren();
     if (admin) $('editor').hidden = !state.curso.activo;
-    if (!state.modulos.length) { const p = document.createElement('p'); p.textContent = admin ? 'Aún no hay módulos. Crea el primero como borrador.' : 'El administrador aún no ha publicado módulos.'; $('modules').append(p); }
+    if (!state.modulos.length) {
+      if (admin) { const p = document.createElement('p'); p.textContent = 'Aún no hay módulos. Crea el primero como borrador.'; $('modules').append(p); }
+      else {
+        const empty = document.createElement('div'); empty.className = 'student-empty';
+        const title = document.createElement('strong'); title.textContent = 'Los módulos están en preparación';
+        const detail = document.createElement('p'); detail.textContent = 'Cuando administración publique el contenido del curso, aparecerá aquí con sus imágenes y materiales.';
+        empty.append(title, detail); $('modules').append(empty);
+      }
+    }
     state.modulos.forEach((mod, index) => {
       const article = document.createElement('article'); article.dataset.moduleId = mod.id_modulo;
-      const heading = document.createElement('h2'); heading.textContent = `${index + 1}. ${mod.titulo}`;
+      if (!admin) {
+        article.className = 'student-module';
+        const top = document.createElement('div'); top.className = 'student-module-top';
+        const kicker = document.createElement('span'); kicker.className = 'student-module-kicker'; kicker.textContent = `MÓDULO ${String(index + 1).padStart(2, '0')}`;
+        const status = document.createElement('span'); status.className = 'student-module-state'; status.dataset.complete = String(Boolean(mod.completado)); status.textContent = mod.completado ? 'Completado' : 'Por empezar';
+        top.append(kicker, status); article.append(top);
+      }
+      const heading = document.createElement('h2'); heading.textContent = admin ? `${index + 1}. ${mod.titulo}` : mod.titulo;
       const desc = document.createElement('p'); desc.textContent = mod.descripcion;
       article.append(heading, desc);
       const documents = document.createElement('ul'); documents.className = 'documents';
-      (mod.documentos || []).forEach(doc => {
-        const item = document.createElement('li');
+      const visibleDocuments = admin ? (mod.documentos || []) : (mod.documentos || []).filter(doc => !isImageDocument(doc));
+      visibleDocuments.forEach(doc => {
+        const item = document.createElement('li'); item.dataset.extension = String(doc.extension || 'pdf').toLowerCase();
         const summary = document.createElement('div'); summary.className = 'document-summary';
         const documentTitle = document.createElement('strong'); documentTitle.textContent = doc.titulo;
         const size = document.createElement('span'); size.className = 'document-size'; size.textContent = `${(doc.extension || 'pdf').toUpperCase()} - ${doc.bytes < 1024 * 1024 ? `${Math.max(1, Math.round(doc.bytes / 1024))} KB` : `${(doc.bytes / (1024 * 1024)).toFixed(1)} MB`}`;
@@ -127,11 +234,19 @@
         }
         documents.append(item);
       });
-      if ((mod.documentos || []).length) article.append(documents);
-      else if (!admin) { const empty = document.createElement('p'); empty.className = 'empty-materials'; empty.textContent = 'Este modulo aun no tiene materiales. El administrador los agregara pronto.'; article.append(empty); }
+      if (visibleDocuments.length) {
+        if (!admin) { const resourcesTitle = document.createElement('h3'); resourcesTitle.className = 'student-resources-heading'; resourcesTitle.textContent = `PDF y materiales · ${visibleDocuments.length}`; article.append(resourcesTitle); }
+        article.append(documents);
+      } else if (!admin) {
+        const empty = document.createElement('p'); empty.className = 'empty-materials';
+        empty.textContent = (mod.documentos || []).some(isImageDocument)
+          ? 'Las imágenes de este módulo se muestran en la galería superior. Administración añadirá los PDF aquí.'
+          : 'Los materiales de este módulo aparecerán aquí cuando estén disponibles.';
+        article.append(empty);
+      }
       if (!admin) {
         const completion = document.createElement('button'); completion.type = 'button'; completion.className = 'module-complete'; completion.setAttribute('aria-pressed', String(Boolean(mod.completado)));
-        completion.textContent = mod.completado ? 'Marcar como pendiente' : 'Marcar modulo como completado';
+        completion.textContent = mod.completado ? 'Marcar como pendiente' : 'Marcar módulo como completado';
         completion.onclick = () => setModuleCompleted(mod, !mod.completado); article.append(completion);
       }
       if (admin) {
@@ -177,9 +292,12 @@
   async function saveDocument(mod, doc, form, name, description, input) {
     if (busy || !state) return;
     const file = input.files[0];
+    const wantsImage = form.elements.material_type.value === 'image';
+    const isImageFile = Boolean(file && /\.(jpe?g|png|webp)$/i.test(file.name));
     let problem = '';
     if (!file) problem = 'Primero selecciona un documento en el campo Archivo.';
     else if (!/\.(pdf|docx?|xlsx?|pptx?|odt|ods|odp|rtf|txt|csv|md|epub|zip|jpe?g|png|webp)$/i.test(file.name)) problem = 'Usa PDF, Office, OpenDocument, texto, EPUB, ZIP o imágenes JPG, PNG y WebP.';
+    else if (wantsImage !== isImageFile) problem = wantsImage ? 'Selecciona una imagen JPG, PNG o WebP para la galería.' : 'Para subir una imagen, elige «Imagen para la galería del curso».';
     else if (!file.size || file.size > 5 * 1024 * 1024) problem = 'Selecciona un documento con contenido y de hasta 5 MB.';
     else if (!name.value.trim() || name.value.trim().length > 150) problem = 'Escribe un nombre para el documento de hasta 150 caracteres.';
     if (problem) { documentStatus(form, problem, true); return; }
@@ -193,7 +311,11 @@
       closeHistory(); render();
       const article = [...$('modules').children].find(el => el.dataset.moduleId === String(mod.id_modulo));
       const notice = document.createElement('p'); notice.className = 'upload-status success'; notice.setAttribute('role', 'status'); notice.tabIndex = -1;
-      notice.textContent = doc ? 'Documento reemplazado. La versión anterior se conserva en el historial.' : 'Documento guardado correctamente. Ya aparece en los materiales de este módulo.';
+      notice.textContent = doc
+        ? `${wantsImage ? 'Imagen' : 'Material'} reemplazado. La versión anterior se conserva en el historial.`
+        : wantsImage
+          ? (mod.publicado ? 'Imagen guardada. Ya aparece en la galería del curso.' : 'Imagen guardada. Aparecerá en la galería cuando publiques el módulo.')
+          : (mod.publicado ? 'Material guardado. Ya aparece debajo de este módulo.' : 'Material guardado. Aparecerá debajo del módulo cuando lo publiques.');
       article?.prepend(notice); notice.focus({ preventScroll: true }); notice.scrollIntoView({ block: 'nearest' });
       message(notice.textContent);
     } catch (error) {
@@ -238,7 +360,8 @@
   async function load() {
     if (busy) return;
     const id = admin ? $('courses').value : new URLSearchParams(location.search).get('inscripcion');
-    state = null; $('modules').replaceChildren(); if (admin) { closeHistory(); updateOverview(); $('editor').hidden = true; resetEditor(); $('course-title').textContent = ''; }
+    state = null; $('modules').replaceChildren(); if (!admin) resetGallery();
+    if (admin) { closeHistory(); updateOverview(); $('editor').hidden = true; resetEditor(); $('course-title').textContent = ''; }
     if (!/^[1-9]\d*$/.test(id || '')) { message(admin ? 'Selecciona un curso.' : 'Abre el aula desde una inscripción de Mi panel.', !admin); return; }
     lock(true); message('Cargando aula…');
     try { state = await request(admin ? `/admin/cursos/${id}` : `/mia/${id}`); $('workspace').hidden = false; message(''); render(); }
@@ -246,6 +369,11 @@
     finally { lock(false); }
   }
   $('refresh').onclick = load;
+  if (!admin) {
+    $('gallery-previous').onclick = () => showGalleryImage(galleryIndex - 1);
+    $('gallery-next').onclick = () => showGalleryImage(galleryIndex + 1);
+    window.addEventListener('pagehide', resetGallery);
+  }
   if (admin) {
     $('courses').onchange = load; $('cancel').onclick = resetEditor;
     $('history-toggle').onclick = loadHistory;
