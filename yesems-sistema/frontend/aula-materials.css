@@ -1,0 +1,38 @@
+.aula-student .documents{grid-template-columns:minmax(0,1fr)}
+.aula-student .documents>li{position:relative;padding:22px 24px;border-radius:17px;background:#fff;box-shadow:0 8px 22px #123c570d}
+.aula-student .documents>li[data-material-type=pdf]{border:1px solid #b9d8e8;border-left:6px solid #176b87;background:linear-gradient(110deg,#f3faff,#fff 48%)}
+.aula-student .documents>li[data-material-type=pdf] .document-summary strong{font:800 clamp(1.12rem,2vw,1.45rem)/1.35 Montserrat,Arial,sans-serif;color:#0c3654}
+.aula-student .document-summary::before{display:none}
+.material-type{display:inline-flex;align-self:flex-start;padding:5px 10px;border-radius:99px;color:#176087;background:#e8f4f9;font:800 .68rem Montserrat,Arial,sans-serif;letter-spacing:.04em;text-transform:uppercase}
+.aula-student [data-material-type=pdf]>.document-summary .material-type{color:#a34937;background:#fbeee9}
+.aula-student .document-actions button:first-child{background:#176b87;color:#fff}
+.aula-student .documents>li>h4{margin:15px 0 8px;padding-top:15px;border-top:1px solid #dfeaf0;color:#244e67;font:800 .88rem Montserrat,Arial,sans-serif}
+.aula-student .support-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding:0;margin:0}
+.aula-student .support-list>li{margin:0;padding:14px;border:1px solid #dce8ee;border-radius:12px;background:#f7fafc;list-style:none}
+.aula-student .support-list .document-summary strong{font-size:.92rem}
+.aula-student .video-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0;padding:0}
+.aula-student .video-card{display:grid;gap:8px;margin:0;padding:15px;border:1px solid #dce8ee;border-radius:12px;background:#f7fafc;list-style:none}
+.aula-student .video-card strong{color:#153f59;font:800 .94rem Montserrat,Arial,sans-serif}
+.aula-student .video-card p{margin:0;color:#61798a;font-size:.87rem}
+.aula-student .video-card a{justify-self:start;color:#176087;font-weight:800;text-decoration:none}
+.aula-student .video-card a:hover{text-decoration:underline}
+.aula-admin .documents .material-type{margin-bottom:4px}
+.aula-admin .material-relation{padding:8px 10px;border-radius:8px;color:#19526d;background:#edf6fa;font-size:.84rem}
+.aula-admin .organize-details{margin:10px 0;padding:12px;border:1px solid #d8e7ef;border-radius:10px;background:#f6fafc}
+.aula-admin .organize-details summary{cursor:pointer;color:#165d78;font-weight:800}
+.aula-admin .organize-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px;padding-top:8px}
+.aula-admin .organize-form label{margin:6px 0}
+.aula-admin .organize-form button{align-self:end}
+.aula-admin .material-order-actions{display:flex;flex-wrap:wrap;gap:6px}
+.aula-admin .admin-videos{margin-top:22px;padding:17px;border:1px solid #d8e7ef;border-radius:12px;background:#f8fbfc}
+.aula-admin .admin-videos>h3{margin-top:0;color:#164963}
+.aula-admin .admin-video-card{padding:12px;border-bottom:1px solid #d8e7ef}
+.aula-admin .admin-video-card>strong{color:#153f59}
+.aula-admin .admin-video-card>p{color:#61798a;font-size:.86rem}
+.aula-admin .admin-video-card summary{margin-top:8px;cursor:pointer;color:#176087;font-weight:800}
+.aula-admin .video-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 12px;padding-top:14px}
+.aula-admin .video-form h3{grid-column:1/-1;margin:0;color:#164963}
+.aula-admin .video-form label{margin:5px 0}
+.aula-admin .video-form button{align-self:end}
+@media(max-width:700px){.aula-student .support-list,.aula-student .video-list,.aula-admin .organize-form,.aula-admin .video-form{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:480px){.aula-student .documents>li{padding:17px}}

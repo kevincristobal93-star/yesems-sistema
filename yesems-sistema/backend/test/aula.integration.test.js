@@ -136,7 +136,8 @@ integration('Aula virtual: permisos, edición y publicación en PostgreSQL aisla
     const versions = await require('fs/promises').readFile(require('path').resolve(__dirname, '../database/migrations/012_classroom_document_versions.sql'), 'utf8');
     const progressArchive = await require('fs/promises').readFile(require('path').resolve(__dirname, '../database/migrations/013_classroom_progress_archive.sql'), 'utf8');
     const publicGallery = await require('fs/promises').readFile(require('path').resolve(__dirname, '../database/migrations/014_course_gallery.sql'), 'utf8');
-    await pool.query(sql); await pool.query(sql); await pool.query(documents); await pool.query(documents); await pool.query(versions); await pool.query(versions); await pool.query(progressArchive); await pool.query(progressArchive); await pool.query(publicGallery); await pool.query(publicGallery);
+    const organization = await require('fs/promises').readFile(require('path').resolve(__dirname, '../database/migrations/015_classroom_material_organization.sql'), 'utf8');
+    await pool.query(sql); await pool.query(sql); await pool.query(documents); await pool.query(documents); await pool.query(versions); await pool.query(versions); await pool.query(progressArchive); await pool.query(progressArchive); await pool.query(publicGallery); await pool.query(publicGallery); await pool.query(organization); await pool.query(organization);
     expect(await api(`/admin/cursos/${course}`)).toEqual(before);
     expect((await pool.query('SELECT count(*)::int AS n FROM curso_actividades WHERE id_curso=$1', [course])).rows[0].n).toBe(0);
     expect((await pool.query('SELECT count(*)::int AS n FROM constancias WHERE id_inscripcion=$1', [enrollment])).rows[0].n).toBe(0);
@@ -272,4 +273,51 @@ integration('Aula virtual: permisos, edición y publicación en PostgreSQL aisla
     expect(state.modulos.find(m => m.id_modulo === mod.id_modulo).documentos.find(d => d.titulo === 'Datos CSV').extension).toBe('csv');
     expect((await fetch(url, { headers: { Authorization: `Bearer ${alumno}` } })).status).toBe(404);
   });
+  test('organiza PDF y apoyos sin perder permisos ni relaciones al reemplazar', async () => {
+    state = await api(`/admin/cursos/${course}`);
+    const mod = state.modulos.find(m => m.publicado && !m.archivado_at);
+    const pdf = Buffer.from('%PDF-1.4\n1 0 obj\n<<>>\nendobj\n%%EOF\n');
+    state = await upload(`/admin/cursos/${course}/modulos/${mod.id_modulo}/documentos`,
+      { revision: state.curso.aula_revision, titulo: 'Tema central', tipo_material: 'pdf', principal_id: '' }, { bytes: pdf });
+    const principal = state.modulos.find(m => m.id_modulo === mod.id_modulo).documentos.find(d => d.titulo === 'Tema central');
+    state = await upload(`/admin/cursos/${course}/modulos/${mod.id_modulo}/documentos`,
+      { revision: state.curso.aula_revision, titulo: 'Mapa del tema', tipo_material: 'organizador', principal_id: principal.id_documento },
+      { bytes: Buffer.from('Mapa conceptual'), name: 'mapa.txt', type: 'text/plain' });
+    let support = state.modulos.find(m => m.id_modulo === mod.id_modulo).documentos.find(d => d.titulo === 'Mapa del tema');
+    expect(support).toMatchObject({ tipo_material: 'organizador', principal_id: principal.id_documento });
+    state = await api(`/admin/cursos/${course}/modulos/${mod.id_modulo}/videos`, 'POST',
+      { revision: state.curso.aula_revision, titulo: 'Demostracion', url: 'https://youtu.be/abc123', principal_id: principal.id_documento }, admin, 201);
+    const videoId = state.modulos.find(m => m.id_modulo === mod.id_modulo).videos.find(v => v.titulo === 'Demostracion').id_video;
+    await api(`/admin/cursos/${course}/documentos/${support.id_documento}/organizacion`, 'PATCH',
+      { revision: state.curso.aula_revision, titulo: support.titulo, tipo_material: 'organizador', principal_id: 2147483647 }, admin, 400);
+    state = await upload(`/admin/cursos/${course}/documentos/${principal.id_documento}`,
+      { revision: state.curso.aula_revision, titulo: 'Tema central actualizado', tipo_material: 'pdf', principal_id: '' },
+      { bytes: pdf }, admin, 200, 'PUT');
+    const updated = state.modulos.find(m => m.id_modulo === mod.id_modulo).documentos.find(d => d.titulo === 'Tema central actualizado');
+    support = state.modulos.find(m => m.id_modulo === mod.id_modulo).documentos.find(d => d.id_documento === support.id_documento);
+    expect(support.principal_id).toBe(updated.id_documento);
+    expect(state.modulos.find(m => m.id_modulo === mod.id_modulo).videos.find(v => v.id_video === videoId).principal_id).toBe(updated.id_documento);
+    const own = await api(`/mia/${enrollment}`, 'GET', null, alumno);
+    expect(own.modulos.find(m => m.id_modulo === mod.id_modulo).documentos.find(d => d.id_documento === support.id_documento).principal_id).toBe(updated.id_documento);
+    expect(own.modulos.find(m => m.id_modulo === mod.id_modulo).videos.find(v => v.id_video === videoId).url).toBe('https://youtu.be/abc123');
+    const browser = await require('./helpers/browser-client').startBrowser(origin);
+    try {
+      await browser.navigate(`${origin}/aula.html?inscripcion=${enrollment}`);
+      await browser.evaluate(`localStorage.setItem('yesems_token', ${JSON.stringify(alumno)})`);
+      await browser.navigate(`${origin}/aula.html?inscripcion=${enrollment}`);
+      await browser.waitFor(`document.querySelector('#modules .support-list .video-card a')`);
+      expect(await browser.evaluate(`document.querySelector('#modules .support-list .video-card a').getAttribute('rel')`)).toContain('noopener');
+      expect(await browser.evaluate(`document.querySelector('#modules .support-list li[data-material-type=organizador] .document-summary strong').textContent`)).toBe('Mapa del tema');
+      await browser.viewport(390, 844);
+      expect(await browser.evaluate('document.documentElement.scrollWidth <= innerWidth')).toBe(true);
+      expect(browser.errors).toEqual([]);
+    } finally { await browser.close(); }
+    await api(`/admin/cursos/${course}/modulos/${mod.id_modulo}/orden-documentos`, 'PUT',
+      { revision: state.curso.aula_revision, documentos: [updated.id_documento] }, admin, 400);
+    const ids = state.modulos.find(m => m.id_modulo === mod.id_modulo).documentos.map(d => d.id_documento).reverse();
+    state = await api(`/admin/cursos/${course}/modulos/${mod.id_modulo}/orden-documentos`, 'PUT',
+      { revision: state.curso.aula_revision, documentos: ids });
+    expect(state.modulos.find(m => m.id_modulo === mod.id_modulo).documentos.map(d => d.id_documento)).toEqual(ids);
+    expect((await fetch(`${origin}/api/aula/mia/${enrollment}/documentos/${support.id_documento}`, { headers: { Authorization: `Bearer ${other}` } })).status).toBe(404);
+  }, 90000);
 });

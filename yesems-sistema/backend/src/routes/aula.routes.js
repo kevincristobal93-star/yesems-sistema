@@ -6,7 +6,7 @@ const auth = require('../middlewares/auth.middleware');
 const admin = require('../middlewares/admin.middleware');
 const files = require('../services/aula-files.service');
 const multer = require('multer');
-const parseDocument = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 1, fields: 3, parts: 4, fieldSize: 2000 } }).single('archivo');
+const parseDocument = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024, files: 1, fields: 5, parts: 6, fieldSize: 2000 } }).single('archivo');
 const wrap = fn => async (req, res) => {
   try { await fn(req, res); } catch (error) { sendError(res, error); }
 };
@@ -37,7 +37,8 @@ router.post('/admin/cursos/:curso/modulos/:modulo/documentos', (req, res, next) 
   if (!/^\d+$/.test(req.body.revision || '')) throw httpError(400, 'Revisión inválida.');
   const { buffer, extension } = files.validarDocumento(req.file);
   const document = validate.documento(req.body);
-  const data = await model.agregarDocumento(positiveId(req.params.curso), positiveId(req.params.modulo), validate.revision(Number(req.body.revision)), document.titulo, document.descripcion, buffer, req.admin.id_administrador, extension);
+  const tipo = !req.body.tipo_material ? (extension === 'pdf' ? 'pdf' : ['jpg','jpeg','png','webp'].includes(extension) ? 'imagen' : 'documento') : document.tipo;
+  const data = await model.agregarDocumento(positiveId(req.params.curso), positiveId(req.params.modulo), validate.revision(Number(req.body.revision)), document.titulo, document.descripcion, buffer, req.admin.id_administrador, extension, tipo, document.principal);
   res.status(201).json({ ok: true, ...data });
 }));
 router.put('/admin/cursos/:curso/documentos/:documento', (req, res, next) => parseDocument(req, res, error => {
@@ -47,7 +48,8 @@ router.put('/admin/cursos/:curso/documentos/:documento', (req, res, next) => par
   if (!/^\d+$/.test(req.body.revision || '')) throw httpError(400, 'Revisión inválida.');
   const document = validate.documento(req.body);
   const { buffer, extension } = files.validarDocumento(req.file);
-  const data = await model.reemplazarDocumento(positiveId(req.params.curso), positiveId(req.params.documento), validate.revision(Number(req.body.revision)), document.titulo, document.descripcion, buffer, req.admin.id_administrador, extension);
+  const tipo = !req.body.tipo_material ? (extension === 'pdf' ? 'pdf' : ['jpg','jpeg','png','webp'].includes(extension) ? 'imagen' : 'documento') : document.tipo;
+  const data = await model.reemplazarDocumento(positiveId(req.params.curso), positiveId(req.params.documento), validate.revision(Number(req.body.revision)), document.titulo, document.descripcion, buffer, req.admin.id_administrador, extension, tipo, document.principal);
   res.json({ ok: true, ...data });
 }));
 router.get('/admin/cursos/:curso/historial-pdf', wrap(async (req, res) => {
@@ -55,6 +57,26 @@ router.get('/admin/cursos/:curso/historial-pdf', wrap(async (req, res) => {
 }));
 router.delete('/admin/cursos/:curso/documentos/:documento', wrap(async (req, res) => {
   res.json({ ok: true, ...await model.retirarDocumento(positiveId(req.params.curso), positiveId(req.params.documento), validate.revision(req.body?.revision), req.admin.id_administrador) });
+}));
+router.patch('/admin/cursos/:curso/documentos/:documento/organizacion', wrap(async (req, res) => {
+  const data = await model.organizarDocumento(positiveId(req.params.curso), positiveId(req.params.documento), validate.revision(req.body?.revision), validate.documento(req.body));
+  res.json({ ok: true, ...data });
+}));
+router.put('/admin/cursos/:curso/modulos/:modulo/orden-documentos', wrap(async (req, res) => {
+  const data = await model.ordenarDocumentos(positiveId(req.params.curso), positiveId(req.params.modulo), validate.revision(req.body?.revision), validate.ordenDocumentos(req.body?.documentos));
+  res.json({ ok: true, ...data });
+}));
+router.post('/admin/cursos/:curso/modulos/:modulo/videos', wrap(async (req, res) => {
+  const data = await model.agregarVideo(positiveId(req.params.curso), positiveId(req.params.modulo), validate.revision(req.body?.revision), validate.video(req.body), req.admin.id_administrador);
+  res.status(201).json({ ok: true, ...data });
+}));
+router.put('/admin/cursos/:curso/videos/:video', wrap(async (req, res) => {
+  const data = await model.editarVideo(positiveId(req.params.curso), positiveId(req.params.video), validate.revision(req.body?.revision), validate.video(req.body));
+  res.json({ ok: true, ...data });
+}));
+router.delete('/admin/cursos/:curso/videos/:video', wrap(async (req, res) => {
+  const data = await model.retirarVideo(positiveId(req.params.curso), positiveId(req.params.video), validate.revision(req.body?.revision));
+  res.json({ ok: true, ...data });
 }));
 router.get('/admin/cursos', wrap(async (_req, res) => res.json({ ok: true, cursos: await model.listarCursos() })));
 router.get('/admin/cursos/:curso', wrap(async (req, res) => res.json({ ok: true, ...await model.obtenerCurso(positiveId(req.params.curso)) })));

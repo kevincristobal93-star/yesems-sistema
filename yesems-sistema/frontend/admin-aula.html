@@ -6,7 +6,7 @@
   <link rel="icon" href="./assets/yesems-logo.png" type="image/png">
   <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./admin-footer.css"><link rel="stylesheet" href="./admin-aula.css"><link rel="stylesheet" href="./aula-progress.css"><link rel="stylesheet" href="./system-header.css">
+  <link rel="stylesheet" href="./admin-footer.css"><link rel="stylesheet" href="./admin-aula.css"><link rel="stylesheet" href="./aula-progress.css"><link rel="stylesheet" href="./system-header.css"><link rel="stylesheet" href="./aula-materials.css">
   <script src="./aula.js" defer></script>
 </head>
 <body data-admin="true" class="aula-admin">
@@ -48,7 +48,7 @@
       </section>
       <div class="aula-work-grid">
         <section id="editor" class="editor-card" hidden aria-labelledby="editor-title">
-          <p class="eyebrow">ORGANIZA EL APRENDIZAJE</p><h2 id="editor-title">Nuevo módulo</h2><p class="hint" id="editor-help">Añade un tema al curso. Se guardará como borrador.</p>
+          <p class="eyebrow">ORGANIZA EL APRENDIZAJE</p><h2 id="editor-title">Nuevo módulo</h2><p class="hint" id="editor-help">Añade un tema al curso. Se guardará como borrador. Después podrás subir un PDF principal y relacionar sus apoyos.</p>
           <form id="module-form"><fieldset id="fields"><label for="title">Título del módulo<input id="title" maxlength="150" placeholder="Ej. Introducción al curso" required></label><label for="description">Descripción <span class="optional">(opcional)</span><textarea id="description" maxlength="2000" placeholder="¿Qué aprenderán tus alumnos en este módulo?"></textarea></label><div class="editor-actions"><button type="submit">Guardar módulo</button><button type="button" id="cancel">Cancelar edición</button></div></fieldset></form>
           <div class="publication-note"><strong>Tú decides cuándo compartirlo</strong><p>Las imágenes y documentos de cada módulo solo se muestran a alumnos autorizados cuando lo publicas. Para la ficha que ve cualquier visitante, usa «Imágenes del catálogo» arriba.</p></div>
         </section>

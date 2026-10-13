@@ -1,6 +1,6 @@
 # Aula virtual · primera etapa
 
-Implementación local de la estructura **curso → módulos → PDF**. No se ha publicado esta entrega en Render.
+Estructura del aula **curso → módulos → materiales**. Las funciones nuevas de organización descritas al final de este documento permanecen locales hasta su despliegue.
 
 ## Administrador
 
@@ -93,3 +93,27 @@ una ilustración temporal. Debajo explica que los PDF se consultan en el aula
 después de la inscripción y aprobación del pago; nunca ofrece descargas privadas
 sin autorización. La API sirve solo las imágenes públicas registradas mediante
 un proxy de solo lectura, sin exponer la URL privada de Cloudinary.
+
+## Organización de materiales (migración 015)
+
+El administrador puede clasificar los archivos como PDF principal, organizador
+gráfico, ejercicio, imagen de galería u otro material. También puede cambiar
+el orden y relacionar cada apoyo con un PDF principal activo del mismo módulo.
+Los archivos existentes se clasifican inicialmente por extensión; ninguno se
+mueve ni se borra. La clasificación, el título, la descripción y la relación
+pueden modificarse sin volver a cargar el archivo.
+
+Cada módulo permite añadir enlaces HTTPS de YouTube o Vimeo. Son enlaces, no
+videos cargados al servidor; pueden acompañar a un PDF o aparecer como videos
+independientes. El administrador puede editarlos o retirarlos. Los alumnos solo
+reciben enlaces de módulos publicados y con acceso autorizado. Al reemplazar
+un PDF principal, sus apoyos y videos se vinculan a la versión nueva; al
+retirarlo, quedan independientes para que el administrador pueda reorganizarlos.
+Un enlace de YouTube o Vimeo puede compartirse fuera del aula: no debe
+considerarse almacenamiento privado ni usarse para videos confidenciales.
+
+En el aula del alumno, el PDF principal se muestra como tarjeta destacada y
+sus apoyos aparecen debajo. Los organizadores gráficos en imagen tienen vista
+previa segura; PDF e imágenes pueden abrirse o descargarse. En móvil, las
+tarjetas se apilan. El progreso sigue siendo por módulo y no se infiere de la
+apertura de un archivo o de un video.

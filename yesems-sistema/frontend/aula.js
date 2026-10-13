@@ -10,7 +10,9 @@
   const imageExtensions = new Set(['jpg', 'jpeg', 'png', 'webp']);
   const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' });
   let galleryItems = [], galleryIndex = 0, gallerySignature = null, galleryUrl = null, galleryAbort = null;
-  const isImageDocument = doc => imageExtensions.has(String(doc.extension || '').toLowerCase());
+  const isImageDocument = doc => imageExtensions.has(String(doc.extension || '').toLowerCase()) && doc.tipo_material === 'imagen' && !doc.principal_id;
+  const materialTypes = [['pdf', 'PDF principal'], ['organizador', 'Organizador gráfico'], ['ejercicio', 'Ejercicio o actividad'], ['imagen', 'Imagen de galería'], ['documento', 'Otro material']];
+  const materialLabel = tipo => materialTypes.find(([value]) => value === tipo)?.[1] || 'Material de estudio';
   function clearGalleryImage() {
     galleryAbort?.abort(); galleryAbort = null;
     if (galleryUrl) URL.revokeObjectURL(galleryUrl);
@@ -205,10 +207,18 @@
     const help = document.createElement('p'); help.className = 'hint';
     const kindLabel = document.createElement('label'); kindLabel.textContent = '¿Qué vas a subir?';
     const kind = document.createElement('select'); kind.name = 'material_type';
-    for (const [value, label] of [['document', 'PDF u otro material de estudio'], ['image', 'Imagen privada del módulo (solo alumnos)']]) {
+    for (const [value, label] of materialTypes) {
       const option = document.createElement('option'); option.value = value; option.textContent = label; kind.append(option);
     }
-    kind.value = doc && isImageDocument(doc) ? 'image' : 'document'; kindLabel.append(kind);
+    kind.value = doc?.tipo_material || (doc?.extension === 'pdf' ? 'pdf' : 'documento'); kindLabel.append(kind);
+    const parentLabel = document.createElement('label'); parentLabel.textContent = 'Relacionar con un PDF principal';
+    const parent = document.createElement('select'); parent.name = 'principal_id';
+    const noParent = document.createElement('option'); noParent.value = ''; noParent.textContent = 'Sin relación: material independiente'; parent.append(noParent);
+    for (const item of mod.documentos || []) {
+      if (item.id_documento === doc?.id_documento || item.tipo_material !== 'pdf' || item.principal_id) continue;
+      const option = document.createElement('option'); option.value = item.id_documento; option.textContent = item.titulo; parent.append(option);
+    }
+    parent.value = String(doc?.principal_id || ''); parentLabel.append(parent);
     const fileLabel = document.createElement('label'); fileLabel.textContent = 'Archivo';
     const file = document.createElement('input'); file.type = 'file'; file.name = 'archivo'; file.accept = '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.rtf,.txt,.csv,.md,.epub,.zip,.jpg,.jpeg,.png,.webp'; file.required = true; fileLabel.append(file);
     const titleLabel = document.createElement('label'); titleLabel.textContent = 'Nombre del documento';
@@ -227,19 +237,75 @@
     };
     const submit = document.createElement('button'); submit.type = 'submit';
     function updateKind() {
-      const image = kind.value === 'image';
-      file.accept = image ? '.jpg,.jpeg,.png,.webp' : '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.rtf,.txt,.csv,.md,.epub,.zip';
+      const image = kind.value === 'imagen';
+      file.accept = image ? '.jpg,.jpeg,.png,.webp' : kind.value === 'pdf' ? '.pdf' : '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.rtf,.txt,.csv,.md,.epub,.zip,.jpg,.jpeg,.png,.webp';
+      if (kind.value === 'pdf' || image) parent.value = '';
+      parentLabel.hidden = kind.value === 'pdf' || image;
       help.textContent = image
-        ? 'JPG, PNG o WebP de hasta 5 MB. Solo los alumnos autorizados verán esta imagen en el aula. Usa la sección superior para la ficha pública.'
-        : 'PDF u otro material de hasta 5 MB. Los alumnos lo encontrarán debajo de este módulo.';
-      submit.textContent = doc ? (image ? 'Reemplazar imagen' : 'Reemplazar material') : (image ? 'Subir imagen' : 'Subir material');
+        ? 'JPG, PNG o WebP de hasta 5 MB. Solo los alumnos autorizados verán esta imagen en el aula.'
+        : 'Hasta 5 MB. Si este archivo complementa un PDF, selecciónalo en el campo siguiente.';
+      submit.textContent = doc ? 'Reemplazar material' : 'Subir material';
     }
     kind.onchange = () => { file.value = ''; updateKind(); };
     updateKind();
     const status = document.createElement('p'); status.className = 'upload-status'; status.setAttribute('role', 'status'); status.setAttribute('aria-live', 'polite'); status.hidden = true;
-    form.append(heading, help, kindLabel, fileLabel, titleLabel, descriptionLabel, submit, status);
-    for (const control of [kind, file, name, description, submit]) { control.dataset.unavailable = String(!state.curso.activo || Boolean(mod.archivado_at)); control.disabled = !state.curso.activo || Boolean(mod.archivado_at); }
+    form.append(heading, help, kindLabel, parentLabel, fileLabel, titleLabel, descriptionLabel, submit, status);
+    for (const control of [kind, parent, file, name, description, submit]) { control.dataset.unavailable = String(!state.curso.activo || Boolean(mod.archivado_at)); control.disabled = !state.curso.activo || Boolean(mod.archivado_at); }
     form.onsubmit = event => { event.preventDefault(); saveDocument(mod, doc, form, name, description, file); };
+    return form;
+  }
+  function createOrganizationForm(mod, doc) {
+    const details = document.createElement('details'); details.className = 'organize-details';
+    const summary = document.createElement('summary'); summary.textContent = 'Organizar este material'; details.append(summary);
+    const form = document.createElement('form'); form.className = 'organize-form';
+    const titleLabel = document.createElement('label'); titleLabel.textContent = 'Título visible';
+    const title = document.createElement('input'); title.maxLength = 150; title.required = true; title.value = doc.titulo; titleLabel.append(title);
+    const descriptionLabel = document.createElement('label'); descriptionLabel.textContent = 'Descripción';
+    const description = document.createElement('textarea'); description.maxLength = 1000; description.value = doc.descripcion || ''; descriptionLabel.append(description);
+    const typeLabel = document.createElement('label'); typeLabel.textContent = 'Tipo de contenido';
+    const type = document.createElement('select');
+    for (const [value, label] of materialTypes) { const option = document.createElement('option'); option.value = value; option.textContent = label; type.append(option); }
+    type.value = doc.tipo_material || 'documento'; typeLabel.append(type);
+    const parentLabel = document.createElement('label'); parentLabel.textContent = 'PDF al que acompaña';
+    const parent = document.createElement('select');
+    const none = document.createElement('option'); none.value = ''; none.textContent = 'Ninguno'; parent.append(none);
+    for (const candidate of mod.documentos || []) {
+      if (candidate.id_documento === doc.id_documento || candidate.tipo_material !== 'pdf' || candidate.principal_id) continue;
+      const option = document.createElement('option'); option.value = candidate.id_documento; option.textContent = candidate.titulo; parent.append(option);
+    }
+    parent.value = String(doc.principal_id || ''); parentLabel.append(parent);
+    const sync = () => { parentLabel.hidden = type.value === 'pdf' || type.value === 'imagen'; if (parentLabel.hidden) parent.value = ''; };
+    type.onchange = sync; sync();
+    const submit = document.createElement('button'); submit.type = 'submit'; submit.textContent = 'Guardar organización';
+    form.append(titleLabel, descriptionLabel, typeLabel, parentLabel, submit); details.append(form);
+    form.onsubmit = event => { event.preventDefault(); mutate(`/documentos/${doc.id_documento}/organizacion`, 'PATCH', {
+      titulo: title.value, descripcion: description.value, tipo_material: type.value, principal_id: parent.value,
+    }); };
+    if (!state.curso.activo || mod.archivado_at) { for (const control of form.querySelectorAll('input,textarea,select,button')) { control.dataset.unavailable = 'true'; control.disabled = true; } }
+    return details;
+  }
+  function createVideoForm(mod, video = null) {
+    const form = document.createElement('form'); form.className = 'video-form';
+    const heading = document.createElement('h3'); heading.textContent = video ? 'Editar enlace de video' : 'Agregar video de apoyo';
+    const titleLabel = document.createElement('label'); titleLabel.textContent = 'Titulo del video';
+    const title = document.createElement('input'); title.required = true; title.maxLength = 150; title.value = video?.titulo || ''; titleLabel.append(title);
+    const urlLabel = document.createElement('label'); urlLabel.textContent = 'Enlace HTTPS de YouTube o Vimeo';
+    const url = document.createElement('input'); url.type = 'url'; url.required = true; url.maxLength = 1000; url.placeholder = 'https://www.youtube.com/watch?v=...'; url.value = video?.url || ''; urlLabel.append(url);
+    const descriptionLabel = document.createElement('label'); descriptionLabel.textContent = 'Descripcion breve';
+    const description = document.createElement('textarea'); description.maxLength = 1000; description.value = video?.descripcion || ''; descriptionLabel.append(description);
+    const parentLabel = document.createElement('label'); parentLabel.textContent = 'PDF al que acompaña';
+    const parent = document.createElement('select'); const none = document.createElement('option'); none.value = ''; none.textContent = 'Video independiente'; parent.append(none);
+    for (const doc of mod.documentos || []) {
+      if (doc.tipo_material !== 'pdf' || doc.principal_id) continue;
+      const option = document.createElement('option'); option.value = doc.id_documento; option.textContent = doc.titulo; parent.append(option);
+    }
+    parent.value = String(video?.principal_id || ''); parentLabel.append(parent);
+    const submit = document.createElement('button'); submit.type = 'submit'; submit.textContent = video ? 'Guardar video' : 'Agregar video';
+    form.append(heading, titleLabel, urlLabel, descriptionLabel, parentLabel, submit);
+    form.onsubmit = event => { event.preventDefault(); mutate(video ? `/videos/${video.id_video}` : `/modulos/${mod.id_modulo}/videos`, video ? 'PUT' : 'POST', {
+      titulo: title.value, url: url.value, descripcion: description.value, principal_id: parent.value,
+    }); };
+    if (!state.curso.activo || mod.archivado_at) for (const control of form.querySelectorAll('input,textarea,select,button')) { control.dataset.unavailable = 'true'; control.disabled = true; }
     return form;
   }
   function render() {
@@ -272,33 +338,87 @@
       article.append(heading, desc);
       const documents = document.createElement('ul'); documents.className = 'documents';
       const visibleDocuments = admin ? (mod.documentos || []) : (mod.documentos || []).filter(doc => !isImageDocument(doc));
+      const documentNodes = new Map();
       visibleDocuments.forEach(doc => {
         const item = document.createElement('li'); item.dataset.extension = String(doc.extension || 'pdf').toLowerCase();
+        item.dataset.materialType = doc.tipo_material || 'documento';
         const summary = document.createElement('div'); summary.className = 'document-summary';
+        const type = document.createElement('span'); type.className = 'material-type'; type.textContent = materialLabel(doc.tipo_material);
         const documentTitle = document.createElement('strong'); documentTitle.textContent = doc.titulo;
         const size = document.createElement('span'); size.className = 'document-size'; size.textContent = `${(doc.extension || 'pdf').toUpperCase()} - ${doc.bytes < 1024 * 1024 ? `${Math.max(1, Math.round(doc.bytes / 1024))} KB` : `${(doc.bytes / (1024 * 1024)).toFixed(1)} MB`}`;
-        summary.append(documentTitle, size);
+        summary.append(type, documentTitle, size);
         if (doc.descripcion) { const detail = document.createElement('p'); detail.textContent = doc.descripcion; summary.append(detail); }
         const documentActions = document.createElement('div'); documentActions.className = 'document-actions';
         const view = document.createElement('button'); view.type = 'button'; view.textContent = 'Ver documento'; view.onclick = () => openDocument(doc);
         const download = document.createElement('button'); download.type = 'button'; download.textContent = 'Descargar'; download.onclick = () => openDocument(doc, true);
-        if ((doc.extension || 'pdf') === 'pdf') documentActions.append(view); documentActions.append(download); item.append(summary, documentActions);
+        if (['pdf','jpg','jpeg','png','webp'].includes(String(doc.extension || 'pdf').toLowerCase())) documentActions.append(view); documentActions.append(download); item.append(summary, documentActions);
         if (admin) {
+          if (doc.principal_id) { const relation = document.createElement('p'); relation.className = 'material-relation'; relation.textContent = `Apoya: ${(mod.documentos || []).find(item => item.id_documento === doc.principal_id)?.titulo || 'PDF principal'}`; item.append(relation); }
+          item.append(createOrganizationForm(mod, doc));
+          const orderActions = document.createElement('div'); orderActions.className = 'material-order-actions';
+          for (const [label, offset] of [['↑ Antes', -1], ['↓ Después', 1]]) {
+            const move = document.createElement('button'); move.type = 'button'; move.textContent = label;
+            const position = (mod.documentos || []).findIndex(item => item.id_documento === doc.id_documento);
+            move.disabled = !state.curso.activo || Boolean(mod.archivado_at) || position + offset < 0 || position + offset >= (mod.documentos || []).length;
+            move.dataset.unavailable = String(move.disabled);
+            move.onclick = () => { const ids = (mod.documentos || []).map(item => item.id_documento); [ids[position], ids[position + offset]] = [ids[position + offset], ids[position]]; mutate(`/modulos/${mod.id_modulo}/orden-documentos`, 'PUT', { documentos: ids }); };
+            orderActions.append(move);
+          }
+          item.append(orderActions);
           const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Retirar documento'; remove.onclick = () => mutate(`/documentos/${doc.id_documento}`, 'DELETE', {}); item.append(remove);
           remove.dataset.unavailable = String(!state.curso.activo); remove.disabled = !state.curso.activo;
           item.append(createPdfForm(mod, doc));
         }
+        documentNodes.set(doc.id_documento, item);
         documents.append(item);
       });
+      if (!admin) for (const doc of visibleDocuments) {
+        if (!doc.principal_id || !documentNodes.has(doc.principal_id)) continue;
+        const parent = documentNodes.get(doc.principal_id);
+        let supports = parent.querySelector('.support-list');
+        if (!supports) { supports = document.createElement('ul'); supports.className = 'support-list'; const label = document.createElement('h4'); label.textContent = 'Materiales de apoyo'; parent.append(label, supports); }
+        supports.append(documentNodes.get(doc.id_documento));
+      }
       if (visibleDocuments.length) {
         if (!admin) { const resourcesTitle = document.createElement('h3'); resourcesTitle.className = 'student-resources-heading'; resourcesTitle.textContent = `PDF y materiales · ${visibleDocuments.length}`; article.append(resourcesTitle); }
         article.append(documents);
-      } else if (!admin) {
+      } else if (!admin && !(mod.videos || []).length) {
         const empty = document.createElement('p'); empty.className = 'empty-materials';
         empty.textContent = (mod.documentos || []).some(isImageDocument)
           ? 'Las imágenes de este módulo se muestran en la galería superior. Administración añadirá los PDF aquí.'
           : 'Los materiales de este módulo aparecerán aquí cuando estén disponibles.';
         article.append(empty);
+      }
+      if (admin) {
+        const videoSection = document.createElement('section'); videoSection.className = 'admin-videos';
+        const title = document.createElement('h3'); title.textContent = `Videos de apoyo · ${(mod.videos || []).length}`; videoSection.append(title);
+        for (const video of mod.videos || []) {
+          const card = document.createElement('div'); card.className = 'admin-video-card';
+          const label = document.createElement('strong'); label.textContent = video.titulo; card.append(label);
+          if (video.principal_id) { const relation = document.createElement('p'); relation.textContent = `Apoya: ${(mod.documentos || []).find(item => item.id_documento === video.principal_id)?.titulo || 'PDF principal'}`; card.append(relation); }
+          const details = document.createElement('details'); const summary = document.createElement('summary'); summary.textContent = 'Editar video'; details.append(summary, createVideoForm(mod, video)); card.append(details);
+          const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Retirar enlace'; remove.disabled = !state.curso.activo || Boolean(mod.archivado_at); remove.dataset.unavailable = String(remove.disabled);
+          remove.onclick = () => mutate(`/videos/${video.id_video}`, 'DELETE', {}); card.append(remove); videoSection.append(card);
+        }
+        videoSection.append(createVideoForm(mod)); article.append(videoSection);
+      } else {
+        const standalone = document.createElement('ul'); standalone.className = 'video-list';
+        for (const video of mod.videos || []) {
+          const item = document.createElement('li'); item.className = 'video-card';
+          const type = document.createElement('span'); type.className = 'material-type'; type.textContent = 'Video de apoyo';
+          const title = document.createElement('strong'); title.textContent = video.titulo;
+          const link = document.createElement('a'); link.href = video.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.referrerPolicy = 'no-referrer'; link.textContent = 'Ver video ↗';
+          item.append(type, title);
+          if (video.descripcion) { const description = document.createElement('p'); description.textContent = video.descripcion; item.append(description); }
+          item.append(link);
+          const parent = documentNodes.get(video.principal_id);
+          if (parent) {
+            let supports = parent.querySelector('.support-list');
+            if (!supports) { supports = document.createElement('ul'); supports.className = 'support-list'; const label = document.createElement('h4'); label.textContent = 'Materiales de apoyo'; parent.append(label, supports); }
+            supports.append(item);
+          } else standalone.append(item);
+        }
+        if (standalone.childElementCount) { const title = document.createElement('h3'); title.className = 'student-resources-heading'; title.textContent = 'Videos del módulo'; article.append(title, standalone); }
       }
       if (!admin) {
         const completion = document.createElement('button'); completion.type = 'button'; completion.className = 'module-complete'; completion.setAttribute('aria-pressed', String(Boolean(mod.completado)));
@@ -348,16 +468,18 @@
   async function saveDocument(mod, doc, form, name, description, input) {
     if (busy || !state) return;
     const file = input.files[0];
-    const wantsImage = form.elements.material_type.value === 'image';
+    const type = form.elements.material_type.value;
+    const wantsImage = type === 'imagen';
     const isImageFile = Boolean(file && /\.(jpe?g|png|webp)$/i.test(file.name));
     let problem = '';
     if (!file) problem = 'Primero selecciona un documento en el campo Archivo.';
     else if (!/\.(pdf|docx?|xlsx?|pptx?|odt|ods|odp|rtf|txt|csv|md|epub|zip|jpe?g|png|webp)$/i.test(file.name)) problem = 'Usa PDF, Office, OpenDocument, texto, EPUB, ZIP o imágenes JPG, PNG y WebP.';
-    else if (wantsImage !== isImageFile) problem = wantsImage ? 'Selecciona una imagen JPG, PNG o WebP para el módulo.' : 'Para subir una imagen privada, elige «Imagen privada del módulo». Para la ficha pública, usa la sección superior.';
+    else if (wantsImage && !isImageFile) problem = 'Selecciona una imagen JPG, PNG o WebP para la galería privada.';
+    else if (type === 'pdf' && !/\.pdf$/i.test(file.name)) problem = 'El material principal debe ser un PDF.';
     else if (!file.size || file.size > 5 * 1024 * 1024) problem = 'Selecciona un documento con contenido y de hasta 5 MB.';
     else if (!name.value.trim() || name.value.trim().length > 150) problem = 'Escribe un nombre para el documento de hasta 150 caracteres.';
     if (problem) { documentStatus(form, problem, true); return; }
-    const body = new FormData(); body.append('titulo', name.value.trim()); body.append('descripcion', description.value.trim()); body.append('revision', String(state.curso.aula_revision)); body.append('archivo', file);
+    const body = new FormData(); body.append('titulo', name.value.trim()); body.append('descripcion', description.value.trim()); body.append('tipo_material', type); body.append('principal_id', form.elements.principal_id.value); body.append('revision', String(state.curso.aula_revision)); body.append('archivo', file);
     const submit = form.querySelector('button[type=submit]'); const originalLabel = submit.textContent;
     lock(true); form.setAttribute('aria-busy', 'true'); submit.textContent = 'Subiendo documento…';
     documentStatus(form, 'Subiendo documento… Espera a que se confirme el guardado.');
@@ -407,7 +529,7 @@
       const token = localStorage.getItem(key); const response = await fetch(API + path, { headers: { Authorization: `Bearer ${token}` }, cache: 'no-store', signal: AbortSignal.timeout(30000) });
       if (!response.ok) throw Error('No se pudo abrir el documento.');
       const url = URL.createObjectURL(await response.blob());
-      if (downloadFile || (doc.extension || 'pdf') !== 'pdf') { const a = document.createElement('a'); a.href = url; a.download = `${doc.titulo.replace(/[\\/:*?"<>|\x00-\x1f]/g, '_')}.${doc.extension || 'pdf'}`; a.click(); }
+      if (downloadFile || !['pdf','jpg','jpeg','png','webp'].includes(String(doc.extension || 'pdf').toLowerCase())) { const a = document.createElement('a'); a.href = url; a.download = `${doc.titulo.replace(/[\\/:*?"<>|\x00-\x1f]/g, '_')}.${doc.extension || 'pdf'}`; a.click(); }
       else { const popup = window.open(url, '_blank'); if (popup) popup.opener = null; else { const a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener'; a.click(); } }
       setTimeout(() => URL.revokeObjectURL(url), 60000); message('');
     } catch (error) { message(error.message, true); }
