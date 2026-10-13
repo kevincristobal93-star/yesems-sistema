@@ -46,6 +46,16 @@ test('el detalle también escapa contenido no confiable', () => {
   expect(details({ ...course, nombre: '<script>x</script>', descripcion: 'Plus: <img onerror=bad()>' })).not.toMatch(/<script>|<img/);
 });
 
+test('la ficha del catálogo separa imágenes públicas y materiales privados', () => {
+  const html = details({ ...course, imagenes_publicas: [{ id_imagen: 11, titulo: 'Vista del proyecto' }] });
+  expect(html).toContain('course-detail-layout');
+  expect(html).toContain('/api/cursos/7/imagenes/11');
+  expect(html).toContain('Vista del proyecto');
+  expect(html).toContain('PDF y materiales de estudio');
+  expect(html).toContain('dentro del aula virtual');
+  expect(details(course)).toContain('course-detail-placeholder');
+});
+
 test('muestra lugares reales y bloquea la acción cuando el cupo está lleno', () => {
   expect(card({ ...course, lugares_disponibles: 3 })).toContain('3 lugares disponibles');
   expect(card({ ...course, lugares_disponibles: 1 })).toContain('1 lugar disponible');

@@ -1,6 +1,7 @@
 (() => {
   'use strict';
   const API = 'https://yesems-sistema-1.onrender.com/api/aula';
+  const COURSE_API = 'https://yesems-sistema-1.onrender.com/api/cursos';
   const $ = id => document.getElementById(id);
   const admin = document.body.dataset.admin === 'true';
   if (!admin) $('login').href = './cursos.html';
@@ -111,6 +112,60 @@
     if ($('archived-count')) $('archived-count').textContent = state.modulos.filter(mod => mod.archivado_at).length;
     $('course-mode').textContent = state.curso.activo ? 'Prepara, revisa y publica los materiales de tus alumnos.' : 'Curso desactivado · Solo consulta';
   }
+  function renderPublicGallery() {
+    if (!admin) return;
+    const panel = $('public-gallery-admin'); panel.hidden = !state;
+    if (!state) return;
+    const list = $('public-gallery-list'); list.replaceChildren();
+    const images = state.curso.imagenes_publicas || [];
+    if (!images.length) {
+      const empty = document.createElement('p'); empty.textContent = 'Aún no hay imágenes públicas. La ficha del curso mostrará una ilustración temporal.'; list.append(empty);
+    }
+    for (const item of images) {
+      const card = document.createElement('article');
+      const image = document.createElement('img'); image.src = `${COURSE_API}/${state.curso.id_curso}/imagenes/${item.id_imagen}`; image.alt = item.titulo; image.loading = 'lazy';
+      const title = document.createElement('strong'); title.textContent = item.titulo;
+      const remove = document.createElement('button'); remove.type = 'button'; remove.textContent = 'Quitar de la ficha';
+      remove.dataset.unavailable = String(!state.curso.activo); remove.disabled = !state.curso.activo;
+      remove.onclick = () => hidePublicImage(item);
+      card.append(image, title, remove); list.append(card);
+    }
+    for (const control of $('public-gallery-form').querySelectorAll('input,button')) {
+      control.dataset.unavailable = String(!state.curso.activo); control.disabled = !state.curso.activo;
+    }
+  }
+  async function publicGalleryRequest(path, method, body) {
+    const response = await fetch(COURSE_API + path, { method, cache: 'no-store', signal: AbortSignal.timeout(90000),
+      headers: { Authorization: `Bearer ${localStorage.getItem(key)}` }, ...(body ? { body } : {}) });
+    const data = await response.json().catch(() => null);
+    if (!response.ok) throw Error(data?.mensaje || 'No se pudo actualizar la galería pública.');
+    return data.imagenes;
+  }
+  async function savePublicImage(event) {
+    event.preventDefault();
+    if (busy || !state) return;
+    const input = $('public-gallery-file'), file = input.files[0], title = $('public-gallery-name').value.trim();
+    const status = $('public-gallery-status'); status.hidden = false; status.classList.remove('error', 'success');
+    if (!file || !/\.(jpe?g|png|webp)$/i.test(file.name) || !file.size || file.size > 5 * 1024 * 1024 || !title || title.length > 150) {
+      status.textContent = 'Selecciona una imagen JPG, PNG o WebP de hasta 5 MB y escribe su nombre.'; status.classList.add('error'); return;
+    }
+    const body = new FormData(); body.append('titulo', title); body.append('archivo', file);
+    lock(true); status.textContent = 'Publicando imagen…';
+    try {
+      state.curso.imagenes_publicas = await publicGalleryRequest(`/${state.curso.id_curso}/imagenes`, 'POST', body);
+      $('public-gallery-form').reset(); renderPublicGallery(); status.textContent = 'Imagen publicada en la ficha del catálogo.'; status.classList.add('success'); message(status.textContent);
+    } catch (error) { status.textContent = error.message; status.classList.add('error'); message(error.message, true); }
+    finally { lock(false); }
+  }
+  async function hidePublicImage(item) {
+    if (busy || !state || !window.confirm(`¿Quitar «${item.titulo}» de la ficha pública?`)) return;
+    lock(true); message('Actualizando galería pública…');
+    try {
+      state.curso.imagenes_publicas = await publicGalleryRequest(`/${state.curso.id_curso}/imagenes/${item.id_imagen}`, 'DELETE');
+      renderPublicGallery(); message('Imagen retirada de la ficha pública.');
+    } catch (error) { message(error.message, true); }
+    finally { lock(false); }
+  }
   function closeHistory() {
     if (!admin) return;
     $('history').hidden = true;
@@ -150,7 +205,7 @@
     const help = document.createElement('p'); help.className = 'hint';
     const kindLabel = document.createElement('label'); kindLabel.textContent = '¿Qué vas a subir?';
     const kind = document.createElement('select'); kind.name = 'material_type';
-    for (const [value, label] of [['document', 'PDF u otro material de estudio'], ['image', 'Imagen para la galería del curso']]) {
+    for (const [value, label] of [['document', 'PDF u otro material de estudio'], ['image', 'Imagen privada del módulo (solo alumnos)']]) {
       const option = document.createElement('option'); option.value = value; option.textContent = label; kind.append(option);
     }
     kind.value = doc && isImageDocument(doc) ? 'image' : 'document'; kindLabel.append(kind);
@@ -175,7 +230,7 @@
       const image = kind.value === 'image';
       file.accept = image ? '.jpg,.jpeg,.png,.webp' : '.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.odt,.ods,.odp,.rtf,.txt,.csv,.md,.epub,.zip';
       help.textContent = image
-        ? 'JPG, PNG o WebP de hasta 5 MB. Al publicar este módulo, la imagen aparecerá en la galería del curso.'
+        ? 'JPG, PNG o WebP de hasta 5 MB. Solo los alumnos autorizados verán esta imagen en el aula. Usa la sección superior para la ficha pública.'
         : 'PDF u otro material de hasta 5 MB. Los alumnos lo encontrarán debajo de este módulo.';
       submit.textContent = doc ? (image ? 'Reemplazar imagen' : 'Reemplazar material') : (image ? 'Subir imagen' : 'Subir material');
     }
@@ -189,6 +244,7 @@
   }
   function render() {
     updateOverview();
+    renderPublicGallery();
     $('course-title').textContent = state.curso.nombre;
     renderShowcase();
     $('modules').replaceChildren();
@@ -297,7 +353,7 @@
     let problem = '';
     if (!file) problem = 'Primero selecciona un documento en el campo Archivo.';
     else if (!/\.(pdf|docx?|xlsx?|pptx?|odt|ods|odp|rtf|txt|csv|md|epub|zip|jpe?g|png|webp)$/i.test(file.name)) problem = 'Usa PDF, Office, OpenDocument, texto, EPUB, ZIP o imágenes JPG, PNG y WebP.';
-    else if (wantsImage !== isImageFile) problem = wantsImage ? 'Selecciona una imagen JPG, PNG o WebP para la galería.' : 'Para subir una imagen, elige «Imagen para la galería del curso».';
+    else if (wantsImage !== isImageFile) problem = wantsImage ? 'Selecciona una imagen JPG, PNG o WebP para el módulo.' : 'Para subir una imagen privada, elige «Imagen privada del módulo». Para la ficha pública, usa la sección superior.';
     else if (!file.size || file.size > 5 * 1024 * 1024) problem = 'Selecciona un documento con contenido y de hasta 5 MB.';
     else if (!name.value.trim() || name.value.trim().length > 150) problem = 'Escribe un nombre para el documento de hasta 150 caracteres.';
     if (problem) { documentStatus(form, problem, true); return; }
@@ -314,7 +370,7 @@
       notice.textContent = doc
         ? `${wantsImage ? 'Imagen' : 'Material'} reemplazado. La versión anterior se conserva en el historial.`
         : wantsImage
-          ? (mod.publicado ? 'Imagen guardada. Ya aparece en la galería del curso.' : 'Imagen guardada. Aparecerá en la galería cuando publiques el módulo.')
+          ? (mod.publicado ? 'Imagen guardada. Ya aparece en la galería privada del aula.' : 'Imagen guardada. Aparecerá en el aula cuando publiques el módulo.')
           : (mod.publicado ? 'Material guardado. Ya aparece debajo de este módulo.' : 'Material guardado. Aparecerá debajo del módulo cuando lo publiques.');
       article?.prepend(notice); notice.focus({ preventScroll: true }); notice.scrollIntoView({ block: 'nearest' });
       message(notice.textContent);
@@ -361,7 +417,7 @@
     if (busy) return;
     const id = admin ? $('courses').value : new URLSearchParams(location.search).get('inscripcion');
     state = null; $('modules').replaceChildren(); if (!admin) resetGallery();
-    if (admin) { closeHistory(); updateOverview(); $('editor').hidden = true; resetEditor(); $('course-title').textContent = ''; }
+    if (admin) { closeHistory(); updateOverview(); renderPublicGallery(); $('editor').hidden = true; resetEditor(); $('course-title').textContent = ''; }
     if (!/^[1-9]\d*$/.test(id || '')) { message(admin ? 'Selecciona un curso.' : 'Abre el aula desde una inscripción de Mi panel.', !admin); return; }
     lock(true); message('Cargando aula…');
     try { state = await request(admin ? `/admin/cursos/${id}` : `/mia/${id}`); $('workspace').hidden = false; message(''); render(); }
@@ -375,6 +431,8 @@
     window.addEventListener('pagehide', resetGallery);
   }
   if (admin) {
+    $('public-gallery-form').onsubmit = savePublicImage;
+    $('public-gallery-file').onchange = () => { const file = $('public-gallery-file').files[0]; if (file && !$('public-gallery-name').value.trim()) $('public-gallery-name').value = file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').slice(0, 150); };
     $('courses').onchange = load; $('cancel').onclick = resetEditor;
     $('history-toggle').onclick = loadHistory;
     $('module-form').onsubmit = event => { event.preventDefault(); mutate(editing ? `/modulos/${editing}` : '/modulos', editing ? 'PUT' : 'POST', { titulo: $('title').value, descripcion: $('description').value }); };

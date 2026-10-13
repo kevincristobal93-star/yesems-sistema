@@ -2,7 +2,7 @@ const enabled = process.env.YES_EMS_ISOLATED_TEST === '1' && process.env.NODE_EN
   && process.env.TEST_DATABASE_URL && process.env.DATABASE_URL === process.env.TEST_DATABASE_URL;
 const integration = enabled ? describe : describe.skip;
 integration('Aula virtual: permisos, edición y publicación en PostgreSQL aislado', () => {
-  let pool, server, origin, admin, alumno, other, userId, course, enrollment, state;
+  let pool, server, origin, admin, alumno, other, userId, course, enrollment, state, publicImageId;
   async function api(path, method = 'GET', body, token = admin, status = 200) {
     const res = await fetch(`${origin}/api/aula${path}`, { method, headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) }, ...(body ? { body: JSON.stringify(body) } : {}) });
     const data = await res.json();
@@ -135,10 +135,57 @@ integration('Aula virtual: permisos, edición y publicación en PostgreSQL aisla
     const documents = await require('fs/promises').readFile(require('path').resolve(__dirname, '../database/migrations/011_classroom_documents.sql'), 'utf8');
     const versions = await require('fs/promises').readFile(require('path').resolve(__dirname, '../database/migrations/012_classroom_document_versions.sql'), 'utf8');
     const progressArchive = await require('fs/promises').readFile(require('path').resolve(__dirname, '../database/migrations/013_classroom_progress_archive.sql'), 'utf8');
-    await pool.query(sql); await pool.query(sql); await pool.query(documents); await pool.query(documents); await pool.query(versions); await pool.query(versions); await pool.query(progressArchive); await pool.query(progressArchive);
+    const publicGallery = await require('fs/promises').readFile(require('path').resolve(__dirname, '../database/migrations/014_course_gallery.sql'), 'utf8');
+    await pool.query(sql); await pool.query(sql); await pool.query(documents); await pool.query(documents); await pool.query(versions); await pool.query(versions); await pool.query(progressArchive); await pool.query(progressArchive); await pool.query(publicGallery); await pool.query(publicGallery);
     expect(await api(`/admin/cursos/${course}`)).toEqual(before);
     expect((await pool.query('SELECT count(*)::int AS n FROM curso_actividades WHERE id_curso=$1', [course])).rows[0].n).toBe(0);
     expect((await pool.query('SELECT count(*)::int AS n FROM constancias WHERE id_inscripcion=$1', [enrollment])).rows[0].n).toBe(0);
+  });
+  test('galería pública: solo administración publica imágenes, sin exponer archivos privados', async () => {
+    const bytes = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/ZK0AAAAASUVORK5CYII=', 'base64');
+    const send = async token => {
+      const body = new FormData(); body.append('titulo', 'Vista de impresión 3D');
+      body.append('archivo', new Blob([bytes], { type: 'image/png' }), 'presentacion.png');
+      return fetch(`${origin}/api/cursos/${course}/imagenes`, { method: 'POST', headers: { Authorization: `Bearer ${token}` }, body });
+    };
+    expect((await send(alumno)).status).toBe(403);
+    const created = await send(admin);
+    expect(created.status).toBe(201);
+    publicImageId = (await created.json()).imagenes[0].id_imagen;
+    const catalog = await (await fetch(`${origin}/api/cursos`)).json();
+    const listed = catalog.cursos.find(item => item.id_curso === course);
+    expect(listed.imagenes_publicas).toEqual([{ id_imagen: publicImageId, titulo: 'Vista de impresión 3D' }]);
+    expect(JSON.stringify(listed)).not.toContain('archivo_url');
+    const image = await fetch(`${origin}/api/cursos/${course}/imagenes/${publicImageId}`);
+    expect(image.status).toBe(200);
+    expect(image.headers.get('content-type')).toContain('image/png');
+    expect(image.headers.get('content-disposition')).toContain('inline');
+    expect(Buffer.from(await image.arrayBuffer())).toEqual(bytes);
+    expect(JSON.stringify(listed)).not.toContain('Manual de prueba');
+    expect((await fetch(`${origin}/api/cursos/${course}/imagenes/2147483647`)).status).toBe(404);
+  });
+  test('catálogo público: ficha con galería a un lado y datos del curso al otro', async () => {
+    const browser = await require('./helpers/browser-client').startBrowser(origin);
+    try {
+      await browser.navigate(`${origin}/cursos.html`);
+      await browser.waitFor(`document.querySelector('[data-course-details="${course}"]')`);
+      await browser.click(`[data-course-details="${course}"]`);
+      await browser.waitFor(`document.querySelector('.course-detail-dialog[open] .course-detail-photo')?.complete`);
+      expect(await browser.evaluate(`document.querySelector('.course-detail-photo').naturalWidth > 0`)).toBe(true);
+      expect(await browser.evaluate(`document.querySelector('.course-detail-layout') !== null && document.querySelector('.course-detail-facts').textContent.includes('$1,000.00')`)).toBe(true);
+      await browser.viewport(390, 844);
+      expect(await browser.evaluate(`document.querySelector('.course-detail-dialog').scrollWidth <= document.querySelector('.course-detail-dialog').clientWidth`)).toBe(true);
+      expect(browser.errors).toEqual([]);
+    } finally { await browser.close(); }
+  }, 90000);
+  test('retirar una imagen pública no da acceso a documentos privados ni borra el archivo histórico', async () => {
+    const url = `${origin}/api/cursos/${course}/imagenes/${publicImageId}`;
+    expect((await fetch(url, { method: 'DELETE', headers: { Authorization: `Bearer ${alumno}` } })).status).toBe(403);
+    const hidden = await fetch(url, { method: 'DELETE', headers: { Authorization: `Bearer ${admin}` } });
+    expect(hidden.status).toBe(200);
+    expect((await hidden.json()).imagenes).toEqual([]);
+    expect((await fetch(url)).status).toBe(404);
+    expect((await pool.query('SELECT activo FROM curso_imagenes_publicas WHERE id_imagen=$1', [publicImageId])).rows[0].activo).toBe(false);
   });
   test('navegador: edición, publicación, texto seguro y vista móvil de alumno', async () => {
     const browser = await require('./helpers/browser-client').startBrowser(origin);
@@ -151,11 +198,11 @@ integration('Aula virtual: permisos, edición y publicación en PostgreSQL aisla
       await browser.waitFor(`document.querySelectorAll('#modules article').length === 2`);
       expect(await browser.evaluate(`document.querySelectorAll('#modules img').length`)).toBe(0);
       await browser.fill('#title', 'Módulo desde navegador'); await browser.fill('#description', 'Descripción de prueba');
-      await browser.click('button[type=submit]');
+      await browser.click('#module-form button[type=submit]');
       await browser.waitFor(`document.querySelectorAll('#modules article').length === 3`);
       await browser.click('#modules article:last-child .actions button:first-child');
       await browser.fill('#description', 'Descripción revisada');
-      await browser.click('button[type=submit]');
+      await browser.click('#module-form button[type=submit]');
       await browser.waitFor(`document.querySelector('#modules article:last-child p').textContent === 'Descripción revisada'`);
       expect(await browser.evaluate(`document.querySelector('#modules article:last-child .actions button[aria-label^="Publicar"]').disabled`)).toBe(true);
       const uploadResult = await browser.evaluate(`(async()=>{

@@ -2,6 +2,9 @@ const pool = require('../config/db');
 
 const disponibilidadSql = `
   SELECT c.*, cat.nombre AS categoria,
+         COALESCE((SELECT json_agg(json_build_object('id_imagen',g.id_imagen,'titulo',g.titulo)
+           ORDER BY g.id_imagen) FROM curso_imagenes_publicas g
+           WHERE g.id_curso=c.id_curso AND g.activo), '[]'::json) AS imagenes_publicas,
          ocupacion.lugares_ocupados,
          GREATEST(c.cupo - ocupacion.lugares_ocupados, 0)::int AS lugares_disponibles,
          (ocupacion.lugares_ocupados >= c.cupo) AS cupo_lleno

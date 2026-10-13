@@ -10,6 +10,9 @@ async function listarCursos() {
 async function obtenerCurso(idCurso, client = pool) {
   // Un snapshot evita combinar la revisión de un estado con los módulos de otro.
   const { rows } = await client.query(`SELECT c.id_curso, c.nombre, c.activo, c.aula_revision,
+    COALESCE((SELECT json_agg(json_build_object('id_imagen',g.id_imagen,'titulo',g.titulo)
+      ORDER BY g.id_imagen) FROM curso_imagenes_publicas g
+      WHERE g.id_curso=c.id_curso AND g.activo), '[]'::json) AS imagenes_publicas,
     COALESCE((SELECT json_agg(json_build_object('id_modulo', m.id_modulo, 'titulo', m.titulo,
       'descripcion', m.descripcion, 'orden', m.orden, 'publicado', m.publicado, 'archivado_at',m.archivado_at,'documentos', ${documentosSql})
       ORDER BY m.orden, m.id_modulo) FROM aula_modulos m WHERE m.id_curso=c.id_curso), '[]'::json) AS modulos

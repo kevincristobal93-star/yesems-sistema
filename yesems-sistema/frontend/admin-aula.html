@@ -30,17 +30,27 @@
       </section>
       <section id="aula-start" class="aula-guide" aria-labelledby="guide-title">
         <p class="eyebrow">PASO A PASO</p><h2 id="guide-title">Del primer módulo al aprendizaje.</h2><p class="hint">Elige un curso arriba para comenzar.</p>
-        <ol><li><span>01</span><div><h3>Crea tus módulos</h3><p>Divide el curso en temas y añade una descripción para orientar a tus alumnos.</p></div></li><li><span>02</span><div><h3>Agrega imágenes y materiales</h3><p>Sube imágenes para la galería visual; los PDF aparecerán debajo de su módulo.</p></div></li><li><span>03</span><div><h3>Publica cuando esté listo</h3><p>Los módulos publicados estarán disponibles para alumnos con acceso autorizado.</p></div></li></ol>
+        <ol><li><span>01</span><div><h3>Crea tus módulos</h3><p>Divide el curso en temas y añade una descripción para orientar a tus alumnos.</p></div></li><li><span>02</span><div><h3>Prepara la ficha pública</h3><p>Sube imágenes de presentación para que cualquier visitante conozca el curso.</p></div></li><li><span>03</span><div><h3>Publica los materiales</h3><p>Los PDF y las imágenes privadas de cada módulo estarán disponibles para alumnos autorizados.</p></div></li></ol>
       </section>
       <section id="course-overview" class="course-overview" hidden aria-labelledby="course-title">
         <div><p class="eyebrow">CONTENIDO DEL CURSO</p><h2 id="course-title"></h2><p id="course-mode" class="hint"></p></div>
         <dl class="aula-counts"><div><dt>Módulos</dt><dd id="module-count">0</dd></div><div><dt>Publicados</dt><dd id="published-count">0</dd></div><div><dt>Materiales</dt><dd id="document-count">0</dd></div></dl>
       </section>
+      <section id="public-gallery-admin" class="public-gallery-admin" hidden aria-labelledby="public-gallery-title">
+        <div><p class="eyebrow">VISTA PREVIA PÚBLICA</p><h2 id="public-gallery-title">Imágenes del catálogo</h2><p class="hint">Estas imágenes serán visibles para cualquier visitante al abrir la ficha del curso. No subas aquí PDF ni material reservado a alumnos.</p></div>
+        <form id="public-gallery-form" class="upload-form" novalidate>
+          <label for="public-gallery-file">Imagen JPG, PNG o WebP (máximo 5 MB)<input id="public-gallery-file" type="file" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" required></label>
+          <label for="public-gallery-name">Nombre de la imagen<input id="public-gallery-name" maxlength="150" required placeholder="Ej. Proyecto final de impresión 3D"></label>
+          <button type="submit">Publicar imagen</button>
+          <p id="public-gallery-status" class="upload-status" role="status" aria-live="polite" hidden></p>
+        </form>
+        <div id="public-gallery-list" class="public-gallery-list" aria-live="polite"></div>
+      </section>
       <div class="aula-work-grid">
         <section id="editor" class="editor-card" hidden aria-labelledby="editor-title">
           <p class="eyebrow">ORGANIZA EL APRENDIZAJE</p><h2 id="editor-title">Nuevo módulo</h2><p class="hint" id="editor-help">Añade un tema al curso. Se guardará como borrador.</p>
           <form id="module-form"><fieldset id="fields"><label for="title">Título del módulo<input id="title" maxlength="150" placeholder="Ej. Introducción al curso" required></label><label for="description">Descripción <span class="optional">(opcional)</span><textarea id="description" maxlength="2000" placeholder="¿Qué aprenderán tus alumnos en este módulo?"></textarea></label><div class="editor-actions"><button type="submit">Guardar módulo</button><button type="button" id="cancel">Cancelar edición</button></div></fieldset></form>
-          <div class="publication-note"><strong>Tú decides cuándo compartirlo</strong><p>Elige «Imagen para la galería» o «PDF u otro material» al cargar archivos de cada módulo. Las imágenes y documentos se mostrarán al publicar el módulo. Ocultarlo conserva el contenido y el avance.</p></div>
+          <div class="publication-note"><strong>Tú decides cuándo compartirlo</strong><p>Las imágenes y documentos de cada módulo solo se muestran a alumnos autorizados cuando lo publicas. Para la ficha que ve cualquier visitante, usa «Imágenes del catálogo» arriba.</p></div>
         </section>
         <div class="module-column"><div id="module-toolbar" class="module-toolbar" hidden><h2>Módulos y materiales</h2><button id="history-toggle" type="button" aria-expanded="false" aria-controls="history">Ver historial de documentos</button></div><section id="history" hidden aria-label="Historial de documentos" aria-live="polite"></section><div id="modules"></div></div>
       </div>

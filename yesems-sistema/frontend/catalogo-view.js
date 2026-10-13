@@ -51,22 +51,39 @@
     const split = description.indexOf('Plus:');
     const overview = split < 0 ? description : description.slice(0, split).trim();
     const plus = split < 0 ? '' : description.slice(split + 5).trim();
+    const images = (Array.isArray(course.imagenes_publicas) ? course.imagenes_publicas : [])
+      .filter(item => Number.isSafeInteger(Number(item.id_imagen)) && Number(item.id_imagen) > 0);
+    const first = images[0];
+    const imageUrl = first ? `https://yesems-sistema-1.onrender.com/api/cursos/${encodeURIComponent(course.id_curso)}/imagenes/${first.id_imagen}` : '';
     return `<button class="course-detail-close" type="button" data-close-details aria-label="Cerrar información del curso">×</button>
-      ${icon(course)}
-      <p class="course-detail-category">${escapeHtml(course.categoria || 'Capacitación')}</p>
-      <h2 id="course-detail-title">${escapeHtml(course.nombre || 'Curso YES EMS')}</h2>
-      ${provisional ? '<p class="proposal-badge">Propuesta · Por confirmar</p>' : ''}
-      <section><h3>Acerca del curso</h3><p class="course-detail-description">${escapeHtml(overview)}</p></section>
-      ${plus ? `<section class="course-detail-plus"><h3>El plus de tu capacitación</h3><p>${escapeHtml(plus)}</p></section>` : ''}
-      <dl class="course-detail-facts"><div><dt>Duración${provisional ? ' sugerida' : ''}</dt><dd>${duration(course)}</dd></div>
-      <div><dt>Cupo${provisional ? ' sugerido' : ''}</dt><dd>${capacity(course)}</dd></div>
-      <div><dt>Precio</dt><dd>${price(course)}</dd></div></dl>
-      ${provisional ? '<p class="proposal-note">Duración y cupo sujetos a validación. Fechas, modalidad, equipo y materiales por confirmar. Inscripciones aún no abiertas.</p>' : ''}
-      ${!provisional ? '<p class="proposal-note">Para obtener constancia es necesario estar inscrito al curso completo, cubrir el pago y cumplir los requisitos académicos y la validación administrativa.</p>' : ''}
-      ${!provisional && course.duracion_aproximada ? '<p class="proposal-note">Fechas y horarios por acordar con YES EMS. Consulta la disponibilidad y los materiales antes de pagar.</p>' : ''}
-      ${!provisional && course.activo !== false && course.ya_inscrito ? '<button class="course-more-button" type="button" data-detail-enroll>Ver mi inscripción</button>' : ''}
-      ${!provisional && course.activo !== false && !course.cupo_lleno && !course.ya_inscrito ? '<button class="course-more-button" type="button" data-detail-enroll>Quiero inscribirme</button>' : ''}
-      ${!provisional && course.activo !== false && course.cupo_lleno && !course.ya_inscrito ? '<button class="course-more-button" type="button" disabled>Cupo lleno</button><p class="proposal-note">Por el momento no hay lugares disponibles. Consulta nuevas fechas con YES EMS.</p>' : ''}`;
+      <div class="course-detail-layout">
+        <div class="course-detail-media">
+          <div class="course-detail-stage">
+            ${first ? `<img class="course-detail-photo" src="${imageUrl}" alt="${escapeHtml(first.titulo)}" loading="eager">` : `<div class="course-detail-placeholder">${icon(course)}<strong>Explora ${escapeHtml(course.nombre || 'este curso')}</strong><span>Las imágenes de presentación aparecerán aquí cuando administración las publique.</span></div>`}
+            ${images.length > 1 ? '<button class="course-detail-arrow course-detail-arrow--prev" type="button" data-gallery-step="-1" aria-label="Imagen anterior">←</button><button class="course-detail-arrow course-detail-arrow--next" type="button" data-gallery-step="1" aria-label="Imagen siguiente">→</button>' : ''}
+          </div>
+          <div class="course-detail-media-footer"><span data-gallery-caption>${first ? `${escapeHtml(first.titulo)} · Imagen 1 de ${images.length}` : 'Vista previa del curso'}</span>
+            <div class="course-detail-dots">${images.map((item,index) => `<button type="button" data-gallery-index="${index}" aria-label="Ver imagen ${index + 1}: ${escapeHtml(item.titulo)}" aria-current="${index === 0}"></button>`).join('')}</div>
+          </div>
+        </div>
+        <div class="course-detail-copy">
+          <p class="course-detail-category">${escapeHtml(course.categoria || 'Capacitación')}</p>
+          <h2 id="course-detail-title">${escapeHtml(course.nombre || 'Curso YES EMS')}</h2>
+          ${provisional ? '<p class="proposal-badge">Propuesta · Por confirmar</p>' : ''}
+          <section><h3>Acerca del curso</h3><p class="course-detail-description">${escapeHtml(overview)}</p></section>
+          ${plus ? `<section class="course-detail-plus"><h3>El plus de tu capacitación</h3><p>${escapeHtml(plus)}</p></section>` : ''}
+          <dl class="course-detail-facts"><div><dt>Duración${provisional ? ' sugerida' : ''}</dt><dd>${duration(course)}</dd></div>
+          <div><dt>Cupo${provisional ? ' sugerido' : ''}</dt><dd>${capacity(course)}</dd></div>
+          <div><dt>Precio</dt><dd>${price(course)}</dd></div></dl>
+          ${provisional ? '<p class="proposal-note">Duración y cupo sujetos a validación. Fechas, modalidad, equipo y materiales por confirmar. Inscripciones aún no abiertas.</p>' : ''}
+          ${!provisional ? '<p class="proposal-note">Para obtener constancia es necesario estar inscrito al curso completo, cubrir el pago y cumplir los requisitos académicos y la validación administrativa.</p>' : ''}
+          ${!provisional && course.duracion_aproximada ? '<p class="proposal-note">Fechas y horarios por acordar con YES EMS. Consulta la disponibilidad y los materiales antes de pagar.</p>' : ''}
+          ${!provisional && course.activo !== false && course.ya_inscrito ? '<button class="course-more-button" type="button" data-detail-enroll>Ver mi inscripción</button>' : ''}
+          ${!provisional && course.activo !== false && !course.cupo_lleno && !course.ya_inscrito ? '<button class="course-more-button" type="button" data-detail-enroll>Quiero inscribirme</button>' : ''}
+          ${!provisional && course.activo !== false && course.cupo_lleno && !course.ya_inscrito ? '<button class="course-more-button" type="button" disabled>Cupo lleno</button><p class="proposal-note">Por el momento no hay lugares disponibles. Consulta nuevas fechas con YES EMS.</p>' : ''}
+        </div>
+      </div>
+      <section class="course-detail-materials"><div><span>CONTENIDO DEL AULA</span><h3>PDF y materiales de estudio</h3></div><p>Los documentos que publique administración se consultan debajo de cada módulo, dentro del aula virtual. El acceso se habilita al confirmar la inscripción y el pago.</p></section>`;
   }
   function bindDetails(container, getCourses, onEnroll) {
     let dialog;
@@ -80,8 +97,31 @@
         dialog = document.createElement('dialog');
         dialog.className = 'course-detail-dialog';
         dialog.setAttribute('aria-labelledby', 'course-detail-title');
+        dialog.addEventListener('error', (event) => {
+          if (event.target.matches('.course-detail-photo')) event.target.closest('.course-detail-stage').dataset.imageError = 'true';
+        }, true);
+        dialog.addEventListener('load', (event) => {
+          if (event.target.matches('.course-detail-photo')) delete event.target.closest('.course-detail-stage').dataset.imageError;
+        }, true);
         dialog.addEventListener('click', (e) => {
           if (e.target.closest('[data-close-details]')) dialog.close();
+          const step = e.target.closest('[data-gallery-step]');
+          const dot = e.target.closest('[data-gallery-index]');
+          if (step || dot) {
+            const images = selected?.imagenes_publicas || [];
+            if (images.length) {
+              const index = dot ? Number(dot.dataset.galleryIndex) : (Number(dialog.dataset.galleryIndex || 0) + Number(step.dataset.galleryStep) + images.length) % images.length;
+              const item = images[index];
+              const photo = dialog.querySelector('.course-detail-photo');
+              if (item && photo) {
+                dialog.dataset.galleryIndex = String(index);
+                photo.src = `https://yesems-sistema-1.onrender.com/api/cursos/${encodeURIComponent(selected.id_curso)}/imagenes/${item.id_imagen}`;
+                photo.alt = item.titulo;
+                dialog.querySelector('[data-gallery-caption]').textContent = `${item.titulo} · Imagen ${index + 1} de ${images.length}`;
+                dialog.querySelectorAll('[data-gallery-index]').forEach((button,position) => button.setAttribute('aria-current', String(position === index)));
+              }
+            }
+          }
           if (e.target.closest('[data-detail-enroll]') && !selected.oferta_provisional && selected.activo !== false && (!selected.cupo_lleno || selected.ya_inscrito)) {
             dialog.close(); onEnroll(selected);
           }
@@ -90,6 +130,7 @@
         document.body.append(dialog);
       }
       dialog.innerHTML = details(selected);
+      dialog.dataset.galleryIndex = '0';
       trigger.focus();
       dialog.showModal();
       dialog.scrollTop = 0;

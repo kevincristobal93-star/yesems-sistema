@@ -64,7 +64,7 @@ async function descartar(url) {
   if (!match) throw Error('Ubicación no permitida');
   await cloudinary.uploader.destroy(match[1], { resource_type: 'raw', type: 'authenticated', invalidate: true });
 }
-async function descargar(res, doc) {
+async function descargar(res, doc, { inline = false } = {}) {
   const extension = path.extname(doc.archivo_url).slice(1);
   if (!Object.hasOwn(formats, extension)) throw httpError(502, 'Formato almacenado no permitido.');
   let bytes;
@@ -82,6 +82,12 @@ async function descargar(res, doc) {
   }
   if (bytes.length !== doc.bytes || !contentMatches(bytes, extension)) throw httpError(502, 'El documento almacenado no coincide con el original.');
   res.set({ 'Cache-Control': 'private, no-store', 'X-Content-Type-Options': 'nosniff' });
+  if (inline) {
+    if (!['jpg', 'jpeg', 'png', 'webp'].includes(extension)) throw httpError(404, 'Imagen no disponible.');
+    res.set('Content-Disposition', `inline; filename="curso-${doc.id_imagen}.${extension}"`);
+    res.set('Cache-Control', 'public, no-store');
+    return res.type(formats[extension]).send(bytes);
+  }
   return res.attachment(`material-${doc.id_documento}.${extension}`).type(formats[extension]).send(bytes);
 }
 function cloudLocation(url) {

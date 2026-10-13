@@ -68,12 +68,17 @@ sin migraciones de base de datos. Los documentos de texto deben estar codificado
 
 ## Presentación visual del curso
 
-El administrador elige «Imagen para la galería del curso» dentro del formulario
-de materiales de cada módulo y sube JPG, PNG o WebP. Las imágenes de los módulos
-publicados forman la galería superior del aula del alumno; los PDF y demás
-documentos aparecen debajo de su módulo. Un módulo en borrador u oculto no
-aporta imágenes ni archivos a la vista del alumno. El historial de reemplazos
-y retiros se conserva.
+En «Contenido del curso», el administrador puede subir JPG, PNG o WebP en
+«Imágenes del catálogo». Son vistas previas públicas: aparecen al abrir la
+ficha del curso en los catálogos público y del alumno. No se mezclan con los
+archivos de estudio ni se hacen públicas las imágenes privadas ya cargadas.
+Puede haber hasta ocho imágenes activas por curso; «Quitar de la ficha» las
+oculta sin borrar el archivo histórico.
+
+Dentro de cada módulo, la opción «Imagen privada del módulo» sigue alimentando
+la galería superior del aula de alumnos autorizados. Los PDF y demás documentos
+aparecen debajo de su módulo. Un módulo en borrador u oculto no aporta imágenes
+ni archivos a la vista del alumno. El historial de reemplazos y retiros se conserva.
 
 La ficha lateral muestra la descripción, categoría, duración y costo de la
 inscripción desde la base de datos. Las imágenes se recuperan mediante el
@@ -81,3 +86,10 @@ endpoint autenticado existente y se muestran como vistas previas temporales;
 las direcciones privadas de almacenamiento nunca se entregan al navegador.
 Si todavía no hay imágenes o módulos publicados, el aula muestra estados vacíos
 claros sin inventar contenido. En móvil, galería y ficha se apilan.
+
+La ficha pública ofrece una galería a la izquierda y descripción, duración,
+cupo y costo a la derecha. Si aún no se han subido imágenes públicas, muestra
+una ilustración temporal. Debajo explica que los PDF se consultan en el aula
+después de la inscripción y aprobación del pago; nunca ofrece descargas privadas
+sin autorización. La API sirve solo las imágenes públicas registradas mediante
+un proxy de solo lectura, sin exponer la URL privada de Cloudinary.
