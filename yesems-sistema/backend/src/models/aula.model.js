@@ -15,7 +15,18 @@ async function validarOrganizacion(client, idModulo, idDocumento, tipo, principa
 }
 
 async function listarCursos() {
-  return (await pool.query('SELECT id_curso, nombre, activo FROM cursos ORDER BY nombre, id_curso')).rows;
+  return (await pool.query(`SELECT c.id_curso, c.nombre, c.activo,
+    (SELECT count(*)::int FROM aula_modulos m WHERE m.id_curso=c.id_curso AND m.archivado_at IS NULL) AS modulos,
+    (SELECT count(*)::int FROM aula_modulos m WHERE m.id_curso=c.id_curso AND m.archivado_at IS NULL AND m.publicado) AS publicados,
+    (SELECT count(*)::int FROM aula_documentos d JOIN aula_modulos m ON m.id_modulo=d.id_modulo
+      WHERE m.id_curso=c.id_curso AND m.archivado_at IS NULL AND d.activo) AS documentos,
+    (SELECT count(*)::int FROM aula_videos v JOIN aula_modulos m ON m.id_modulo=v.id_modulo
+      WHERE m.id_curso=c.id_curso AND m.archivado_at IS NULL AND v.activo) AS videos,
+    ((SELECT count(*)::int FROM aula_documentos d JOIN aula_modulos m ON m.id_modulo=d.id_modulo
+      WHERE m.id_curso=c.id_curso AND m.archivado_at IS NULL AND m.publicado AND d.activo)
+     + (SELECT count(*)::int FROM aula_videos v JOIN aula_modulos m ON m.id_modulo=v.id_modulo
+      WHERE m.id_curso=c.id_curso AND m.archivado_at IS NULL AND m.publicado AND v.activo)) AS materiales_publicados
+    FROM cursos c ORDER BY c.nombre, c.id_curso`)).rows;
 }
 async function obtenerCurso(idCurso, client = pool) {
   // Un snapshot evita combinar la revisión de un estado con los módulos de otro.

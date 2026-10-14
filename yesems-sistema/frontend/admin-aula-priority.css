@@ -1,0 +1,21 @@
+.admin-aula-priority{margin:22px 0 4px;padding:28px;border:1px solid #c8dce5;border-radius:16px;background:linear-gradient(125deg,#fff 0%,#eff8fb 100%);box-shadow:0 14px 30px rgba(13,61,89,.07)}
+.admin-aula-priority-heading{display:flex;gap:20px;align-items:center;justify-content:space-between}
+.admin-aula-priority-heading h2{font-size:clamp(1.5rem,2.7vw,2.1rem);color:#0d3d59}
+.admin-aula-priority-heading p:last-child{max-width:620px;margin:9px 0 0;color:#60748a;line-height:1.55}
+.admin-aula-manager{flex:none;padding:13px 18px;border-radius:9px;color:#fff;background:#176b87;font:700 .85rem Montserrat,sans-serif;text-decoration:none;text-align:center}
+.admin-aula-manager:hover,.admin-aula-priority-action:hover{background:#0d3d59;color:#fff}
+.admin-aula-priority-summary{margin:20px 0 15px;color:#365267;font-size:.85rem;font-weight:700}
+.admin-aula-priority-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.admin-aula-priority-card{display:flex;min-width:0;gap:10px;flex-direction:column;padding:18px;border:1px solid #dce8ee;border-radius:12px;background:#fff}
+.admin-aula-priority-card h3{font-size:1.02rem;line-height:1.35;color:#12354b}
+.admin-aula-priority-badge{align-self:flex-start;padding:5px 9px;border-radius:99px;background:#fff1d2;color:#805700;font-size:.7rem;font-weight:700}
+.admin-aula-priority-badge.status-3{background:#e1f5e8;color:#19633c}
+.admin-aula-priority-badge.status-4{background:#ecf0f3;color:#526576}
+.admin-aula-priority-counts{margin:0;color:#60748a;font-size:.78rem;line-height:1.5}
+.admin-aula-priority-action{align-self:flex-start;margin-top:auto;padding:8px 10px;border:1px solid #c7dce5;border-radius:7px;color:#176b87;font-size:.79rem;font-weight:700;text-decoration:none}
+.admin-aula-priority-empty{grid-column:1/-1;margin:0;padding:22px;border:1px dashed #bed3dd;border-radius:10px;color:#60748a}
+.admin-aula-priority-footnote{margin:16px 0 0;color:#60748a;font-size:.77rem}
+.admin-aula-menu-priority{background:rgba(245,185,66,.13);outline:1px solid rgba(245,185,66,.3)}
+.admin-aula-menu-badge{margin-left:auto;padding:4px 6px;border-radius:5px;color:#0d3d59;background:#f5b942;font-size:.62rem}
+@media(max-width:1000px){.admin-aula-priority-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.admin-aula-priority{padding:21px;margin-top:16px}.admin-aula-priority-heading{align-items:stretch;flex-direction:column}.admin-aula-manager{width:100%}.admin-aula-priority-list{grid-template-columns:1fr}}

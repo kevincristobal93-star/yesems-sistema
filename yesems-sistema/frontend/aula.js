@@ -555,13 +555,26 @@
   if (admin) {
     $('public-gallery-form').onsubmit = savePublicImage;
     $('public-gallery-file').onchange = () => { const file = $('public-gallery-file').files[0]; if (file && !$('public-gallery-name').value.trim()) $('public-gallery-name').value = file.name.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').slice(0, 150); };
-    $('courses').onchange = load; $('cancel').onclick = resetEditor;
+    $('courses').onchange = () => {
+      const selected = $('courses').value;
+      const url = new URL(location.href);
+      if (selected) url.searchParams.set('curso', selected);
+      else url.searchParams.delete('curso');
+      history.replaceState(null, '', url);
+      load();
+    }; $('cancel').onclick = resetEditor;
     $('history-toggle').onclick = loadHistory;
     $('module-form').onsubmit = event => { event.preventDefault(); mutate(editing ? `/modulos/${editing}` : '/modulos', editing ? 'PUT' : 'POST', { titulo: $('title').value, descripcion: $('description').value }); };
     (async () => { lock(true); try {
       const data = await request('/admin/cursos');
       data.cursos.forEach(course => { const option = document.createElement('option'); option.value = course.id_curso; option.textContent = course.nombre + (course.activo ? '' : ' (desactivado)'); $('courses').append(option); });
+      const selected = new URLSearchParams(location.search).get('curso');
       $('workspace').hidden = false; message('Selecciona un curso para organizar sus módulos.');
+      if (/^[1-9]\d*$/.test(selected || '') && data.cursos.some(course => String(course.id_curso) === selected)) {
+        $('courses').value = selected;
+        lock(false);
+        await load();
+      }
     } catch (error) { message(error.message, true); } finally { lock(false); } })();
   } else load();
 })();

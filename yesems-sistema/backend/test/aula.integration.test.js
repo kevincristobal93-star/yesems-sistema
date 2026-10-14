@@ -46,6 +46,8 @@ integration('Aula virtual: permisos, edición y publicación en PostgreSQL aisla
     expect(state.modulos[0].publicado).toBe(false);
     state = await api(`/admin/cursos/${course}/modulos`, 'POST', { revision: 1, titulo: '<img src=x onerror=alert(1)>', descripcion: 'Texto seguro' }, admin, 201);
     expect(state.curso.aula_revision).toBe(2);
+    const courses = await api('/admin/cursos');
+    expect(courses.cursos.find(item => Number(item.id_curso) === course)).toMatchObject({ modulos: 2, publicados: 0, documentos: 0, videos: 0, materiales_publicados: 0 });
   });
   test('publicar y ordenar con protección contra cambios concurrentes', async () => {
     const ids = state.modulos.map(m => m.id_modulo).reverse();
@@ -193,10 +195,10 @@ integration('Aula virtual: permisos, edición y publicación en PostgreSQL aisla
     try {
       await browser.navigate(`${origin}/admin-aula.html`);
       await browser.evaluate(`localStorage.setItem('yesems_admin_token', ${JSON.stringify(admin)}); localStorage.setItem('yesems_token', ${JSON.stringify(alumno)})`);
-      await browser.navigate(`${origin}/admin-aula.html`);
+      await browser.navigate(`${origin}/admin-aula.html?curso=${course}`);
       await browser.waitFor(`document.querySelector('#courses').options.length > 1`);
-      await browser.fill('#courses', String(course));
       await browser.waitFor(`document.querySelectorAll('#modules article').length === 2`);
+      expect(await browser.evaluate(`document.querySelector('#courses').value`)).toBe(String(course));
       expect(await browser.evaluate(`document.querySelectorAll('#modules img').length`)).toBe(0);
       await browser.fill('#title', 'Módulo desde navegador'); await browser.fill('#description', 'Descripción de prueba');
       await browser.click('#module-form button[type=submit]');
