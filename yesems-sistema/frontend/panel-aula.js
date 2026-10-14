@@ -17,7 +17,7 @@ const PanelAula = (() => {
   }
   function ensure() {
     if (section) return section;
-    const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = './panel-aula.css'; document.head.append(css);
+    const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = './panel-aula.css?v=3'; document.head.append(css);
     section = element('section', 'panel-aula-section');
     section.id = 'mi-aula';
     section.setAttribute('aria-labelledby', 'mi-aula-title');
