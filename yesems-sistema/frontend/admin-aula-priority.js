@@ -1,17 +1,12 @@
 (() => {
   'use strict';
   if (!localStorage.getItem('yesems_admin_token') || !document.querySelector('.admin-hero')) return;
-  const style = document.createElement('link');
-  style.rel = 'stylesheet'; style.href = './admin-aula-priority.css'; document.head.append(style);
-
   const menu = document.querySelector('#admin-menu nav');
   const link = menu?.querySelector('a[href="./admin-aula.html"]');
   if (link) {
     link.classList.add('admin-aula-menu-priority');
-    link.setAttribute('aria-label', 'Aula virtual, sección prioritaria');
+    link.setAttribute('aria-label', 'Aula virtual');
     link.lastChild.textContent = 'Aula virtual';
-    const badge = document.createElement('span'); badge.textContent = 'Prioridad'; badge.className = 'admin-aula-menu-badge';
-    link.append(badge);
     menu.children[0]?.after(link);
   }
 
@@ -27,15 +22,16 @@
   const heading = node('div', 'admin-aula-priority-heading');
   const copy = node('div');
   const title = node('h2', '', 'Aula virtual'); title.id = 'aula-priority-title';
-  copy.append(node('p', 'eyebrow', 'PRIORIDAD ACADÉMICA'), title,
-    node('p', '', 'Prepara los módulos, publica el PDF principal y organiza los apoyos de cada curso.'));
-  const manager = node('a', 'admin-aula-manager', 'Abrir gestor del aula →'); manager.href = './admin-aula.html';
+  copy.append(node('p', 'admin-aula-priority-kicker', 'CONTENIDOS DE TUS CURSOS'), title,
+    node('p', '', 'Crea módulos, ordena documentos y videos, y revisa qué contenido ya pueden ver tus alumnos.'));
+  const manager = node('a', 'admin-aula-manager', 'Administrar aula →'); manager.href = './admin-aula.html';
   heading.append(copy, manager);
   const summary = node('p', 'admin-aula-priority-summary', 'Revisando el contenido de tus cursos…');
   summary.setAttribute('role', 'status');
   const list = node('div', 'admin-aula-priority-list');
-  section.append(heading, summary, list,
-    node('p', 'admin-aula-priority-footnote', 'Ruta recomendada: módulo → PDF principal → apoyos y videos → publicación.'));
+  const workflow = node('div', 'admin-aula-priority-workflow');
+  workflow.append(node('span', '', '1. Crear módulo'), node('span', '', '2. Agregar materiales'), node('span', '', '3. Publicar'));
+  section.append(heading, summary, list, workflow);
   document.querySelector('.admin-hero').after(section);
 
   function priority(course) {
@@ -60,7 +56,10 @@
     return item;
   }
 
-  (async () => {
+  async function loadCourses() {
+    summary.classList.remove('is-error');
+    summary.textContent = 'Consultando los contenidos de tus cursos…';
+    list.replaceChildren();
     try {
       const data = await request('/aula/admin/cursos');
       const courses = Array.isArray(data.cursos) ? data.cursos : [];
@@ -70,13 +69,20 @@
       const published = active.reduce((sum, course) => sum + Number(course.publicados || 0), 0);
       summary.textContent = `${active.length} cursos activos · ${pending} por preparar · ${published} módulos publicados`;
       if (!ordered.length) {
-        list.append(node('p', 'admin-aula-priority-empty', 'Aún no hay cursos. Crea el primero en «Cursos y disponibilidad».'));
+        list.append(node('p', 'admin-aula-priority-empty', 'Aún no hay cursos. Puedes crear uno en «Cursos y disponibilidad».'));
         return;
       }
       ordered.slice(0, 6).forEach(course => list.append(card(course)));
       if (ordered.length > 6) summary.textContent += ` · Mostrando 6 de ${ordered.length}`;
     } catch (error) {
-      summary.textContent = error.message || 'No se pudo consultar el aula. Vuelve a intentarlo.';
+      if (error?.status === 401) return;
+      summary.classList.add('is-error');
+      summary.textContent = 'No pudimos cargar el resumen del aula. Puedes entrar al gestor o intentar de nuevo.';
+      const retry = node('button', 'admin-aula-priority-retry', 'Reintentar');
+      retry.type = 'button';
+      retry.addEventListener('click', loadCourses);
+      list.append(retry);
     }
-  })();
+  }
+  loadCourses();
 })();

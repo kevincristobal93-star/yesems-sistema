@@ -34,5 +34,12 @@
 .aula-admin .video-form h3{grid-column:1/-1;margin:0;color:#164963}
 .aula-admin .video-form label{margin:5px 0}
 .aula-admin .video-form button{align-self:end}
+.aula-admin .module-visibility{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin:14px 0 20px;padding:13px 15px;border:1px solid #f0d79f;border-radius:10px;background:#fff8e9}
+.aula-admin .module-visibility[data-visible=true]{border-color:#b8dfc9;background:#eff9f2}
+.aula-admin .module-visibility p{flex:1 1 260px;margin:0;color:#6a4b13;font-size:.84rem;line-height:1.5;font-weight:700}
+.aula-admin .module-visibility[data-visible=true] p{color:#19633c}
+.aula-admin .module-visibility-publish,.aula-admin .upload-publish{border-color:#176b87;color:#fff;background:#176b87}
+.aula-admin .module-visibility-publish:hover,.aula-admin .upload-publish:hover{color:#fff;background:#0d3d59}
+.aula-admin .upload-publish{display:flex;margin-top:10px}
 @media(max-width:700px){.aula-student .support-list,.aula-student .video-list,.aula-admin .organize-form,.aula-admin .video-form{grid-template-columns:minmax(0,1fr)}}
 @media(max-width:480px){.aula-student .documents>li{padding:17px}}

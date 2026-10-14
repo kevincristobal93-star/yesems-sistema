@@ -336,6 +336,23 @@
       const heading = document.createElement('h2'); heading.textContent = admin ? `${index + 1}. ${mod.titulo}` : mod.titulo;
       const desc = document.createElement('p'); desc.textContent = mod.descripcion;
       article.append(heading, desc);
+      if (admin && !mod.archivado_at) {
+        const visibility = document.createElement('div'); visibility.className = 'module-visibility';
+        visibility.dataset.visible = String(Boolean(mod.publicado && state.curso.activo));
+        const text = document.createElement('p');
+        if (!state.curso.activo) text.textContent = 'Curso desactivado: el alumnado no puede acceder a estos materiales.';
+        else if (mod.publicado) text.textContent = 'Visible para alumnos con acceso al curso. Los materiales activos de este módulo ya están publicados.';
+        else if ((mod.documentos || []).length) text.textContent = 'Solo visible en administración. Publica este módulo para que sus documentos aparezcan en el aula del alumno.';
+        else text.textContent = 'Solo visible en administración. Sube un documento y después publica el módulo.';
+        visibility.append(text);
+        if (state.curso.activo && !mod.publicado && (mod.documentos || []).length) {
+          const publish = document.createElement('button'); publish.type = 'button'; publish.className = 'module-visibility-publish';
+          publish.textContent = 'Publicar módulo para alumnos';
+          publish.onclick = () => mutate(`/modulos/${mod.id_modulo}/publicacion`, 'PATCH', { publicado: true });
+          visibility.append(publish);
+        }
+        article.append(visibility);
+      }
       const documents = document.createElement('ul'); documents.className = 'documents';
       const visibleDocuments = admin ? (mod.documentos || []) : (mod.documentos || []).filter(doc => !isImageDocument(doc));
       const documentNodes = new Map();
@@ -489,13 +506,20 @@
       closeHistory(); render();
       const article = [...$('modules').children].find(el => el.dataset.moduleId === String(mod.id_modulo));
       const notice = document.createElement('p'); notice.className = 'upload-status success'; notice.setAttribute('role', 'status'); notice.tabIndex = -1;
-      notice.textContent = doc
+      const noticeText = doc
         ? `${wantsImage ? 'Imagen' : 'Material'} reemplazado. La versión anterior se conserva en el historial.`
         : wantsImage
-          ? (mod.publicado ? 'Imagen guardada. Ya aparece en la galería privada del aula.' : 'Imagen guardada. Aparecerá en el aula cuando publiques el módulo.')
-          : (mod.publicado ? 'Material guardado. Ya aparece debajo de este módulo.' : 'Material guardado. Aparecerá debajo del módulo cuando lo publiques.');
+          ? (mod.publicado ? 'Imagen guardada. Ya aparece en la galería privada del aula.' : 'Imagen guardada solo para administración. Publica el módulo para mostrarla al alumno.')
+          : (mod.publicado ? 'Material guardado. Ya aparece debajo de este módulo.' : 'Material guardado solo para administración. Publica el módulo para mostrarlo al alumno.');
+      notice.textContent = noticeText;
+      if (!mod.publicado && state.curso.activo && !mod.archivado_at) {
+        const publish = document.createElement('button'); publish.type = 'button'; publish.className = 'upload-publish';
+        publish.textContent = 'Publicar módulo para alumnos';
+        publish.onclick = () => mutate(`/modulos/${mod.id_modulo}/publicacion`, 'PATCH', { publicado: true });
+        notice.append(publish);
+      }
       article?.prepend(notice); notice.focus({ preventScroll: true }); notice.scrollIntoView({ block: 'nearest' });
-      message(notice.textContent);
+      message(noticeText);
     } catch (error) {
       const detail = error.name === 'TimeoutError' || error.name === 'AbortError' || error instanceof TypeError
         ? 'No se pudo confirmar la carga. Pulsa Actualizar aula para comprobar si se guardó antes de volver a subirlo.' : error.message;

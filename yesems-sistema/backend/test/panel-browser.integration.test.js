@@ -99,6 +99,9 @@ integration('Paneles reales en Edge: plan, avance y constancia (base aislada)', 
     await authPage('admin.html', fixture.admin, true);
     await browser.waitFor("document.querySelectorAll('.admin-aula-priority-card').length > 0", 'priority classroom visible');
     expect(await browser.evaluate("document.querySelector('.admin-hero').nextElementSibling.id")).toBe('aula-prioridad');
+    expect(await browser.evaluate("document.querySelector('.admin-aula-priority-kicker').textContent")).toBe('CONTENIDOS DE TUS CURSOS');
+    expect(await browser.evaluate("getComputedStyle(document.querySelector('.admin-aula-priority')).borderRadius")).toBe('18px');
+    expect(await browser.evaluate("getComputedStyle(document.querySelector('.admin-aula-manager')).textDecorationLine")).toBe('none');
     expect(await browser.evaluate(`Boolean(document.querySelector('.admin-aula-priority-card a[href="./admin-aula.html?curso=${fixture.course.id_curso}"]'))`)).toBe(true);
     await trackingReady();
     expect(await browser.evaluate(`Boolean(document.querySelector('#tracking-course option[value="${fixture.inactive.id_curso}"]'))`)).toBe(true);

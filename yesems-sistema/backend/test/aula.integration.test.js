@@ -221,8 +221,11 @@ integration('Aula virtual: permisos, edición y publicación en PostgreSQL aisla
       expect(uploadResult.status).toBe(201);
       await browser.click('#refresh');
       await browser.waitFor(`document.querySelector('#modules article:last-child .documents li .document-summary strong')?.textContent === 'Manual de navegador'`);
+      expect(await browser.evaluate("document.querySelector('#modules article:last-child .module-visibility').dataset.visible")).toBe('false');
+      expect(await browser.evaluate("document.querySelector('#modules article:last-child .module-visibility-publish').textContent")).toBe('Publicar módulo para alumnos');
       await browser.click('#modules article:last-child .actions button[aria-label^="Publicar"]');
       await browser.waitFor(`document.querySelector('#modules article:last-child .badge').textContent === 'Publicado'`);
+      expect(await browser.evaluate("document.querySelector('#modules article:last-child .module-visibility').dataset.visible")).toBe('true');
       await browser.click('#modules article:last-child .actions button[aria-label^="Subir"]');
       await browser.waitFor(`document.querySelector('#modules article:nth-child(2) h2').textContent.includes('Módulo desde navegador')`);
       const galleryModule = await browser.evaluate(`Number(document.querySelector('#modules article:nth-child(2)').dataset.moduleId)`);
