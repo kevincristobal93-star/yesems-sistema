@@ -1,0 +1,81 @@
+/* Shared visual language for the two classroom views. Scoped to avoid changing other panels. */
+.aula-student,.aula-admin{--aula-midnight:#06243a;--aula-ink:#0c3449;--aula-teal:#0f5660;--aula-mint:#c5efa8;--aula-surface:#f3f8f7;--aula-border:#d7e5e4;background:var(--aula-surface)}
+.aula-student .student-aula-main,.aula-admin .aula-main{max-width:1440px;padding-inline:clamp(16px,3.2vw,46px)}
+.aula-student .student-breadcrumb,.aula-admin .aula-breadcrumb{margin-bottom:18px}
+.aula-student .student-breadcrumb a,.aula-admin .aula-breadcrumb a{color:var(--aula-teal)}
+
+/* Student: a confident introduction followed by an image and a useful course summary. */
+.aula-student .student-course-heading{position:relative;display:grid;grid-template-columns:minmax(0,1.55fr) minmax(270px,.68fr);align-items:center;gap:clamp(24px,5vw,76px);min-height:340px;margin:0 0 28px;padding:clamp(30px,5vw,68px);overflow:hidden;border-radius:28px;background:radial-gradient(circle at 82% -10%,#15505b 0,transparent 38%),linear-gradient(115deg,#061d34 0%,#092e42 70%,#104d52 100%);box-shadow:0 24px 48px #06243a1c}
+.aula-student .student-course-heading::before,.aula-admin .aula-hero::before{content:"";position:absolute;inset:auto auto -175px -90px;width:360px;height:360px;border:1px solid #ffffff1f;border-radius:50%;box-shadow:0 0 0 42px #ffffff08,0 0 0 95px #ffffff05;pointer-events:none}
+.aula-student .student-hero-copy{position:relative;z-index:1;min-width:0}
+.aula-student .student-eyebrow{color:var(--aula-teal)}
+.aula-student .student-course-heading .student-eyebrow,.aula-admin .aula-hero .eyebrow{color:var(--aula-mint);letter-spacing:.16em}
+.aula-student .student-course-heading h1{max-width:820px;color:#f4fbf8;font-size:clamp(2.25rem,4.6vw,4.6rem);line-height:1.08;overflow-wrap:anywhere}
+.aula-student .student-course-heading .student-hero-copy>p:last-of-type{max-width:650px;margin:22px 0 25px;color:#c9dfe0;font-size:clamp(.98rem,1.45vw,1.18rem);line-height:1.65}
+.aula-student .student-hero-link,.aula-admin .aula-hero .hero-label{display:inline-flex;align-items:center;justify-content:space-between;gap:24px;min-height:50px;padding:12px 20px;border:0;border-radius:11px;background:var(--aula-mint);color:#092e32;font:800 .86rem Montserrat,Arial,sans-serif;text-decoration:none;box-shadow:0 8px 22px #001c1b28}
+.aula-student .student-hero-link:hover{background:#dbf9c6;color:#092e32}
+.aula-student .student-hero-card{position:relative;z-index:1;display:flex;flex-direction:column;justify-content:center;min-height:260px;padding:clamp(24px,3vw,34px);border:1px solid #d3ede3;border-radius:22px;background:#edf8f2;box-shadow:0 22px 35px #001b2840;transform:rotate(2deg)}
+.aula-student .student-hero-card>span{color:var(--aula-ink);font:800 .68rem Montserrat,Arial,sans-serif;letter-spacing:.13em}
+.aula-student .student-hero-card strong{display:block;margin:15px 0;color:#104e4a;font:800 clamp(2rem,3.2vw,3.6rem)/1.07 Montserrat,Arial,sans-serif;letter-spacing:-.06em}
+.aula-student .student-hero-card em,.aula-admin .aula-hero h1 em{font-style:normal;color:#568b46}
+.aula-student .student-hero-card p{margin:0;padding-top:12px;border-top:1px solid #b8d8cf;color:#46706b;font-size:.8rem;line-height:1.5}
+.aula-student .course-showcase{grid-template-columns:minmax(0,1.45fr) minmax(320px,.8fr);gap:22px}
+.aula-student .gallery-stage{min-height:330px;aspect-ratio:16/9;border-radius:22px;border-color:#c8dcdd;background:#deeee9;box-shadow:0 16px 34px #0c34491c}
+.aula-student .gallery-fallback{background:radial-gradient(circle at 88% 14%,#c5efa8 0 12%,transparent 13%),linear-gradient(130deg,#d5e8e9 0 42%,#eff8f3 42% 68%,#c4deda 68%);color:#123b44}
+.aula-student .gallery-fallback span{color:#185753}
+.aula-student .gallery-dots button[aria-current=true]{background:#0f5660;box-shadow:0 0 0 3px #0f566026}
+.aula-student .course-facts{padding:clamp(24px,3vw,36px);border-color:var(--aula-border);border-radius:22px;box-shadow:0 12px 28px #0c34490d}
+.aula-student .course-facts-badge{color:#155750;background:#e4f4e9;border-color:#bcdcc9}
+.aula-student .course-facts h2{color:var(--aula-ink)}
+.aula-student .course-facts-link{background:var(--aula-teal)}
+.aula-student .course-facts-link:hover{background:#0a3944}
+.aula-student .student-overview{margin:24px 0 32px;border-color:var(--aula-border);background:#fff}
+.aula-student .progress-track span{background:linear-gradient(90deg,#0c7772,#a4df87)}
+.aula-student .student-modules-heading{align-items:center;margin:34px 0 20px}
+.aula-student .student-modules-heading h2{color:var(--aula-ink)}
+.aula-student #modules>.student-module{position:relative;padding:clamp(22px,3vw,34px);border:1px solid var(--aula-border);border-radius:20px;box-shadow:0 12px 30px #0c34490d}
+.aula-student #modules>.student-module::before{content:"";position:absolute;inset:0 auto 0 0;width:6px;border-radius:20px 0 0 20px;background:linear-gradient(#0f5660,#98d880)}
+.aula-student .student-module-kicker{color:#386b55}
+.aula-student .student-module-state{color:#13594e;background:#e5f5ed}
+.aula-student .student-resources-heading{color:#0d464b}
+.aula-student .documents>li[data-material-type=pdf]{border-color:#a9d3c4;border-left-color:#0f6660;background:linear-gradient(110deg,#eaf8f0,#fff 52%)}
+.aula-student .documents>li[data-material-type=pdf] .document-summary strong{color:#0b3b43}
+.aula-student .document-actions button:first-child,.aula-student .module-complete[aria-pressed=true]{background:var(--aula-teal);border-color:var(--aula-teal);color:#fff}
+.aula-student .document-actions button,.aula-student .module-complete{border-color:#4f8583;color:#145a5a}
+.aula-student .material-type{color:#11584c;background:#e5f5e9}
+.aula-student .support-list>li,.aula-student .video-card{background:#f6faf8;border-color:var(--aula-border)}
+
+/* Admin: a compact workflow card and clear content-management hierarchy. */
+.aula-admin .aula-hero{position:relative;gap:clamp(24px,5vw,72px);min-height:280px;padding:clamp(30px,4vw,54px);border-radius:26px;background:radial-gradient(circle at 84% 0%,#15505b 0,transparent 35%),linear-gradient(115deg,#061d34,#0a3446 72%,#0e4c51);box-shadow:0 22px 42px #06243a1b}
+.aula-admin .aula-hero>div{position:relative;z-index:1}
+.aula-admin .aula-hero h1{max-width:740px;font-size:clamp(2.1rem,3.5vw,3.8rem);line-height:1.08;letter-spacing:-.055em}
+.aula-admin .aula-hero p:not(.eyebrow){max-width:610px;color:#c9dfe0;font-size:1rem;line-height:1.65}
+.aula-admin .aula-hero .hero-label{font-size:.75rem}
+.aula-admin .hero-illustration{display:grid;flex:0 0 255px;place-items:center;min-height:215px;padding:18px;border-radius:20px;background:#edf8f2;color:#0e514c;box-shadow:0 18px 30px #001b2840;transform:rotate(3deg)}
+.aula-admin .hero-illustration svg{width:142px}
+.aula-admin .hero-illustration span{color:#15564f;font:800 .71rem Montserrat,Arial,sans-serif;letter-spacing:.05em}
+.aula-admin .course-picker,.aula-admin .aula-guide,.aula-admin .public-gallery-admin,.aula-admin .editor-card,.aula-admin #modules article,.aula-admin #history{border-color:var(--aula-border);border-radius:18px;box-shadow:0 10px 25px #0c34490a}
+.aula-admin .course-picker{grid-template-columns:minmax(0,1fr) minmax(340px,1.15fr);padding:clamp(22px,3vw,34px);margin:24px 0}
+.aula-admin .course-picker h2{color:var(--aula-ink);font-size:clamp(1.3rem,2vw,1.75rem)}
+.aula-admin .course-controls{align-items:end}
+.aula-admin .aula-guide ol{gap:14px}
+.aula-admin .aula-guide li{padding:18px;border:1px solid var(--aula-border);border-radius:13px;background:#f6faf8}
+.aula-admin .aula-guide li>span{color:#145d53;background:#dbf2df}
+.aula-admin .course-overview{padding:22px 26px;border:1px solid var(--aula-border);border-radius:18px;background:#fff}
+.aula-admin .course-overview h2{color:var(--aula-ink)}
+.aula-admin .aula-counts dd{color:var(--aula-teal)}
+.aula-admin .public-gallery-admin{padding:clamp(20px,3vw,30px)}
+.aula-admin .aula-work-grid{grid-template-columns:minmax(280px,.8fr) minmax(0,1.4fr)}
+.aula-admin .editor-card{position:sticky;top:20px}
+.aula-admin #modules article{padding:clamp(20px,2.4vw,30px)}
+.aula-admin #modules article h2{color:var(--aula-ink);font-size:1.25rem}
+.aula-admin .module-toolbar h2{color:var(--aula-ink)}
+.aula-admin .documents li{background:#f8fbf9;border-color:var(--aula-border)}
+.aula-admin .module-visibility[data-visible=true]{background:#e9f7ed;border-color:#b7ddc3}
+.aula-admin .module-visibility-publish,.aula-admin .upload-publish{background:var(--aula-teal);border-color:var(--aula-teal)}
+.aula-admin .admin-videos{background:#f6faf8;border-color:var(--aula-border)}
+
+@media(max-width:1050px){.aula-student .student-course-heading{grid-template-columns:minmax(0,1fr) minmax(240px,.65fr)}.aula-student .course-showcase{grid-template-columns:minmax(0,1fr)}.aula-admin .course-picker{grid-template-columns:1fr}.aula-admin .aula-work-grid{grid-template-columns:minmax(250px,.8fr) minmax(0,1.2fr)}}
+@media(max-width:760px){.aula-student .student-course-heading{grid-template-columns:1fr;min-height:0;padding:28px;gap:24px}.aula-student .student-hero-card{min-height:0;transform:none}.aula-student .student-hero-card strong{font-size:2rem}.aula-admin .aula-hero{min-height:0}.aula-admin .hero-illustration{display:none}.aula-admin .aula-work-grid{grid-template-columns:1fr}.aula-admin .editor-card{position:static}.aula-admin .aula-guide ol{grid-template-columns:1fr}.aula-admin .course-overview{padding:20px}}
+@media(max-width:520px){.aula-student .student-aula-main,.aula-admin .aula-main{padding-inline:16px}.aula-student .student-course-heading{padding:24px;border-radius:20px}.aula-student .student-course-heading h1{font-size:2.1rem}.aula-student .student-hero-card{padding:20px}.aula-student .gallery-stage{min-height:240px}.aula-student .course-facts{padding:21px}.aula-student .student-modules-heading button{width:100%}.aula-student #modules>.student-module{padding:20px}.aula-admin .aula-hero{padding:26px 22px;border-radius:20px}.aula-admin .aula-hero h1{font-size:2.15rem}.aula-admin .course-picker{padding:21px}.aula-admin .course-controls{flex-direction:column;align-items:stretch}.aula-admin .course-controls button{width:100%}.aula-admin .aula-counts{flex-wrap:wrap}.aula-admin .module-toolbar{align-items:stretch;flex-direction:column}}
+@media(prefers-reduced-motion:reduce){.aula-student .progress-track span{transition:none}}
