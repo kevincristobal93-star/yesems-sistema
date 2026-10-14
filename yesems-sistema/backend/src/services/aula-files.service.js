@@ -44,10 +44,13 @@ async function guardar(buffer, extension = 'pdf') {
       const reason = result?.error?.message || response.headers.get('x-cld-error') || `Cloudinary HTTP ${response.status}`;
       throw Object.assign(new Error(String(reason)), { http_code: response.status });
     }
-    if (!result.secure_url || result.public_id !== id || result.resource_type !== 'raw' || result.type !== 'authenticated') {
+    const location = cloudLocation(result.secure_url);
+    if (!location || location[1] !== id || result.public_id !== id || result.resource_type !== 'raw' || result.type !== 'authenticated') {
       throw new Error('Cloudinary devolvio una respuesta de carga inesperada');
     }
-    return result.secure_url;
+    // Cloudinary puede devolver una URL de entrega con firma corta. Guardamos
+    // solo la ubicación canónica; la descarga se firma tras autorizar al usuario.
+    return canonicalLocation(location);
   } catch (error) {
     console.error('[aula-cloudinary-upload]', diagnosticoCloudinary(error));
     throw httpError(502, 'No se pudo guardar el documento en el almacenamiento privado.');
@@ -73,7 +76,7 @@ async function descargar(res, doc, { inline = false } = {}) {
     const match = cloudLocation(doc.archivo_url);
     if (!match) throw httpError(502, 'Ubicación privada no válida.');
     try {
-      const response = await fetch(obtenerUrlDescarga(doc.archivo_url), { redirect: 'error', signal: AbortSignal.timeout(30000) });
+      const response = await fetch(obtenerUrlDescarga(canonicalLocation(match)), { redirect: 'error', signal: AbortSignal.timeout(30000) });
       if (!response.ok) throw Error('Storage');
       const chunks = []; let size = 0;
       for await (const chunk of response.body) { size += chunk.length; if (size > MAX) throw Error('Size'); chunks.push(chunk); }
@@ -92,6 +95,9 @@ async function descargar(res, doc, { inline = false } = {}) {
 }
 function cloudLocation(url) {
   const cloud = String(process.env.CLOUDINARY_CLOUD_NAME || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-  return String(url).match(new RegExp(`^https://res\\.cloudinary\\.com/${cloud}/raw/authenticated/(?:v\\d+/)?(yesems/aula/[a-f0-9-]{36}\\.(${Object.keys(formats).join('|')}))$`));
+  return String(url).match(new RegExp(`^https://res\\.cloudinary\\.com/${cloud}/raw/authenticated/(?:s--[A-Za-z0-9_-]{8}--/)?(?:v\\d+/)?(yesems/aula/[a-f0-9-]{36}\\.(${Object.keys(formats).join('|')}))$`));
+}
+function canonicalLocation(match) {
+  return `https://res.cloudinary.com/${process.env.CLOUDINARY_CLOUD_NAME}/raw/authenticated/${match[1]}`;
 }
 module.exports = { validarDocumento, guardar, descartar, descargar };

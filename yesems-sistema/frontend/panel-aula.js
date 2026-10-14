@@ -254,7 +254,9 @@ const PanelAula = (() => {
         headers: { Authorization: `Bearer ${token}` }, cache: 'no-store', signal: AbortSignal.timeout(45000),
       });
       if (response.status === 401) { onUnauthorized?.(); return; }
-      if (!response.ok) throw Error('Este material ya no está disponible. Actualiza el panel.');
+      if (response.status === 404) throw Error('Este material ya no está disponible. Actualiza el panel.');
+      if (response.status === 403) throw Error('Tu acceso a este material cambió. Actualiza el panel y revisa tu inscripción.');
+      if (!response.ok) throw Error('No se pudo abrir el archivo en este momento. Intenta de nuevo más tarde.');
       const blob = await response.blob();
       if (!blob.size) throw Error('El archivo está vacío.');
       const url = URL.createObjectURL(blob); activeUrls.add(url);

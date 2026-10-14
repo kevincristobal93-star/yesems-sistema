@@ -1,6 +1,7 @@
 jest.mock('../src/services/storage.service', () => ({ cloudinaryEnabled: true, obtenerUrlDescarga: jest.fn() }));
 
 const { guardar, validarDocumento, descargar, descartar } = require('../src/services/aula-files.service');
+const storage = require('../src/services/storage.service');
 const originalFetch = global.fetch;
 
 describe('aula-files.service Cloudinary uploads', () => {
@@ -46,8 +47,22 @@ describe('aula-files.service Cloudinary uploads', () => {
 
     await expect(guardar(Buffer.from('test'), extension)).resolves.toMatch(new RegExp(`/yesems/aula/[a-f0-9-]{36}\\.${extension}$`));
   });
+  test('normaliza la URL firmada que Cloudinary devuelve al subir el PDF', async () => {
+    process.env.CLOUDINARY_API_SECRET = 'secret-test-only';
+    process.env.CLOUDINARY_API_KEY = 'key-test-only';
+    process.env.CLOUDINARY_CLOUD_NAME = 'test-cloud';
+    global.fetch = jest.fn().mockImplementation(async (_url, options) => {
+      const id = options.body.get('public_id');
+      return { ok: true, json: async () => ({
+        secure_url: `https://res.cloudinary.com/test-cloud/raw/authenticated/s--YMtkwD-0--/v1791838214/${id}`,
+        public_id: id, resource_type: 'raw', type: 'authenticated',
+      }) };
+    });
+    await expect(guardar(Buffer.from('test'), 'pdf')).resolves.toMatch(/^https:\/\/res\.cloudinary\.com\/test-cloud\/raw\/authenticated\/yesems\/aula\/[a-f0-9-]{36}\.pdf$/);
+  });
   test('descarga documentos con su tipo y extensión y valida ubicación privada', async () => {
     process.env.CLOUDINARY_CLOUD_NAME = 'test-cloud';
+    storage.obtenerUrlDescarga.mockReturnValue('https://api.cloudinary.com/test-only-download');
     const buffer = Buffer.from('Material del curso');
     global.fetch = jest.fn().mockResolvedValue(new Response(buffer));
     const res = { set: jest.fn(), attachment: jest.fn().mockReturnThis(), type: jest.fn().mockReturnThis(), send: jest.fn() };
@@ -56,8 +71,22 @@ describe('aula-files.service Cloudinary uploads', () => {
     expect(res.attachment).toHaveBeenCalledWith('material-12.txt');
     expect(res.type).toHaveBeenCalledWith('text/plain');
     expect(res.send).toHaveBeenCalledWith(buffer);
+    expect(storage.obtenerUrlDescarga).toHaveBeenCalledWith('https://res.cloudinary.com/test-cloud/raw/authenticated/yesems/aula/12345678-1234-1234-1234-123456789012.txt');
     await expect(descargar(res, { ...doc, archivo_url: doc.archivo_url.replace('.txt', '.exe') })).rejects.toMatchObject({ statusCode: 502 });
     await expect(descartar(doc.archivo_url.replace('test-cloud', 'other-cloud'))).rejects.toThrow();
+  });
+  test('descarga un PDF existente con segmento de firma sin exponerlo al navegador', async () => {
+    process.env.CLOUDINARY_CLOUD_NAME = 'test-cloud';
+    storage.obtenerUrlDescarga.mockReturnValue('https://api.cloudinary.com/test-only-download');
+    const buffer = Buffer.from('%PDF-1.4\n1 0 obj\n<<>>\nendobj\n%%EOF');
+    const url = 'https://res.cloudinary.com/test-cloud/raw/authenticated/s--YMtkwD-0--/v1791838214/yesems/aula/12345678-1234-1234-1234-123456789012.pdf';
+    global.fetch = jest.fn().mockResolvedValue(new Response(buffer));
+    const res = { set: jest.fn(), attachment: jest.fn().mockReturnThis(), type: jest.fn().mockReturnThis(), send: jest.fn() };
+    await descargar(res, { id_documento: 12, bytes: buffer.length, archivo_url: url });
+    expect(storage.obtenerUrlDescarga).toHaveBeenCalledWith('https://res.cloudinary.com/test-cloud/raw/authenticated/yesems/aula/12345678-1234-1234-1234-123456789012.pdf');
+    expect(global.fetch).toHaveBeenCalledWith('https://api.cloudinary.com/test-only-download', expect.objectContaining({ redirect: 'error' }));
+    expect(res.send).toHaveBeenCalledWith(buffer);
+    await expect(descargar(res, { id_documento: 12, bytes: buffer.length, archivo_url: url.replace('s--YMtkwD-0--', 's--bad--') })).rejects.toMatchObject({ statusCode: 502 });
   });
 });
 
