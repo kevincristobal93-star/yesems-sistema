@@ -3,6 +3,8 @@ const router = express.Router();
 const usuarioController = require('../controllers/usuario.controller');
 const verificarToken = require('../middlewares/auth.middleware');
 const verificarAdministrador = require('../middlewares/admin.middleware');
+const multer = require('multer');
+const subirFoto = multer({ storage: multer.memoryStorage(), limits: { fileSize: 2 * 1024 * 1024, files: 1, fields: 0, parts: 1 } }).single('foto');
 router.param('id', require('../utils/http-error').validateIdParam);
 
 // Públicas
@@ -21,6 +23,12 @@ router.post('/login', async (req,res,next) => {
 // Protegidas
 router.get('/mio', verificarToken, usuarioController.obtenerPerfilPropio);
 router.put('/mio', verificarToken, usuarioController.actualizarPerfilPropio);
+router.get('/mio/foto', verificarToken, usuarioController.obtenerFotoPropia);
+router.put('/mio/foto', verificarToken, (req, res, next) => subirFoto(req, res, (error) => {
+  if (error) return res.status(400).json({ ok: false, mensaje: error.code === 'LIMIT_FILE_SIZE' ? 'La foto no puede superar 2 MB.' : 'Selecciona una sola foto JPG, PNG o WebP.' });
+  next();
+}), usuarioController.guardarFotoPropia);
+router.delete('/mio/foto', verificarToken, usuarioController.eliminarFotoPropia);
 router.use(verificarAdministrador);
 router.get('/', usuarioController.listarUsuarios);
 router.get('/:id', usuarioController.obtenerUsuario);

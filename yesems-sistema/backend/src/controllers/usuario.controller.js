@@ -139,6 +139,49 @@ const actualizarPerfilPropio = async (req, res) => {
   }
 };
 
+function tipoDeImagen(buffer) {
+  if (!Buffer.isBuffer(buffer) || !buffer.length || buffer.length > 2 * 1024 * 1024) return null;
+  if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) return 'image/jpeg';
+  if (buffer.length >= 8 && buffer.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))) return 'image/png';
+  if (buffer.length >= 12 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP') return 'image/webp';
+  return null;
+}
+
+const guardarFotoPropia = async (req, res) => {
+  try {
+    const tipo = tipoDeImagen(req.file?.buffer);
+    if (!tipo || tipo !== req.file.mimetype) return res.status(400).json({ ok: false, mensaje: 'Selecciona una foto JPG, PNG o WebP válida de hasta 2 MB.' });
+    const guardada = await usuarioModel.guardarFotoPropia(req.admin.id_usuario, tipo, req.file.buffer);
+    if (!guardada) return res.status(404).json({ ok: false, mensaje: 'Cuenta no encontrada' });
+    res.json({ ok: true, actualizado_at: guardada.actualizado_at });
+  } catch (error) {
+    console.error('Error al guardar foto de perfil:', error.code || error.name);
+    res.status(500).json({ ok: false, mensaje: 'No se pudo guardar la foto. Intenta nuevamente.' });
+  }
+};
+
+const obtenerFotoPropia = async (req, res) => {
+  try {
+    const foto = await usuarioModel.obtenerFotoPropia(req.admin.id_usuario);
+    if (!foto) return res.status(204).set('Cache-Control', 'private, no-store').end();
+    res.set({ 'Content-Type': foto.mime_type, 'Cache-Control': 'private, no-store', 'Content-Disposition': 'inline', 'X-Content-Type-Options': 'nosniff' });
+    res.send(foto.contenido);
+  } catch (error) {
+    console.error('Error al consultar foto de perfil:', error.code || error.name);
+    res.status(500).json({ ok: false, mensaje: 'No se pudo consultar la foto.' });
+  }
+};
+
+const eliminarFotoPropia = async (req, res) => {
+  try {
+    await usuarioModel.eliminarFotoPropia(req.admin.id_usuario);
+    res.json({ ok: true });
+  } catch (error) {
+    console.error('Error al eliminar foto de perfil:', error.code || error.name);
+    res.status(500).json({ ok: false, mensaje: 'No se pudo quitar la foto.' });
+  }
+};
+
 const actualizarUsuario = async (req, res) => {
   try {
     const { id } = req.params;
@@ -181,6 +224,9 @@ module.exports = {
   login,
   obtenerPerfilPropio,
   actualizarPerfilPropio,
+  guardarFotoPropia,
+  obtenerFotoPropia,
+  eliminarFotoPropia,
   ascenderAAlumno,
   actualizarUsuario,
   eliminarUsuario,

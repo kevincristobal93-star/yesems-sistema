@@ -117,3 +117,19 @@ sus apoyos aparecen debajo. Los organizadores gráficos en imagen tienen vista
 previa segura; PDF e imágenes pueden abrirse o descargarse. En móvil, las
 tarjetas se apilan. El progreso sigue siendo por módulo y no se infiere de la
 apertura de un archivo o de un video.
+
+## Aula integrada en Mi panel
+
+El panel del alumno muestra ahora «Mi aula» inmediatamente después del saludo.
+Ya no aparece «Entrar al aula» dentro de cada tarjeta de inscripción: cursos,
+módulos, PDF principales, apoyos y videos publicados se ven abiertos en esta
+sección. Los PDF e imágenes se consultan en una vista previa protegida dentro
+del panel, o se descargan usando el endpoint autenticado existente. El alumno
+puede marcar un módulo como completado allí mismo; este registro no sustituye
+la asistencia ni el avance académico requerido para una constancia.
+
+La consulta de `/api/aula/mia/:inscripcion` sigue determinando el acceso. Si
+el pago aún no se aprobó, el panel explica que el contenido está pendiente de
+habilitar; si no hay módulos publicados, muestra un estado de preparación.
+`aula.html` permanece disponible para enlaces antiguos, pero el acceso
+principal del alumno ya no exige salir del panel.

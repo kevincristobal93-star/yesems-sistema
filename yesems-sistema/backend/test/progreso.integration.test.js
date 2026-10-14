@@ -208,6 +208,27 @@ integration('Proceso real de inscripción, avance y constancia (PostgreSQL aisla
     await request('PUT','/usuarios/mio',{token:otroAlumno.token,body:{...basic,curp:'FICH000101HDF00002'},status:409});
   });
 
+  test('la foto de perfil es privada, persistente y solo la administra su dueño', async () => {
+    const person = await register('foto');
+    const other = await register('otra-foto');
+    const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/lS8AAAAASUVORK5CYII=', 'base64');
+    const form = new FormData();
+    form.append('foto', new Blob([png], { type: 'image/png' }), 'perfil.png');
+    await request('GET', '/usuarios/mio/foto', { token: person.token, status: 204 });
+    await request('PUT', '/usuarios/mio/foto', { body: form, status: 401 });
+    await request('PUT', '/usuarios/mio/foto', { token: person.token, body: form, status: 200 });
+    const saved = await request('GET', '/usuarios/mio/foto', { token: person.token, status: 200 });
+    expect(saved.headers.get('content-type')).toContain('image/png');
+    expect(saved.bytes.equals(png)).toBe(true);
+    await request('GET', '/usuarios/mio/foto', { token: other.token, status: 204 });
+    const bad = new FormData();
+    bad.append('foto', new Blob(['<script>alert(1)</script>'], { type: 'image/png' }), 'trampa.png');
+    await request('PUT', '/usuarios/mio/foto', { token: person.token, body: bad, status: 400 });
+    expect((await request('GET', '/usuarios/mio/foto', { token: person.token, status: 200 })).bytes.equals(png)).toBe(true);
+    await request('DELETE', '/usuarios/mio/foto', { token: person.token, status: 200 });
+    await request('GET', '/usuarios/mio/foto', { token: person.token, status: 204 });
+  });
+
   test('solo efectivo y transferencia; subir comprobante no confirma y un abono tampoco', async () => {
     const course=await createCourse({price:1000});
     const id=await enroll(course);

@@ -1,0 +1,9 @@
+.profile-photo-controls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:18px}
+.profile-photo-controls button{border:1px solid #176b87;border-radius:8px;padding:9px 13px;color:#176b87;background:#fff;font:700 .78rem Montserrat,sans-serif;cursor:pointer}
+.profile-photo-controls button:first-of-type{color:#fff;background:#176b87}
+.profile-photo-controls button:hover{box-shadow:0 5px 14px rgba(23,107,135,.16)}
+.profile-photo-controls button:disabled{opacity:.55;cursor:wait}
+.profile-photo-controls small{color:#60748a;font-size:.72rem}
+.profile-photo-status{flex-basis:100%;margin:0;color:#176b87;font-size:.78rem}
+.profile-avatar,#header-avatar,#drawer-avatar{overflow:hidden}
+.profile-avatar img,#header-avatar img,#drawer-avatar img{display:block;width:100%;height:100%;object-fit:cover;border-radius:50%}

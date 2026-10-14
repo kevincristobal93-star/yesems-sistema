@@ -58,7 +58,7 @@ function setupPanelMotion() {
       if (entry.isIntersecting) { entry.target.classList.add('is-visible'); observer.unobserve(entry.target); }
     });
   }, { threshold: 0.08 });
-  document.querySelectorAll('.quick-summary, .dashboard-grid, .featured-section, .activity-section, #mis-inscripciones').forEach((section) => observer.observe(section));
+  document.querySelectorAll('.quick-summary, .dashboard-grid, .featured-section, .activity-section, #mis-inscripciones, #mi-aula').forEach((section) => observer.observe(section));
 }
 
 function paymentComplete(item) {
@@ -120,6 +120,7 @@ function renderActivity(items) {
 function closeExpiredSession() {
   if (sessionExpired) return;
   sessionExpired = true;
+  PanelAula.clear();
   localStorage.removeItem('yesems_token');
   localStorage.removeItem('yesems_usuario');
   list.innerHTML = '';
@@ -179,7 +180,6 @@ function constanciaAction(item) {
 function renderEnrollment(item) {
   return `<article class="enrollment-card" id="inscripcion-${escapeHtml(item.id_inscripcion)}"><div><h3>${escapeHtml(item.curso_nombre)}</h3><p>${escapeHtml(item.curso_descripcion || 'Curso YES EMS')}</p><div class="enrollment-info"><span>Inscripción: ${escapeHtml(formatDate(item.fecha_inscripcion))}</span><span>Disponibilidad: ${escapeHtml(availabilityLabel(item))}</span></div></div>
     <div class="enrollment-side"><span class="badge">${escapeHtml(InscripcionEstado.estado(item))}</span><strong class="constancia-status">${paymentLabel(item)}</strong><p class="payment-summary">Confirmado: ${amount(item.total_pagado)} de ${amount(item.monto_total)}</p><a class="payment-button" href="./pago.html?inscripcion=${encodeURIComponent(item.id_inscripcion)}">Ver pago</a><div class="constancia-actions">${constanciaAction(item)}</div><p class="panel-feedback" role="status" aria-live="polite"></p></div>
-    ${item.estado !== 'cancelada' && paymentComplete(item) ? `<a class="payment-button" href="./aula.html?inscripcion=${encodeURIComponent(item.id_inscripcion)}">Entrar al aula</a>` : '<p>El aula se habilita con la inscripción vigente y el pago completo aprobado.</p>'}
     ${PanelProgreso.render(item.progreso, item.estado)}</article>`;
 }
 
@@ -239,6 +239,7 @@ async function loadPanel() {
     panelMessage.hidden = true;
     renderActivity(items);
     if (!items.length) {
+      PanelAula.render([], apiRequest, token, closeExpiredSession);
       list.innerHTML = '<div class="empty">Aún no tienes inscripciones. <a href="./catalogo-alumno.html">Explora los cursos disponibles</a> para comenzar.</div>';
       ListFilters.attach(list, [], {title:'mis inscripciones'});
       document.querySelector('#featured-status').textContent = 'Sin cursos inscritos';
@@ -248,6 +249,7 @@ async function loadPanel() {
     }
     renderFeaturedCourse(items.find((item) => item.estado !== 'cancelada') || items[0]);
     list.innerHTML = items.map(renderEnrollment).join('');
+    PanelAula.render(items, apiRequest, token, closeExpiredSession);
     ListFilters.attach(list, items, {title:'mis inscripciones', map:item=>({search:[item.curso_nombre,item.folio_constancia,item.id_inscripcion].filter(Boolean).join(' '),course:item.curso_nombre||'',state:InscripcionEstado.estado(item),date:String(item.fecha_inscripcion||'').slice(0,10)})});
     list.querySelectorAll('.enrollment-card').forEach((card) => {
       if (openDetails.has(card.id) && card.querySelector('details')) card.querySelector('details').open = true;
@@ -256,6 +258,7 @@ async function loadPanel() {
     if (sessionExpired) return;
     panelMessage.hidden = false;
     panelMessage.textContent = error.message;
+    PanelAula.showError('No se pudo consultar el aula. Pulsa Actualizar para intentar de nuevo.');
     list.innerHTML = '';
     ListFilters.attach(list, [], {title:'mis inscripciones'});
     document.querySelector('#activity-list').textContent = 'No se pudieron consultar los movimientos. Usa “Actualizar” para volver a intentar.';
@@ -351,6 +354,7 @@ document.addEventListener('keydown', (event) => {
 });
 document.querySelector('#account-button').addEventListener('click', () => { window.location.href = './configuracion.html'; });
 document.querySelector('#logout-button').addEventListener('click', () => {
+  PanelAula.clear();
   localStorage.removeItem('yesems_token');
   localStorage.removeItem('yesems_usuario');
   window.location.href = './cursos.html';

@@ -95,6 +95,32 @@ const actualizarPerfilPropio = async (id, datos) => {
   return resultado.rows[0];
 };
 
+const guardarFotoPropia = async (id, mimeType, contenido) => {
+  const resultado = await pool.query(
+    `INSERT INTO public.usuario_fotos (id_usuario, mime_type, contenido)
+     SELECT id_usuario, $2, $3 FROM public.usuarios WHERE id_usuario = $1 AND activo = true
+     ON CONFLICT (id_usuario) DO UPDATE SET mime_type = EXCLUDED.mime_type,
+       contenido = EXCLUDED.contenido, actualizado_at = now()
+     RETURNING actualizado_at`,
+    [id, mimeType, contenido]
+  );
+  return resultado.rows[0];
+};
+
+const obtenerFotoPropia = async (id) => {
+  const resultado = await pool.query(
+    `SELECT f.mime_type, f.contenido, f.actualizado_at FROM public.usuario_fotos f
+     JOIN public.usuarios u ON u.id_usuario = f.id_usuario
+     WHERE f.id_usuario = $1 AND u.activo = true`, [id]
+  );
+  return resultado.rows[0];
+};
+
+const eliminarFotoPropia = async (id) => {
+  const resultado = await pool.query('DELETE FROM public.usuario_fotos WHERE id_usuario = $1 RETURNING id_usuario', [id]);
+  return Boolean(resultado.rowCount);
+};
+
 module.exports = {
   obtenerUsuarios,
   obtenerUsuarioPorId,
@@ -104,4 +130,7 @@ module.exports = {
   actualizarUsuario,
   desactivarUsuario,
   actualizarPerfilPropio,
+  guardarFotoPropia,
+  obtenerFotoPropia,
+  eliminarFotoPropia,
 };

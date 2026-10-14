@@ -160,6 +160,7 @@ integration('Paneles reales en Edge: plan, avance y constancia (base aislada)', 
     await browser.viewport(1440, 1000);
     await authPage('panel.html', fixture.student);
     await panelReady();
+    expect(await browser.evaluate("Boolean(document.querySelector('.profile-photo-controls button'))")).toBe(true);
     const card = `#inscripcion-${fixture.enrollment.id_inscripcion}`;
     expect(await browser.evaluate(`document.querySelector('${card} [role="progressbar"]').getAttribute('aria-valuenow')`)).toBe('50');
     expect(await browser.evaluate(`document.querySelector('${card}').textContent`)).toContain('1 de 2 cumplidas');
