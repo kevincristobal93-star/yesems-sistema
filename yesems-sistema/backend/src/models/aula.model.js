@@ -86,6 +86,34 @@ async function archivarModulo(idCurso, idModulo, revision, archivado, admin) {
     if (!result.rowCount) throw httpError(404, 'Modulo no encontrado en este curso.');
   });
 }
+async function eliminarModulo(idCurso, idModulo, revision, tituloConfirmado) {
+  const archivos = [];
+  const result = await modificar(idCurso, revision, async client => {
+    const module = await client.query('SELECT titulo, archivado_at FROM aula_modulos WHERE id_curso=$1 AND id_modulo=$2 FOR UPDATE', [idCurso, idModulo]);
+    if (!module.rowCount) throw httpError(404, 'Módulo no encontrado en este curso.');
+    if (!module.rows[0].archivado_at) throw httpError(409, 'Archiva el módulo antes de eliminarlo definitivamente.');
+    if (module.rows[0].titulo !== tituloConfirmado) throw httpError(400, 'El título de confirmación no coincide.');
+    const documents = await client.query('SELECT id_documento, archivo_url FROM aula_documentos WHERE id_modulo=$1', [idModulo]);
+    const documentIds = documents.rows.map(row => row.id_documento);
+    if (documentIds.length) {
+      const external = await client.query('SELECT id_documento FROM aula_documentos WHERE id_modulo<>$1 AND reemplaza_id=ANY($2::integer[]) LIMIT 1', [idModulo, documentIds]);
+      if (external.rowCount) throw httpError(409, 'Un documento de otro módulo conserva una referencia a este material.');
+      archivos.push(...documents.rows.map(row => row.archivo_url));
+    }
+    await client.query('DELETE FROM aula_modulo_progreso WHERE id_modulo=$1', [idModulo]);
+    await client.query('DELETE FROM aula_videos WHERE id_modulo=$1', [idModulo]);
+    await client.query('UPDATE aula_documentos SET reemplaza_id=NULL WHERE id_modulo=$1', [idModulo]);
+    await client.query('DELETE FROM aula_documentos WHERE id_modulo=$1', [idModulo]);
+    await client.query('DELETE FROM aula_modulos WHERE id_curso=$1 AND id_modulo=$2', [idCurso, idModulo]);
+    await client.query(`UPDATE aula_modulos m SET orden=positions.orden
+      FROM (SELECT id_modulo, row_number() OVER (ORDER BY orden,id_modulo)::integer AS orden FROM aula_modulos WHERE id_curso=$1) positions
+      WHERE m.id_modulo=positions.id_modulo`, [idCurso]);
+  });
+  for (const url of new Set(archivos)) {
+    try { await files.descartar(url); } catch { console.error('No se pudo retirar un archivo del módulo eliminado del almacenamiento privado.'); }
+  }
+  return result;
+}
 async function ordenarModulos(idCurso, revision, ids, admin) {
   return modificar(idCurso, revision, async client => {
     const current = (await client.query('SELECT id_modulo FROM aula_modulos WHERE id_curso=$1', [idCurso])).rows;
@@ -273,4 +301,4 @@ async function documentoAlumno(inscripcion, usuario, documento) {
   if (!aula.modulos.some(m => m.documentos.some(d => d.id_documento === documento))) throw httpError(404, 'Documento no disponible.');
   return documentoAdmin(aula.curso.id_curso, documento);
 }
-module.exports = { listarCursos, obtenerCurso, crearModulo, editarModulo, publicarModulo, archivarModulo, ordenarModulos, obtenerAulaPropia, actualizarProgreso, agregarDocumento, reemplazarDocumento, organizarDocumento, ordenarDocumentos, agregarVideo, editarVideo, retirarVideo, historialCurso, retirarDocumento, documentoAdmin, documentoAlumno };
+module.exports = { listarCursos, obtenerCurso, crearModulo, editarModulo, publicarModulo, archivarModulo, eliminarModulo, ordenarModulos, obtenerAulaPropia, actualizarProgreso, agregarDocumento, reemplazarDocumento, organizarDocumento, ordenarDocumentos, agregarVideo, editarVideo, retirarVideo, historialCurso, retirarDocumento, documentoAdmin, documentoAlumno };

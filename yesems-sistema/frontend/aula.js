@@ -447,6 +447,7 @@
         const actions = document.createElement('div'); actions.className = 'actions'; article.append(actions);
         function button(label, action, unavailable = false) {
           const b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.setAttribute('aria-label', `${label}: ${mod.titulo}`); b.dataset.unavailable = String(unavailable || !state.curso.activo); b.disabled = unavailable || !state.curso.activo; b.onclick = action; actions.append(b);
+          return b;
         }
         button('Editar', () => { editing = mod.id_modulo; $('title').value = mod.titulo; $('description').value = mod.descripcion; $('editor-title').textContent = 'Editar módulo'; if ($('editor-help')) $('editor-help').textContent = 'Actualiza el título o la descripción de este tema.'; $('title').focus(); });
         if (!mod.archivado_at) button(mod.publicado ? 'Ocultar' : 'Publicar', () => mutate(`/modulos/${mod.id_modulo}/publicacion`, 'PATCH', { publicado: !mod.publicado }), !mod.publicado && !(mod.documentos || []).length);
@@ -455,6 +456,17 @@
           if (!mod.archivado_at && !window.confirm(`Se ocultara "${mod.titulo}" del aula. Los documentos y el avance se conservaran. ¿Archivar?`)) return;
           mutate(`/modulos/${mod.id_modulo}/archivo`, 'PATCH', { archivado: !mod.archivado_at });
         });
+        if (mod.archivado_at) {
+          const remove = button('Eliminar definitivamente', () => {
+            const confirmedTitle = window.prompt(`Se borrarán el módulo "${mod.titulo}", sus documentos, videos y registros de avance. Esta acción no se puede deshacer. Escribe el título exacto para continuar:`);
+            if (confirmedTitle !== mod.titulo) {
+              if (confirmedTitle !== null) message('El título no coincide. No se eliminó el módulo.', true);
+              return;
+            }
+            mutate(`/modulos/${mod.id_modulo}`, 'DELETE', { titulo_confirmado: confirmedTitle });
+          });
+          remove.classList.add('module-delete');
+        }
         for (const [label, offset] of [['Subir', -1], ['Bajar', 1]]) button(label, () => {
           const ids = state.modulos.map(m => m.id_modulo); [ids[index], ids[index + offset]] = [ids[index + offset], ids[index]];
           mutate('/orden', 'PUT', { modulos: ids });

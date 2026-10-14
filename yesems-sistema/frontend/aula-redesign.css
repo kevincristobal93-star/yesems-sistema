@@ -73,6 +73,8 @@
 .aula-admin .documents li{background:#f8fbf9;border-color:var(--aula-border)}
 .aula-admin .module-visibility[data-visible=true]{background:#e9f7ed;border-color:#b7ddc3}
 .aula-admin .module-visibility-publish,.aula-admin .upload-publish{background:var(--aula-teal);border-color:var(--aula-teal)}
+.aula-admin .actions .module-delete{margin-left:auto;border-color:#efc4c4;color:#a33232;background:#fff7f7}
+.aula-admin .actions .module-delete:hover{border-color:#aa3838;color:#8a2020;background:#ffeded}
 .aula-admin .admin-videos{background:#f6faf8;border-color:var(--aula-border)}
 
 @media(max-width:1050px){.aula-student .student-course-heading{grid-template-columns:minmax(0,1fr) minmax(240px,.65fr)}.aula-student .course-showcase{grid-template-columns:minmax(0,1fr)}.aula-admin .course-picker{grid-template-columns:1fr}.aula-admin .aula-work-grid{grid-template-columns:minmax(250px,.8fr) minmax(0,1.2fr)}}

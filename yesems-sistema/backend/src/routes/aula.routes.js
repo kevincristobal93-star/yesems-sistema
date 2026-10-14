@@ -98,6 +98,11 @@ router.patch('/admin/cursos/:curso/modulos/:modulo/archivo', wrap(async (req, re
   const data = await model.archivarModulo(positiveId(req.params.curso), positiveId(req.params.modulo), validate.revision(req.body.revision), req.body.archivado, req.admin.id_administrador);
   res.json({ ok: true, ...data });
 }));
+router.delete('/admin/cursos/:curso/modulos/:modulo', wrap(async (req, res) => {
+  if (typeof req.body?.titulo_confirmado !== 'string' || !req.body.titulo_confirmado) throw httpError(400, 'Escribe el título del módulo para confirmar.');
+  const data = await model.eliminarModulo(positiveId(req.params.curso), positiveId(req.params.modulo), validate.revision(req.body.revision), req.body.titulo_confirmado);
+  res.json({ ok: true, ...data });
+}));
 router.put('/admin/cursos/:curso/orden', wrap(async (req, res) => {
   const data = await model.ordenarModulos(positiveId(req.params.curso), validate.revision(req.body?.revision), validate.orden(req.body?.modulos), req.admin.id_administrador);
   res.json({ ok: true, ...data });

@@ -338,4 +338,29 @@ integration('Aula virtual: permisos, edición y publicación en PostgreSQL aisla
     expect(state.modulos.find(m => m.id_modulo === mod.id_modulo).documentos.map(d => d.id_documento)).toEqual(ids);
     expect((await fetch(`${origin}/api/aula/mia/${enrollment}/documentos/${support.id_documento}`, { headers: { Authorization: `Bearer ${other}` } })).status).toBe(404);
   }, 90000);
+  test('elimina solo un módulo archivado con título confirmado y retira sus datos asociados', async () => {
+    state = await api(`/admin/cursos/${course}`);
+    state = await api(`/admin/cursos/${course}/modulos`, 'POST', { revision: state.curso.aula_revision, titulo: 'Módulo desechable' }, admin, 201);
+    const moduleId = state.modulos.find(mod => mod.titulo === 'Módulo desechable').id_modulo;
+    const pdf = Buffer.from('%PDF-1.4\n1 0 obj\n<<>>\nendobj\n%%EOF\n');
+    state = await upload(`/admin/cursos/${course}/modulos/${moduleId}/documentos`, { revision: state.curso.aula_revision, titulo: 'Archivo de prueba' }, { bytes: pdf });
+    const originalId = state.modulos.find(mod => mod.id_modulo === moduleId).documentos[0].id_documento;
+    state = await upload(`/admin/cursos/${course}/documentos/${originalId}`, { revision: state.curso.aula_revision, titulo: 'Archivo actualizado' }, { bytes: pdf }, admin, 200, 'PUT');
+    state = await api(`/admin/cursos/${course}/modulos/${moduleId}/videos`, 'POST', { revision: state.curso.aula_revision, titulo: 'Video de prueba', url: 'https://youtu.be/abc123' }, admin, 201);
+    await pool.query('INSERT INTO aula_modulo_progreso(id_inscripcion,id_modulo,completado_at) VALUES ($1,$2,now())', [enrollment, moduleId]);
+    const endpoint = `/admin/cursos/${course}/modulos/${moduleId}`;
+    await api(endpoint, 'DELETE', { revision: state.curso.aula_revision, titulo_confirmado: 'Módulo desechable' }, alumno, 403);
+    await api(endpoint, 'DELETE', { revision: state.curso.aula_revision, titulo_confirmado: 'Módulo desechable' }, admin, 409);
+    state = await api(`${endpoint}/archivo`, 'PATCH', { revision: state.curso.aula_revision, archivado: true });
+    await api(endpoint, 'DELETE', { revision: state.curso.aula_revision, titulo_confirmado: 'Otro título' }, admin, 400);
+    const currentRevision = state.curso.aula_revision;
+    await api(endpoint, 'DELETE', { revision: currentRevision - 1, titulo_confirmado: 'Módulo desechable' }, admin, 409);
+    state = await api(endpoint, 'DELETE', { revision: currentRevision, titulo_confirmado: 'Módulo desechable' });
+    expect(state.modulos.some(mod => mod.id_modulo === moduleId)).toBe(false);
+    for (const table of ['aula_modulos', 'aula_documentos', 'aula_videos', 'aula_modulo_progreso']) {
+      const result = await pool.query(`SELECT count(*)::int AS total FROM ${table} WHERE id_modulo=$1`, [moduleId]);
+      expect(result.rows[0].total).toBe(0);
+    }
+    expect(state.modulos.map(mod => mod.orden)).toEqual(state.modulos.map((_, index) => index + 1));
+  });
 });
