@@ -90,7 +90,8 @@ function session(user) {
       setup_token: jwt.sign({ id_usuario: user.id_usuario, token_version: user.token_version || 0, purpose: 'password_setup' },
         process.env.JWT_SECRET, { expiresIn: '10m', audience: 'yesems-password-setup', algorithm: 'HS256' }),
       email: user.email,
-      needs_profile: !user.google_sub && (!user.nombre || !user.apellido),
+      needs_profile: !user.nombre || !user.apellido || !user.telefono,
+      profile: { nombre: user.nombre || '', apellido: user.apellido || '', telefono: user.telefono || '' },
     };
   }
   return { ok: true, token: jwt.sign({ id_usuario: user.id_usuario, email: user.email, rol: user.rol, token_version: user.token_version || 0 }, process.env.JWT_SECRET, { expiresIn: '8h' }),

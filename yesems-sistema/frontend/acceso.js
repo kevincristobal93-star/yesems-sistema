@@ -1,7 +1,7 @@
 /* Acceso compartido: no simula verificaciones ni incluye claves privadas. */
 (() => {
   const api = 'https://yesems-sistema-1.onrender.com/api';
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = './acceso.css'; document.head.append(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = './acceso.css?v=2'; document.head.append(css);
   const dialog = document.createElement('dialog');
   dialog.id = 'verified-access'; dialog.setAttribute('aria-labelledby', 'verified-title');
   dialog.innerHTML = `<button type="button" class="access-close" aria-label="Cerrar">×</button>
@@ -9,6 +9,26 @@
     <p class="access-eyebrow">BIENVENIDO A YES EMS</p><h2 id="verified-title">Iniciar sesión</h2>
     <p class="access-intro" id="access-intro">Tus cursos y constancias, en un solo lugar.</p>
     <p id="access-course"></p>
+    <ol id="access-steps" class="access-steps" hidden aria-label="Pasos para crear tu cuenta"><li>Verifica tu correo</li><li>Completa tu perfil</li><li>Crea tu contraseña</li></ol>
+    <form id="access-login-form" hidden>
+      <label>Correo electrónico<input id="access-login-email" type="email" autocomplete="username" required maxlength="150"></label>
+      <label>Contraseña de YES EMS<input id="access-login-password" type="password" autocomplete="current-password" required maxlength="72"></label>
+      <button type="submit">Entrar al panel</button>
+      <button type="button" id="access-recover">Olvidé mi contraseña</button>
+      <button type="button" id="access-other">Usar Google o código por correo</button>
+    </form>
+    <section id="access-recovery" hidden>
+      <form id="access-recovery-send"><label>Correo registrado<input id="access-recovery-email" type="email" autocomplete="email" required maxlength="150"></label><button type="submit">Solicitar código de recuperación</button></form>
+      <form id="access-recovery-reset" hidden>
+        <label>Código recibido<input id="access-recovery-code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required></label>
+        <label>Nueva contraseña de YES EMS<input id="access-recovery-password" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label>
+        <label>Confirmar contraseña<input id="access-recovery-confirm" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label>
+        <p class="access-note">Usa al menos 12 caracteres. Al cambiarla se cerrarán las sesiones anteriores.</p>
+        <button type="submit">Guardar nueva contraseña</button>
+      </form>
+      <p class="access-note">La contraseña de Google se recupera directamente con Google.</p><a href="https://accounts.google.com/signin/recovery" target="_blank" rel="noopener noreferrer">Recuperar mi cuenta de Google</a>
+      <button type="button" id="access-recovery-back">Volver a iniciar sesión</button>
+    </section>
     <div id="access-identify">
     <div class="access-provider"><div id="access-google"></div><p id="access-google-note" class="access-note"></p></div>
     <div class="access-divider">o con tu correo electrónico</div>
@@ -24,22 +44,48 @@
     <button type="submit">Verificar y continuar</button><p class="access-note">Vence en 10 minutos. Para reenviar, espera al menos 60 segundos.</p></form>
     </div>
     <form id="access-setup-form" hidden>
-      <p class="access-note">Correo verificado · Paso 2: crea tu contraseña</p>
+      <p class="access-note" id="access-setup-note">Tu correo ya está verificado.</p>
       <label>Correo verificado<input id="access-verified-email" type="email" autocomplete="username" readonly></label>
       <label>Contraseña de YES EMS<input id="access-new-password" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label>
       <label>Confirmar contraseña<input id="access-confirm-password" type="password" autocomplete="new-password" minlength="12" maxlength="72" required></label>
       <p class="access-note">Usa al menos 12 caracteres (máximo 72 bytes). Crea una contraseña distinta de la de Google: YES EMS nunca te pide tu contraseña de Gmail.</p>
       <button type="submit">Crear contraseña y entrar</button>
+      <button type="button" id="access-profile-back" hidden>Volver a mis datos</button>
       <button type="button" id="access-verify-again">Volver a verificar mi cuenta</button>
     </form>
     <p id="access-message" role="status" aria-live="polite"></p>
-    <div id="access-login-help"><a id="access-password" href="./index.html">Entrar con mi contraseña</a>
-    <a href="./password.html">¿Olvidaste tu contraseña?</a></div>
+    <div id="access-login-help"><button type="button" id="access-password">Entrar con correo y contraseña</button>
+    <button type="button" id="access-recovery-link">¿Olvidaste tu contraseña?</button></div>
     <div class="access-switch"><p id="access-register-prompt">¿Es tu primera vez? <button type="button" id="access-register-mode">Crear una cuenta</button></p><p id="access-login-prompt" hidden>¿Ya tienes cuenta? <button type="button" id="access-login-mode">Iniciar sesión</button></p></div>
     <a class="access-admin" href="./admin-login.html">Acceso administrativo</a>`;
   document.body.append(dialog);
   const get = id => dialog.querySelector('#' + id);
   get('access-setup-form').insertBefore(get('access-registration'), get('access-new-password').parentElement);
+  const profileNext = document.createElement('button');
+  profileNext.type = 'button'; profileNext.id = 'access-profile-next'; profileNext.textContent = 'Continuar: crear contraseña';
+  get('access-registration').append(profileNext);
+  const passwordFields = [get('access-new-password').parentElement, get('access-confirm-password').parentElement, get('access-setup-form').querySelector('button[type=submit]')];
+  function step(number) {
+    get('access-steps').hidden = false;
+    [...get('access-steps').children].forEach((item,index)=>{
+      if(index+1===number)item.setAttribute('aria-current','step');else item.removeAttribute('aria-current');
+    });
+  }
+  function profileStep(show) {
+    get('access-registration').hidden = !show;
+    passwordFields.forEach(el=>{el.hidden=show;});
+    get('access-profile-back').hidden=show || !get('access-name').required;
+    step(show ? 2 : 3);
+    get('verified-title').textContent=show?'Completa tu perfil':'Crea tu contraseña de YES EMS';
+    get('access-setup-note').textContent=show?'Completa los datos que faltan. Conservaremos los que ya están registrados.':'Último paso: crea una contraseña propia de YES EMS.';
+  }
+  get('access-profile-back').onclick=()=>{if(!busy)profileStep(true);};
+  profileNext.onclick=()=>{
+    if(busy)return;
+    const inputs=[...get('access-registration').querySelectorAll('input')];
+    if(inputs.some(input=>!input.reportValidity()))return;
+    profileStep(false);get('access-new-password').focus();
+  };
   let course; let sentEmail; let busy = false; let version = 0; let sdk; let mailEnabled = false;
   let setupToken = null; let setupFromGoogle = false;
   function clearSetup() {
@@ -49,10 +95,13 @@
     dialog.querySelector('.access-switch').hidden = false;
     get('access-registration').querySelectorAll('input').forEach(input => { input.required = false; });
   }
-  function data() { return get('access-registration').hidden ? {} : { nombre:get('access-name').value.trim(),apellido:get('access-lastname').value.trim(),telefono:get('access-phone').value.trim() }; }
+  function data() { return { nombre:get('access-name').value.trim(),apellido:get('access-lastname').value.trim(),telefono:get('access-phone').value.trim() }; }
   function mode(register) {
     if (busy) return;
     clearSetup();
+    get('access-login-form').hidden=true;get('access-recovery').hidden=true;
+    get('access-message').textContent='';get('access-steps').hidden=!register;
+    if(register)step(1);
     get('access-registration').hidden=true;
     get('access-register-prompt').hidden=register;
     get('access-login-prompt').hidden=!register;
@@ -61,10 +110,52 @@
     get('access-intro').textContent=register?'Primero verifica tu correo. Después crearás tu contraseña de YES EMS.':'Tus cursos y constancias, en un solo lugar.';
     dialog.dataset.mode=register?'register':'login';
     sentEmail=null;get('access-code-form').hidden=true;get('access-code').value='';
+    get('access-send').textContent='Continuar con correo';
     dialog.scrollTop=0;
   }
   get('access-login-mode').onclick=()=>mode(false);
   get('access-register-mode').onclick=()=>mode(true);
+  function passwordMode() {
+    if(busy)return;
+    mode(false);get('access-identify').hidden=true;get('access-login-help').hidden=true;
+    get('access-login-form').hidden=false;get('access-login-email').focus();
+  }
+  function recoveryMode() {
+    if(busy)return;
+    mode(false);get('access-identify').hidden=true;get('access-login-help').hidden=true;
+    get('access-recovery').hidden=false;get('access-recovery-reset').hidden=true;
+    get('verified-title').textContent='Recuperar contraseña';
+    get('access-intro').textContent='Recupera el acceso a tu cuenta de YES EMS.';
+    get('access-recovery-email').value=get('access-login-email').value;
+    get('access-recovery-email').focus();
+  }
+  get('access-password').onclick=passwordMode;
+  get('access-other').onclick=()=>mode(false);
+  get('access-recover').onclick=recoveryMode;
+  get('access-recovery-link').onclick=recoveryMode;
+  get('access-recovery-back').onclick=passwordMode;
+  get('access-login-form').onsubmit=e=>{e.preventDefault();action(async()=>{
+    const response=await fetch(api+'/usuarios/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:get('access-login-email').value.trim(),password:get('access-login-password').value}),signal:AbortSignal.timeout(20000)});
+    const result=await response.json();
+    if(!response.ok||!result.ok)throw new Error(result.mensaje||'No pudimos iniciar sesión. Reintenta o recupera tu contraseña.');
+    finish(result);
+  });};
+  get('access-recovery-send').onsubmit=e=>{e.preventDefault();action(async()=>{
+    const result=await request('password/codigo',{email:get('access-recovery-email').value.trim()});
+    get('access-recovery-reset').hidden=false;get('access-recovery-code').value='';get('access-recovery-code').focus();get('access-message').textContent=result.mensaje;
+  });};
+  get('access-recovery-email').oninput=()=>{get('access-recovery-reset').hidden=true;};
+  get('access-recovery-reset').onsubmit=e=>{e.preventDefault();action(async()=>{
+    const password=get('access-recovery-password').value,confirmacion=get('access-recovery-confirm').value;
+    if(password!==confirmacion)throw new Error('Las contraseñas no coinciden.');
+    const result=await request('password/restablecer',{email:get('access-recovery-email').value.trim(),codigo:get('access-recovery-code').value,password,confirmacion});
+    localStorage.removeItem('yesems_token');localStorage.removeItem('yesems_usuario');
+    get('access-recovery-reset').reset();get('access-recovery').hidden=true;
+    get('access-login-form').hidden=false;get('access-login-password').value='';
+    get('access-login-email').value=get('access-recovery-email').value;
+    get('verified-title').textContent='Inicia sesión de nuevo';get('access-intro').textContent='Tu contraseña fue actualizada.';
+    get('access-message').textContent=result.mensaje;get('access-login-password').focus();
+  });};
   get('access-verify-again').onclick=()=>{ if (!busy) { mode(true); get('access-message').textContent='Verifica nuevamente tu cuenta para continuar.'; } };
   async function request(path, body) {
     const res = await fetch(api + '/acceso/' + path, { method:body ? 'POST':'GET',headers:body ? {'Content-Type':'application/json'}:undefined,body:body ? JSON.stringify(body):undefined,signal:AbortSignal.timeout(20000) });
@@ -82,13 +173,18 @@
       localStorage.removeItem('yesems_token');localStorage.removeItem('yesems_usuario');
       setupToken = result.setup_token; setupFromGoogle = fromGoogle;
       get('access-identify').hidden = true;
+      get('access-login-form').hidden = true;
       get('access-login-help').hidden = true;
       dialog.querySelector('.access-switch').hidden = true;
       get('access-setup-form').hidden = false;
       get('access-verified-email').value = result.email;
       get('access-registration').hidden = !result.needs_profile;
       get('access-registration').querySelectorAll('input').forEach(input => { input.required = Boolean(result.needs_profile); });
-      get('verified-title').textContent = 'Crea tu contraseña de YES EMS';
+      for(const [key,id] of Object.entries({nombre:'access-name',apellido:'access-lastname',telefono:'access-phone'})) {
+        get(id).value=result.profile?.[key]||'';
+        get(id).readOnly=Boolean(result.profile?.[key]);
+      }
+      profileStep(Boolean(result.needs_profile));
       get('access-intro').textContent = 'Tu correo ya está verificado. Completa este paso para acceder a tu cuenta.';
       get('access-message').textContent = 'Esta autorización dura 10 minutos. No se cambiará tu contraseña de Google.';
       get(result.needs_profile ? 'access-name' : 'access-new-password').focus();
@@ -96,7 +192,7 @@
       return;
     }
     localStorage.setItem('yesems_token', result.token);localStorage.setItem('yesems_usuario',JSON.stringify(result.usuario));
-    window.location.href=fromGoogle ? './panel.html'+(course?.id_curso?'?curso='+encodeURIComponent(course.id_curso):'') : course?.id_curso ? './inscripcion.html?curso='+encodeURIComponent(course.id_curso) : './panel.html';
+    window.location.href='./panel.html'+(course?.id_curso?'?curso='+encodeURIComponent(course.id_curso):'');
   }
   function loadGoogle() {
     if (!sdk) sdk = new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.async=true;s.onload=resolve;s.onerror=()=>{sdk=null;reject(new Error('Google no pudo cargar. Usa tu correo o intenta de nuevo.'));};document.head.append(s);});
@@ -116,6 +212,7 @@
   get('access-email-form').addEventListener('submit',e=>{e.preventDefault();action(async()=>{
     const address=get('access-email').value.trim().toLowerCase();
     const result=await request('codigo',{email:address});sentEmail=address;
+    get('access-send').textContent='Reenviar código';
     get('access-code-form').hidden=false;get('access-code').value='';get('access-code').focus();get('access-message').textContent=result.mensaje;
   });});
   get('access-email').addEventListener('input',()=>{sentEmail=null;get('access-code-form').hidden=true;});
@@ -136,13 +233,12 @@
   });});
   dialog.querySelector('.access-close').onclick=()=>{if(!busy)dialog.close();};
   dialog.addEventListener('cancel',event=>{if(busy)event.preventDefault();});
-  dialog.addEventListener('close',()=>{version++;clearSetup();get('access-code').value='';});
+  dialog.addEventListener('close',()=>{version++;clearSetup();get('access-code').value='';get('access-login-password').value='';get('access-recovery-reset').reset();});
   window.YesemsAccess={open:async(selected=null)=>{
     if(dialog.open || busy)return;
     mode(Boolean(document.querySelector('#registration-form')));
     course=selected;sentEmail=null;mailEnabled=false;version++;const current=version;
     get('access-course').textContent=course?.nombre ? 'Curso: '+course.nombre : '';
-    get('access-password').href='./index.html'+(course?.id_curso?'?curso='+encodeURIComponent(course.id_curso):'');
     get('access-code-form').hidden=true;get('access-code').value='';get('access-message').textContent='Consultando opciones de acceso…';
     get('access-google').replaceChildren();get('access-google-note').textContent='';get('access-send').disabled=true;
     dialog.showModal();
@@ -157,11 +253,11 @@
   const legacy = document.querySelector('#registration-form');
   const existing = legacy || document.querySelector('#login-form');
   if(existing) {
-    if(!legacy){const recovery=document.createElement('a');recovery.href='./password.html';recovery.id='forgot-password-link';recovery.textContent='Olvidé mi contraseña';existing.after(recovery);}
-    if(legacy) legacy.hidden=true;
-    const button=document.createElement('button');button.type='button';button.className='primary-button';button.textContent='Continuar con Google o correo';
+    existing.hidden=true;
+    const button=document.createElement('button');button.type='button';button.className='primary-button';button.textContent=legacy?'Crear mi cuenta':'Elegir cómo iniciar sesión';
     const id=new URLSearchParams(location.search).get('curso');
     button.onclick=()=>window.YesemsAccess.open(id?{id_curso:id}:null);existing.before(button);
     if(legacy) { const intro=document.querySelector('.form-intro');if(intro)intro.textContent='Verifica tu correo y crea una contraseña propia de YES EMS para completar tu cuenta.'; }
+    else { const intro=document.querySelector('.form-intro');if(intro)intro.textContent='Entra con tu contraseña, un código por correo o tu cuenta de Google.'; }
   }
 })();

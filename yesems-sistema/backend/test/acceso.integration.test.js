@@ -150,6 +150,7 @@ const enabled=process.env.YES_EMS_ISOLATED_TEST==='1' && process.env.NODE_ENV===
       expect(await browser.evaluate("document.querySelector('#access-verified-email').readOnly")).toBe(true);
       expect(await browser.evaluate("document.querySelector('#access-verified-email').value")).toBe(address('browser'));
       await browser.fill('#access-name','Alumna');await browser.fill('#access-lastname','Prueba acceso');await browser.fill('#access-phone','5500000000');
+      await browser.click('#access-profile-next');
       await browser.fill('#access-new-password',initialPassword);await browser.fill('#access-confirm-password','No-coincide-123456');
       await browser.click('#access-setup-form button[type=submit]');
       await browser.waitFor("document.querySelector('#access-message').textContent.includes('no coinciden')");
@@ -157,7 +158,7 @@ const enabled=process.env.YES_EMS_ISOLATED_TEST==='1' && process.env.NODE_ENV===
       await browser.screenshot(path.join(artifacts,'crear-password-mobile.png'));
       expect(await browser.evaluate("document.querySelector('#verified-access').scrollWidth <= document.querySelector('#verified-access').clientWidth+1")).toBe(true);
       await browser.click('#access-setup-form button[type=submit]');
-      await browser.waitFor("location.pathname.endsWith('/inscripcion.html')");
+      await browser.waitFor("location.pathname.endsWith('/panel.html')");
       expect(await browser.evaluate('location.search')).toBe('?curso=1');
       expect(await browser.evaluate("JSON.parse(localStorage.getItem('yesems_usuario')).nombre")).toBe('Alumna');
       await browser.navigate(origin+'/password.html');
@@ -178,7 +179,7 @@ const enabled=process.env.YES_EMS_ISOLATED_TEST==='1' && process.env.NODE_ENV===
     await request('/acceso/google',{...body,challenge:next.challenge},409);
   });
   test('Google vincula una cuenta local existente solo por correo verificado y conserva su identidad',async()=>{
-    const email=address('google-link');
+    const email=`google-link-${tag}@gmail.com`;
     const original=(await pool.query(`INSERT INTO usuarios(nombre,apellido,email,password_hash,rol,email_verificado_at)
       VALUES('Nombre original','Apellido original',$1,'hash-de-prueba','alumno',now()) RETURNING id_usuario`,[email])).rows[0];
     const state=await request('/acceso/google/reto',{});
@@ -189,15 +190,16 @@ const enabled=process.env.YES_EMS_ISOLATED_TEST==='1' && process.env.NODE_ENV===
     expect(saved).toEqual({google_sub:sub,password_hash:'hash-de-prueba'});
     expect((await pool.query('SELECT count(*)::int AS n FROM usuarios WHERE lower(email)=lower($1)',[email])).rows[0].n).toBe(1);
   });
-  test('Google permite crear cuenta sin teléfono y solo usa nombres del token verificado',async()=>{
+  test('Google exige completar teléfono y conserva los nombres verificados',async()=>{
     const state=await request('/acceso/google/reto',{});
     global.__googleTestPayload={sub:tag+'onboarding',email:`onboarding-${tag}@gmail.com`,email_verified:true,nonce:state.nonce,given_name:'Google',family_name:'Prueba'};
     const pending=await request('/acceso/google',{credential:'token-ficticio',challenge:state.challenge,nombre:'Suplantado',rol:'admin'});
-    expect(pending.needs_profile).toBe(false);
+    expect(pending.needs_profile).toBe(true);
+    await request('/acceso/password/crear',{setup_token:pending.setup_token,password:initialPassword,confirmacion:initialPassword},400);
     const result=await finishSetup(pending);
     expect(result.usuario).toMatchObject({nombre:'Google',apellido:'Prueba',rol:'cliente'});
     const row=(await pool.query('SELECT telefono,curp FROM usuarios WHERE id_usuario=$1',[result.usuario.id_usuario])).rows[0];
-    expect(row).toEqual({telefono:null,curp:null});
+    expect(row).toEqual({telefono:profile.telefono,curp:null});
     const again=await request('/acceso/google/reto',{});global.__googleTestPayload.nonce=again.nonce;
     const login=await request('/acceso/google',{credential:'token-ficticio',challenge:again.challenge});
     expect(login.usuario.id_usuario).toBe(result.usuario.id_usuario);
@@ -216,7 +218,7 @@ const enabled=process.env.YES_EMS_ISOLATED_TEST==='1' && process.env.NODE_ENV===
       await db.query("UPDATE usuarios SET nombre='Conservado' WHERE id_usuario=2");
     }finally{await db.end();}
   });
-  test('navegador Google simulado pide solo contraseña, conserva correo y curso y permite Google después',async()=>{
+  test('navegador Google completa perfil y contraseña, conserva correo y curso y permite Google después',async()=>{
     const {startBrowser}=require('./helpers/browser-client');let browser;
     const origin=base.replace(/\/api$/,'');const email=`browser-google-${tag}@gmail.com`;
     try {
@@ -238,7 +240,10 @@ const enabled=process.env.YES_EMS_ISOLATED_TEST==='1' && process.env.NODE_ENV===
       }
       await googleLogin();
       await browser.waitFor("!document.querySelector('#access-setup-form').hidden && document.querySelector('#verified-access').getAttribute('aria-busy')!=='true'");
-      expect(await browser.evaluate("document.querySelector('#access-registration').hidden")).toBe(true);
+      expect(await browser.evaluate("document.querySelector('#access-registration').hidden")).toBe(false);
+      expect(await browser.evaluate("document.querySelector('#access-name').value")).toBe('Google');
+      await browser.fill('#access-phone',profile.telefono);
+      await browser.click('#access-profile-next');
       expect(await browser.evaluate("document.querySelector('#access-verified-email').value")).toBe(email);
       expect(await browser.evaluate("localStorage.getItem('yesems_token')")).toBeNull();
       await browser.viewport(390,844);
@@ -255,6 +260,35 @@ const enabled=process.env.YES_EMS_ISOLATED_TEST==='1' && process.env.NODE_ENV===
       expect(await browser.evaluate("Boolean(localStorage.getItem('yesems_token'))")).toBe(true);
       expect(browser.errors).toEqual([]);
     } finally { if(browser)await browser.close(); }
+  },60000);
+  test('pantalla unificada permite contraseña, recuperación y nuevo ingreso',async()=>{
+    const email=address('unified');
+    const original=await finishSetup(await request('/acceso/correo',{email,codigo:await code(email)}));
+    const {startBrowser}=require('./helpers/browser-client');let browser;
+    const origin=base.replace(/\/api$/,'');
+    try {
+      browser=await startBrowser(origin);await browser.navigate(origin+'/index.html');
+      await browser.click('.form-container > .primary-button');
+      await browser.waitFor("document.querySelector('#verified-access').open && !document.querySelector('#access-send').disabled");
+      await browser.click('#access-password');
+      await browser.fill('#access-login-email',email);await browser.fill('#access-login-password','Incorrecta-123456');
+      await browser.click('#access-login-form button[type=submit]');
+      await browser.waitFor("document.querySelector('#verified-access').getAttribute('aria-busy')!=='true'");
+      expect(await browser.evaluate("localStorage.getItem('yesems_token')")).toBeNull();
+      await browser.click('#access-recover');
+      await clearLimits();
+      await browser.click('#access-recovery-send button');
+      await browser.waitFor("!document.querySelector('#access-recovery-reset').hidden && document.querySelector('#verified-access').getAttribute('aria-busy')!=='true'");
+      await browser.fill('#access-recovery-code',messages.get(email));
+      const next='Nueva-contrasena-YES-EMS-456';
+      await browser.fill('#access-recovery-password',next);await browser.fill('#access-recovery-confirm',next);
+      await browser.click('#access-recovery-reset button');
+      await browser.waitFor("!document.querySelector('#access-login-form').hidden && document.querySelector('#verified-access').getAttribute('aria-busy')!=='true'");
+      expect((await nativeFetch(base+'/usuarios/mio',{headers:{Authorization:'Bearer '+original.token}})).status).toBe(401);
+      await browser.fill('#access-login-password',next);await browser.click('#access-login-form button[type=submit]');
+      await browser.waitFor("location.pathname==='/panel.html'");
+      expect(browser.errors).toEqual([]);
+    } finally {if(browser)await browser.close();}
   },60000);
   test('crear contraseña requiere permiso verificado limitado, no admite sesión normal ni contraseña débil',async()=>{
     const email=address('setup-safety');const codigo=await code(email);
@@ -284,8 +318,8 @@ const enabled=process.env.YES_EMS_ISOLATED_TEST==='1' && process.env.NODE_ENV===
     const state=await request('/acceso/google/reto',{});
     global.__googleTestPayload={sub,email,email_verified:true,nonce:state.nonce};
     const pending=await request('/acceso/google',{credential:'token-ficticio',challenge:state.challenge});
-    expect(pending.setup_required).toBe(true);expect(pending.needs_profile).toBe(false);
-    const payload={setup_token:pending.setup_token,password:initialPassword,confirmacion:initialPassword,nombre:'No cambiar',email:address('otra')};
+    expect(pending.setup_required).toBe(true);expect(pending.needs_profile).toBe(true);
+    const payload={setup_token:pending.setup_token,password:initialPassword,confirmacion:initialPassword,nombre:'No cambiar',telefono:profile.telefono,email:address('otra')};
     const results=await Promise.all([1,2].map(()=>nativeFetch(base+'/acceso/password/crear',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)})));
     expect(results.map(r=>r.status).sort()).toEqual([200,401]);
     const row=(await pool.query('SELECT nombre,apellido,email,rol,folio,google_sub FROM usuarios WHERE id_usuario=$1',[user.id_usuario])).rows[0];

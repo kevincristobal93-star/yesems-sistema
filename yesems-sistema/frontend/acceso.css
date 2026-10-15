@@ -39,6 +39,13 @@
 #verified-access #access-verify-again{display:block;margin:6px auto 12px;border:0;background:transparent;color:#176c83;text-decoration:underline;text-underline-offset:3px;cursor:pointer;font:inherit}
 #verified-access #access-google{min-height:44px}
 #verified-access .access-admin{border-top:1px solid #e7edf2;padding-top:16px;margin-bottom:0}
+#verified-access .access-steps{display:flex;gap:8px;padding:0;list-style:none;counter-reset:steps;margin:20px 0;font-size:11px;color:#63758a}
+#verified-access .access-steps li{flex:1;padding:10px 6px;border-bottom:3px solid #e7edf2;counter-increment:steps}
+#verified-access .access-steps li::before{content:counter(steps) '. ';font-weight:800}
+#verified-access .access-steps [aria-current=step]{border-color:#176c83;color:#113f55;font-weight:800}
+#verified-access button[type=button]:not(.access-close){cursor:pointer;font:inherit;color:#176c83;background:#f3f8fb;border:1px solid #dce6ed;border-radius:10px;padding:10px;margin:5px 0}
+#verified-access #access-profile-next{width:100%;background:#113f55;color:white}
+#verified-access #access-code{letter-spacing:.35em;font-size:22px;text-align:center}
 #verified-access button[type=submit]{transition:background .18s,box-shadow .18s}
 #verified-access button[type=submit]:not(:disabled):hover{background:#10576d;box-shadow:0 4px 14px #176c8326}
 @media(prefers-reduced-motion:reduce){#verified-access button[type=submit]{transition:none}}

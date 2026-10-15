@@ -26,8 +26,12 @@ async function complete(body, ip) {
     if (!user || !user.activo || !['cliente', 'alumno'].includes(user.rol) || !user.email_verificado_at ||
         (user.token_version || 0) !== (claims.token_version || 0)) throw httpError(401, 'Vuelve a verificar tu cuenta para continuar.');
     if (user.password_hash) throw httpError(409, 'Ya tienes una contraseña de YES EMS. Inicia sesión o utiliza la recuperación.');
-    const needsProfile = !user.google_sub && (!user.nombre || !user.apellido);
-    const profile = needsProfile ? access.profile(body) : user;
+    const needsProfile = !user.nombre || !user.apellido || !user.telefono;
+    const profile = needsProfile ? access.profile({
+      nombre: user.nombre || body.nombre,
+      apellido: user.apellido || body.apellido,
+      telefono: user.telefono || body.telefono,
+    }) : user;
     const saved = (await client.query(`UPDATE usuarios SET password_hash=$2, token_version=token_version+1,
       nombre=$3, apellido=$4, telefono=$5 WHERE id_usuario=$1 RETURNING *`,
     [user.id_usuario, hash, profile.nombre, profile.apellido, profile.telefono])).rows[0];
