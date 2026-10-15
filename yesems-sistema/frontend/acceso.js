@@ -11,11 +11,11 @@
     <p id="access-course"></p>
     <ol id="access-steps" class="access-steps" hidden aria-label="Pasos para crear tu cuenta"><li>Verifica tu correo</li><li>Completa tu perfil</li><li>Crea tu contraseña</li></ol>
     <form id="access-login-form" hidden>
-      <label>Correo electrónico<input id="access-login-email" type="email" autocomplete="username" required maxlength="150"></label>
+      <label>Correo electrónico<input id="access-login-email" type="email" autocomplete="username" required maxlength="150" placeholder="tu@correo.com"></label>
       <label>Contraseña de YES EMS<input id="access-login-password" type="password" autocomplete="current-password" required maxlength="72"></label>
       <button type="submit">Entrar al panel</button>
       <button type="button" id="access-recover">Olvidé mi contraseña</button>
-      <button type="button" id="access-other">Usar Google o código por correo</button>
+      <button type="button" id="access-other">Recibir un código por correo</button>
     </form>
     <section id="access-recovery" hidden>
       <form id="access-recovery-send"><label>Correo registrado<input id="access-recovery-email" type="email" autocomplete="email" required maxlength="150"></label><button type="submit">Solicitar código de recuperación</button></form>
@@ -54,12 +54,13 @@
       <button type="button" id="access-verify-again">Volver a verificar mi cuenta</button>
     </form>
     <p id="access-message" role="status" aria-live="polite"></p>
-    <div id="access-login-help"><button type="button" id="access-password">Entrar con correo y contraseña</button>
+    <div id="access-login-help" hidden><button type="button" id="access-return-login">Volver al inicio de sesión</button>
     <button type="button" id="access-recovery-link">¿Olvidaste tu contraseña?</button></div>
     <div class="access-switch"><p id="access-register-prompt">¿Es tu primera vez? <button type="button" id="access-register-mode">Crear una cuenta</button></p><p id="access-login-prompt" hidden>¿Ya tienes cuenta? <button type="button" id="access-login-mode">Iniciar sesión</button></p></div>
     <a class="access-admin" href="./admin-login.html">Acceso administrativo</a>`;
   document.body.append(dialog);
   const get = id => dialog.querySelector('#' + id);
+  get('access-identify').insertBefore(get('access-login-form'), get('access-email-form'));
   get('access-setup-form').insertBefore(get('access-registration'), get('access-new-password').parentElement);
   const profileNext = document.createElement('button');
   profileNext.type = 'button'; profileNext.id = 'access-profile-next'; profileNext.textContent = 'Continuar: crear contraseña';
@@ -99,13 +100,13 @@
   function mode(register) {
     if (busy) return;
     clearSetup();
-    get('access-login-form').hidden=true;get('access-recovery').hidden=true;
+    get('access-login-form').hidden=register;get('access-email-form').hidden=!register;get('access-recovery').hidden=true;
     get('access-message').textContent='';get('access-steps').hidden=!register;
     if(register)step(1);
     get('access-registration').hidden=true;
     get('access-register-prompt').hidden=register;
     get('access-login-prompt').hidden=!register;
-    get('access-login-help').hidden=register;
+    get('access-login-help').hidden=true;
     get('verified-title').textContent=register?'Crear tu cuenta':'Iniciar sesión';
     get('access-intro').textContent=register?'Primero verifica tu correo. Después crearás tu contraseña de YES EMS.':'Tus cursos y constancias, en un solo lugar.';
     dialog.dataset.mode=register?'register':'login';
@@ -117,8 +118,7 @@
   get('access-register-mode').onclick=()=>mode(true);
   function passwordMode() {
     if(busy)return;
-    mode(false);get('access-identify').hidden=true;get('access-login-help').hidden=true;
-    get('access-login-form').hidden=false;get('access-login-email').focus();
+    mode(false);get('access-login-email').focus();
   }
   function recoveryMode() {
     if(busy)return;
@@ -129,8 +129,14 @@
     get('access-recovery-email').value=get('access-login-email').value;
     get('access-recovery-email').focus();
   }
-  get('access-password').onclick=passwordMode;
-  get('access-other').onclick=()=>mode(false);
+  get('access-return-login').onclick=passwordMode;
+  get('access-other').onclick=()=>{
+    if(busy)return;
+    get('access-email').value=get('access-login-email').value;
+    get('access-login-form').hidden=true;get('access-email-form').hidden=false;
+    get('access-login-help').hidden=false;get('access-message').textContent='';
+    get('access-email').focus();
+  };
   get('access-recover').onclick=recoveryMode;
   get('access-recovery-link').onclick=recoveryMode;
   get('access-recovery-back').onclick=passwordMode;
@@ -151,6 +157,7 @@
     const result=await request('password/restablecer',{email:get('access-recovery-email').value.trim(),codigo:get('access-recovery-code').value,password,confirmacion});
     localStorage.removeItem('yesems_token');localStorage.removeItem('yesems_usuario');
     get('access-recovery-reset').reset();get('access-recovery').hidden=true;
+    get('access-identify').hidden=false;get('access-email-form').hidden=true;get('access-code-form').hidden=true;
     get('access-login-form').hidden=false;get('access-login-password').value='';
     get('access-login-email').value=get('access-recovery-email').value;
     get('verified-title').textContent='Inicia sesión de nuevo';get('access-intro').textContent='Tu contraseña fue actualizada.';

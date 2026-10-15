@@ -270,7 +270,13 @@ const enabled=process.env.YES_EMS_ISOLATED_TEST==='1' && process.env.NODE_ENV===
       browser=await startBrowser(origin);await browser.navigate(origin+'/index.html');
       await browser.click('.form-container > .primary-button');
       await browser.waitFor("document.querySelector('#verified-access').open && !document.querySelector('#access-send').disabled");
-      await browser.click('#access-password');
+      expect(await browser.evaluate("document.querySelector('#access-password')")).toBeNull();
+      expect(await browser.evaluate("!document.querySelector('#access-login-form').hidden && document.querySelector('#access-email-form').hidden")).toBe(true);
+      await browser.fill('#access-login-email',email);
+      await browser.click('#access-other');
+      expect(await browser.evaluate("document.querySelector('#access-email').value")).toBe(email);
+      expect(await browser.evaluate("document.querySelector('#access-email-form').hidden")).toBe(false);
+      await browser.click('#access-return-login');
       await browser.fill('#access-login-email',email);await browser.fill('#access-login-password','Incorrecta-123456');
       await browser.click('#access-login-form button[type=submit]');
       await browser.waitFor("document.querySelector('#verified-access').getAttribute('aria-busy')!=='true'");
