@@ -40,7 +40,7 @@
       ${student && course.ya_inscrito ? '<p class="student-enrolled-badge">Ya estás inscrito</p>' : ''}
       <${title}>${escapeHtml(course.nombre || 'Curso YES EMS')}</${title}>
       <p class="${cls('description')} catalog-summary">${escapeHtml(course.descripcion || 'Consulta los detalles con nuestro equipo.')}</p>
-      <div class="${cls('data')}"><span>${duration(course)}${provisional ? ' sugeridas' : ''}</span><span>${capacity(course)}${provisional ? ' sugeridas' : ''}</span></div>
+      <div class="${cls('data')}"><span>${duration(course)}${provisional ? ' sugeridas' : ''}</span>${course.control_cupo === false ? '' : `<span>${capacity(course)}${provisional ? ' sugeridas' : ''}</span>`}</div>
       <p class="${cls('price')}">${price(course)}</p>
       ${action}
     </article>`;
@@ -73,7 +73,7 @@
           <section><h3>Acerca del curso</h3><p class="course-detail-description">${escapeHtml(overview)}</p></section>
           ${plus ? `<section class="course-detail-plus"><h3>El plus de tu capacitación</h3><p>${escapeHtml(plus)}</p></section>` : ''}
           <dl class="course-detail-facts"><div><dt>Duración${provisional ? ' sugerida' : ''}</dt><dd>${duration(course)}</dd></div>
-          <div><dt>Cupo${provisional ? ' sugerido' : ''}</dt><dd>${capacity(course)}</dd></div>
+          ${course.control_cupo === false ? '' : `<div><dt>Cupo${provisional ? ' sugerido' : ''}</dt><dd>${capacity(course)}</dd></div>`}
           <div><dt>Precio</dt><dd>${price(course)}</dd></div></dl>
           ${provisional ? '<p class="proposal-note">Duración y cupo sujetos a validación. Fechas, modalidad, equipo y materiales por confirmar. Inscripciones aún no abiertas.</p>' : ''}
           ${!provisional ? '<p class="proposal-note">Para obtener constancia es necesario estar inscrito al curso completo, cubrir el pago y cumplir los requisitos académicos y la validación administrativa.</p>' : ''}

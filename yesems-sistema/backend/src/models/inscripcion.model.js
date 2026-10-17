@@ -41,10 +41,6 @@ const crearInscripcion = async (datos) => {
     }
     const existente = await client.query("SELECT 1 FROM inscripciones WHERE id_usuario = $1 AND id_curso = $2 AND estado <> 'cancelada'", [id_usuario, id_curso]);
     if (existente.rowCount) throw httpError(409, 'Ya existe una inscripción activa para este alumno y curso');
-    const ocupacion = await client.query("SELECT COUNT(*)::int AS total FROM inscripciones WHERE id_curso = $1 AND estado <> 'cancelada'", [id_curso]);
-    if (ocupacion.rows[0].total >= curso.cupo) {
-      throw httpError(409, 'El curso alcanzó su cupo. Elige otro curso o consulta nuevas fechas con YES EMS.');
-    }
     // Omitir el monto no debe convertir accidentalmente un curso de pago en gratuito.
     return (await client.query(
       'INSERT INTO inscripciones (id_usuario, id_curso, id_horario, monto_total) VALUES ($1, $2, $3, $4) RETURNING *',

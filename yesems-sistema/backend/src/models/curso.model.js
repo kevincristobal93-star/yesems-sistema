@@ -6,8 +6,8 @@ const disponibilidadSql = `
            ORDER BY g.id_imagen) FROM curso_imagenes_publicas g
            WHERE g.id_curso=c.id_curso AND g.activo), '[]'::json) AS imagenes_publicas,
          ocupacion.lugares_ocupados,
-         GREATEST(c.cupo - ocupacion.lugares_ocupados, 0)::int AS lugares_disponibles,
-         (ocupacion.lugares_ocupados >= c.cupo) AS cupo_lleno
+         NULL::int AS lugares_disponibles,
+         false AS cupo_lleno, false AS control_cupo
   FROM cursos c
   JOIN categorias cat ON c.id_categoria = cat.id_categoria
   CROSS JOIN LATERAL (

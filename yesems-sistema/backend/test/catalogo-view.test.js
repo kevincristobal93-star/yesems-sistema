@@ -1,6 +1,13 @@
 const { card, details, icon } = require('../../frontend/catalogo-view');
 const course = { id_curso: 7, nombre: 'Curso de prueba', descripcion: 'Plus: proyecto práctico', categoria: 'Tecnología', duracion_horas: 32, cupo: 12, precio: '0.00' };
 
+test('sin control de cupo no muestra valores históricos ni disponibilidad pendiente', () => {
+  const unlimited = { ...course, control_cupo: false, cupo_lleno: false, cupo_confirmado: false };
+  expect(card(unlimited)).not.toContain('Cupo por confirmar');
+  expect(details(unlimited)).not.toContain('<dt>Cupo');
+  expect(details(unlimited)).toContain('Quiero inscribirme');
+});
+
 describe.each([false, true])('Catálogo (alumno=%s)', (student) => {
   test('propuesta no anuncia gratuidad ni ofrece inscripción', () => {
     const html = card({ ...course, oferta_provisional: true }, student);

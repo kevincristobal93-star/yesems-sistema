@@ -11,13 +11,18 @@ const enabled=process.env.YES_EMS_ISOLATED_TEST==='1' && process.env.NODE_ENV===
   beforeAll(async()=>{
     const url=new URL(process.env.TEST_DATABASE_URL);
     if(url.hostname!=='127.0.0.1' || url.pathname!=='/yesems_progress_test')throw Error('Solo clúster temporal de pruebas');
-    source=new Pool({connectionString:url.toString()});
+    const bootstrap=new Pool({connectionString:url.toString()});
+    const sourceDatabase='yesems_backup_source_'+crypto.randomBytes(4).toString('hex');
+    try { await bootstrap.query(`CREATE DATABASE ${sourceDatabase}`); } finally { await bootstrap.end(); }
+    url.pathname='/'+sourceDatabase;
+    const sourceUrl=url.toString();
+    source=new Pool({connectionString:sourceUrl});
     await source.query('CREATE TABLE backup_probe (id int PRIMARY KEY, texto text); INSERT INTO backup_probe VALUES(1,\'solo prueba sin datos reales\')');
     await source.query('CREATE TABLE usuarios (id int, token_version int); INSERT INTO usuarios VALUES(1,4); CREATE TABLE acceso_codigos (codigo text); INSERT INTO acceso_codigos VALUES(\'ficticio\')');
     await source.query(`CREATE DATABASE ${database}`);url.pathname='/'+database;
     target=new Pool({connectionString:url.toString()});
     directory=await fs.mkdtemp(path.join(os.tmpdir(),'yesems-backup-test-'));
-    env={...process.env,BACKUP_DATABASE_URL:process.env.TEST_DATABASE_URL,RESTORE_DATABASE_URL:url.toString(),BACKUP_DIRECTORY:directory,BACKUP_ENCRYPTION_KEY:crypto.randomBytes(32).toString('hex'),PG_BIN:process.env.PG_BIN || (process.platform==='win32'?'C:\\Program Files\\PostgreSQL\\18\\bin':'')};
+    env={...process.env,BACKUP_DATABASE_URL:sourceUrl,RESTORE_DATABASE_URL:url.toString(),BACKUP_DIRECTORY:directory,BACKUP_ENCRYPTION_KEY:crypto.randomBytes(32).toString('hex'),PG_BIN:process.env.PG_BIN || (process.platform==='win32'?'C:\\Program Files\\PostgreSQL\\18\\bin':'')};
   });
   afterAll(async()=>{
     await target?.end();await source?.end();

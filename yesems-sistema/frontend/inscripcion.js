@@ -72,6 +72,7 @@ async function loadCourse() {
           ? `${available} ${available === 1 ? 'lugar disponible' : 'lugares disponibles'}`
           : `${course.cupo ?? '—'} lugares${course.oferta_provisional ? ' sugeridos' : ''}`;
     setText('#course-capacity', capacityText);
+    document.querySelector('#course-capacity').parentElement.hidden = course.control_cupo === false;
     setText('#course-price', course.oferta_provisional || course.precio === null || course.precio === undefined ? 'Por confirmar' : new Intl.NumberFormat('es-MX',{style:'currency',currency:'MXN'}).format(Number(course.precio)));
     document.querySelector('#course-loading').hidden = true;
     document.querySelector('#course-content').hidden = false;
