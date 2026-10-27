@@ -1,6 +1,6 @@
 .aula-student{font-family:"Open Sans",Arial,sans-serif;color:#102d47;background:#f2f6fa}
-.student-aula-main{max-width:1360px;margin:auto;padding:32px 28px 80px}
-.student-breadcrumb{display:flex;align-items:center;gap:10px;margin-bottom:24px;color:#6a7f91;font-size:.88rem;font-weight:700}
+.student-aula-main{max-width:1360px;margin:auto;padding:var(--space-8) 28px 80px}
+.student-breadcrumb{display:flex;align-items:center;gap:10px;margin-bottom:var(--space-6);color:#6a7f91;font-size:.88rem;font-weight:700}
 .student-breadcrumb a{text-decoration:none}
 .student-course-heading{margin-bottom:30px}
 .student-eyebrow{margin:0 0 10px;color:#a5710a;font:800 .78rem Montserrat,Arial,sans-serif;letter-spacing:.13em}
@@ -8,16 +8,16 @@
 .student-course-heading>p:last-child{max-width:720px;margin:13px 0 0;color:#5d7388;font-size:1rem;line-height:1.6}
 .aula-student #feedback{min-height:0;margin:0 0 14px;color:#15516b}
 .aula-student #feedback:empty{display:none}
-.course-showcase{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.85fr);gap:24px;align-items:stretch;margin:0;padding:0;border:0;background:transparent}
+.course-showcase{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(300px,.85fr);gap:var(--space-6);align-items:stretch;margin:0;padding:0;border:0;background:transparent}
 .course-gallery{min-width:0}
-.gallery-stage{position:relative;min-height:390px;aspect-ratio:16/10;overflow:hidden;border:1px solid #c9dbe9;border-radius:24px;background:#d9ebf7;box-shadow:0 18px 36px #143f5b17}
+.gallery-stage{position:relative;min-height:390px;aspect-ratio:16/10;overflow:hidden;border:1px solid #c9dbe9;border-radius:var(--radius-lg);background:#d9ebf7;box-shadow:var(--shadow-lg)}
 .gallery-stage img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#eef5f9}
-.gallery-fallback{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:16px;padding:clamp(30px,7vw,68px);background:radial-gradient(circle at 88% 15%,#e7d491 0 12%,transparent 13%),linear-gradient(125deg,#d5eaf7 0 39%,#edf6fb 39% 65%,#c9e3ed 65%);color:#0b3857}
-.gallery-fallback::after{content:"";position:absolute;right:9%;bottom:12%;width:22%;aspect-ratio:1;border:16px solid #176b8740;border-radius:32px;transform:rotate(-16deg)}
-.gallery-fallback span{position:relative;z-index:1;align-self:flex-start;padding:7px 11px;border-radius:99px;background:#fff9;color:#a5710a;font:800 .74rem Montserrat,Arial,sans-serif;letter-spacing:.1em}
+.gallery-fallback{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;gap:var(--space-4);padding:clamp(30px,7vw,68px);background:radial-gradient(circle at 88% 15%,#e7d491 0 12%,transparent 13%),linear-gradient(125deg,#d5eaf7 0 39%,#edf6fb 39% 65%,#c9e3ed 65%);color:#0b3857}
+.gallery-fallback::after{content:"";position:absolute;right:9%;bottom:12%;width:22%;aspect-ratio:1;border:16px solid #176b8740;border-radius:var(--radius-lg);transform:rotate(-16deg)}
+.gallery-fallback span{position:relative;z-index:1;align-self:flex-start;padding:7px 11px;border-radius:var(--radius-pill);background:#fff9;color:#a5710a;font:800 .74rem Montserrat,Arial,sans-serif;letter-spacing:.1em}
 .gallery-fallback strong{position:relative;z-index:1;max-width:520px;font:800 clamp(1.55rem,3vw,2.8rem)/1.13 Montserrat,Arial,sans-serif;letter-spacing:-.035em}
 .gallery-fallback p{position:relative;z-index:1;max-width:420px;margin:0;color:#44647b;line-height:1.55}
-.gallery-arrow{position:absolute;top:50%;z-index:2;display:grid;place-items:center;width:48px;height:48px;margin:0;padding:0;transform:translateY(-50%);border:1px solid #fff8;border-radius:50%;color:#fff;background:#0a3854d9;font-size:1.4rem;box-shadow:0 8px 18px #082b4740}
+.gallery-arrow{position:absolute;top:50%;z-index:2;display:grid;place-items:center;width:48px;height:48px;margin:0;padding:0;transform:translateY(-50%);border:1px solid #fff8;border-radius:50%;color:#fff;background:#0a3854d9;font-size:1.4rem;box-shadow:var(--shadow-md)}
 .gallery-arrow:hover{background:#125f7c}
 .gallery-arrow--previous{left:16px}.gallery-arrow--next{right:16px}
 .gallery-footer{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:15px 2px 0}
@@ -26,39 +26,39 @@
 .gallery-footer span{color:#697f90;font-size:.8rem;overflow-wrap:anywhere}
 .gallery-dots{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:7px;min-width:0}
 .gallery-dots button{width:11px;height:11px;min-width:11px;min-height:11px;margin:0;padding:0;border:0;border-radius:50%;background:#ccdce5}
-.gallery-dots button[aria-current=true]{background:#176b87;box-shadow:0 0 0 3px #176b8726}
-.course-facts{display:flex;flex-direction:column;min-width:0;margin:0;padding:30px;background:#fff;border:1px solid #d8e5ed;border-radius:24px;box-shadow:0 12px 30px #143f5b0c}
-.course-facts-badge{align-self:flex-start;padding:7px 12px;border:1px solid #c8dbe9;border-radius:99px;color:#176087;background:#f1f7fb;font:800 .75rem Montserrat,Arial,sans-serif;letter-spacing:.04em}
-.course-facts h2{margin:20px 0 12px;color:#0b2f4a;font:800 clamp(1.3rem,2vw,1.8rem)/1.2 Montserrat,Arial,sans-serif}
+.gallery-dots button[aria-current=true]{background:var(--blue);box-shadow:0 0 0 3px #176b8726}
+.course-facts{display:flex;flex-direction:column;min-width:0;margin:0;padding:30px;background:#fff;border:1px solid #d8e5ed;border-radius:var(--radius-lg);box-shadow:var(--shadow-md)}
+.course-facts-badge{align-self:flex-start;padding:7px var(--space-3);border:1px solid #c8dbe9;border-radius:var(--radius-pill);color:#176087;background:#f1f7fb;font:800 .75rem Montserrat,Arial,sans-serif;letter-spacing:.04em}
+.course-facts h2{margin:20px 0 var(--space-3);color:#0b2f4a;font:800 clamp(1.3rem,2vw,1.8rem)/1.2 Montserrat,Arial,sans-serif}
 .course-facts>p{margin:0 0 20px;color:#5c7082;font-size:.94rem;line-height:1.65;white-space:pre-wrap;overflow-wrap:anywhere}
-.course-facts dl{margin:0 0 24px}.course-facts dl>div{display:flex;justify-content:space-between;align-items:baseline;gap:16px;padding:14px 0;border-top:1px solid #e3edf2}
+.course-facts dl{margin:0 0 var(--space-6)}.course-facts dl>div{display:flex;justify-content:space-between;align-items:baseline;gap:var(--space-4);padding:14px 0;border-top:1px solid #e3edf2}
 .course-facts dt{color:#788b99;font-size:.83rem;font-weight:700}.course-facts dd{margin:0;color:#173b56;font-size:.9rem;font-weight:800;text-align:right;overflow-wrap:anywhere}
-.course-facts-link{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto;padding:14px 17px;border-radius:11px;background:#176b87;color:#fff;text-decoration:none;font-weight:800}
+.course-facts-link{display:flex;align-items:center;justify-content:space-between;gap:var(--space-3);margin-top:auto;padding:14px 17px;border-radius:var(--radius-md);background:var(--blue);color:#fff;text-decoration:none;font-weight:800}
 .course-facts-link:hover{background:#0d4d68;color:#fff}
-.aula-student .student-overview{margin:32px 0 36px;padding:22px 28px;border-radius:18px;box-shadow:0 8px 22px #143f5b0a}
+.aula-student .student-overview{margin:var(--space-8) 0 36px;padding:22px 28px;border-radius:var(--radius-lg);box-shadow:var(--shadow-md)}
 .student-modules-heading{display:flex;justify-content:space-between;align-items:end;gap:22px;margin:0 0 22px}
 .student-modules-heading h2{margin:0;color:#0b2f4a;font:800 clamp(1.55rem,2.6vw,2.2rem)/1.2 Montserrat,Arial,sans-serif}
 .student-modules-heading p:last-child{margin:9px 0 0;color:#60798c;font-size:.92rem}
 .student-modules-heading button{flex-shrink:0;margin:0;font-weight:700}
 .aula-student #modules{display:grid;gap:18px}
-.aula-student #modules>.student-module{margin:0;padding:26px 28px 25px;overflow:visible;border:1px solid #d6e4ec;border-left:5px solid #176b87;border-radius:18px;background:#fff;box-shadow:0 8px 28px #123c570a}
-.student-module-top{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:10px}
+.aula-student #modules>.student-module{margin:0;padding:26px 28px 25px;overflow:visible;border:1px solid #d6e4ec;border-left:5px solid var(--blue);border-radius:var(--radius-lg);background:#fff;box-shadow:var(--shadow-md)}
+.student-module-top{display:flex;justify-content:space-between;align-items:center;gap:var(--space-4);margin-bottom:10px}
 .student-module-kicker{color:#ad750e;font:800 .75rem Montserrat,Arial,sans-serif;letter-spacing:.11em}
-.student-module-state{padding:7px 11px;border-radius:99px;color:#176087;background:#eaf4f8;font-size:.76rem;font-weight:800}
+.student-module-state{padding:7px 11px;border-radius:var(--radius-pill);color:#176087;background:#eaf4f8;font-size:.76rem;font-weight:800}
 .student-module-state[data-complete=true]{color:#126247;background:#e8f6ee}
 .aula-student #modules>.student-module h2{margin:0;color:#102f49;font:800 clamp(1.3rem,2.1vw,1.75rem)/1.25 Montserrat,Arial,sans-serif}
 .aula-student #modules>.student-module>p{max-width:890px;margin:10px 0 18px;color:#596e80;line-height:1.6}
-.student-resources-heading{margin:20px 0 12px;padding-top:18px;border-top:1px solid #e2ebf0;color:#153f59;font:800 .9rem Montserrat,Arial,sans-serif}
-.aula-student .documents{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:0;padding:0}
-.aula-student .documents li{display:flex;flex-direction:column;gap:8px;margin:0;padding:17px;border:1px solid #dce8ee;border-radius:12px;background:#f9fcfd}
+.student-resources-heading{margin:20px 0 var(--space-3);padding-top:18px;border-top:1px solid #e2ebf0;color:#153f59;font:800 .9rem Montserrat,Arial,sans-serif}
+.aula-student .documents{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-3);margin:0;padding:0}
+.aula-student .documents li{display:flex;flex-direction:column;gap:var(--space-2);margin:0;padding:17px;border:1px solid #dce8ee;border-radius:var(--radius-md);background:#f9fcfd}
 .aula-student .document-summary{gap:7px}.aula-student .document-summary strong{color:#163d57;font-size:.94rem}
-.aula-student .document-summary::before{content:"ARCHIVO";align-self:flex-start;padding:4px 7px;border-radius:5px;background:#e9f3f8;color:#176b87;font-size:.63rem;font-weight:800;letter-spacing:.1em}
+.aula-student .document-summary::before{content:"ARCHIVO";align-self:flex-start;padding:var(--space-1) 7px;border-radius:5px;background:#e9f3f8;color:var(--blue);font-size:.63rem;font-weight:800;letter-spacing:.1em}
 .aula-student .documents li[data-extension=pdf] .document-summary::before{content:"PDF";color:#a34937;background:#fbebe7}
 .aula-student .document-actions{margin-top:auto}.aula-student .document-actions button{flex:1 1 auto}
 .aula-student .module-complete{margin-top:20px}
-.aula-student #modules>.student-empty{padding:40px 30px;border:1px dashed #a9c3d3;border-radius:18px;background:#fff;text-align:center}
+.aula-student #modules>.student-empty{padding:40px 30px;border:1px dashed #a9c3d3;border-radius:var(--radius-lg);background:#fff;text-align:center}
 .student-empty strong{display:block;color:#153f59;font:800 1.25rem Montserrat,Arial,sans-serif}
 .student-empty p{margin:10px 0 0;color:#637c8e}
 @media(max-width:1030px){.course-showcase{grid-template-columns:minmax(0,1fr)}.course-facts{padding:26px}.gallery-stage{min-height:350px;aspect-ratio:16/9}}
-@media(max-width:680px){.student-aula-main{padding:22px 16px 60px}.student-course-heading h1{font-size:2rem}.course-showcase{gap:16px}.gallery-stage{min-height:260px;aspect-ratio:4/3;border-radius:18px}.gallery-fallback{padding:26px}.gallery-fallback::after{border-width:9px}.gallery-arrow{width:40px;height:40px}.course-facts{padding:23px;border-radius:18px}.gallery-footer{align-items:flex-start}.aula-student .student-overview{padding:18px}.student-modules-heading{align-items:stretch;flex-direction:column}.student-modules-heading button{align-self:flex-start}.aula-student .documents{grid-template-columns:minmax(0,1fr)}.aula-student #modules>.student-module{padding:21px 19px}.student-module-top{align-items:flex-start;flex-direction:column;gap:8px}}
-@media(max-width:390px){.course-facts dl>div{align-items:flex-start;flex-direction:column;gap:5px}.course-facts dd{text-align:left}.gallery-footer{flex-direction:column;gap:12px}.gallery-dots{justify-content:flex-start}}
+@media(max-width:680px){.student-aula-main{padding:22px var(--space-4) 60px}.student-course-heading h1{font-size:2rem}.course-showcase{gap:var(--space-4)}.gallery-stage{min-height:260px;aspect-ratio:4/3;border-radius:var(--radius-lg)}.gallery-fallback{padding:26px}.gallery-fallback::after{border-width:9px}.gallery-arrow{width:40px;height:40px}.course-facts{padding:23px;border-radius:var(--radius-lg)}.gallery-footer{align-items:flex-start}.aula-student .student-overview{padding:18px}.student-modules-heading{align-items:stretch;flex-direction:column}.student-modules-heading button{align-self:flex-start}.aula-student .documents{grid-template-columns:minmax(0,1fr)}.aula-student #modules>.student-module{padding:21px 19px}.student-module-top{align-items:flex-start;flex-direction:column;gap:var(--space-2)}}
+@media(max-width:390px){.course-facts dl>div{align-items:flex-start;flex-direction:column;gap:5px}.course-facts dd{text-align:left}.gallery-footer{flex-direction:column;gap:var(--space-3)}.gallery-dots{justify-content:flex-start}}

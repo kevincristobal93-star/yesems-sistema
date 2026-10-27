@@ -36,8 +36,8 @@
     return `<article class="${cls('card')} catalog-tile">
       <div class="course-cover">${icon(course)}<span class="course-cover-tag">${student && course.ya_inscrito ? 'Inscrito' : provisional ? 'Propuesta' : 'Capacitación'}</span></div>
       <p class="${cls('category')}">${escapeHtml(course.categoria || 'Capacitación')}</p>
-      ${provisional ? '<p class="proposal-badge">Propuesta · Por confirmar</p>' : ''}
-      ${student && course.ya_inscrito ? '<p class="student-enrolled-badge">Ya estás inscrito</p>' : ''}
+      ${provisional ? '<p class="badge badge--warning proposal-badge">Propuesta · Por confirmar</p>' : ''}
+      ${student && course.ya_inscrito ? '<p class="badge badge--success student-enrolled-badge">Ya estás inscrito</p>' : ''}
       <${title}>${escapeHtml(course.nombre || 'Curso YES EMS')}</${title}>
       <p class="${cls('description')} catalog-summary">${escapeHtml(course.descripcion || 'Consulta los detalles con nuestro equipo.')}</p>
       <div class="${cls('data')}"><span>${duration(course)}${provisional ? ' sugeridas' : ''}</span>${course.control_cupo === false ? '' : `<span>${capacity(course)}${provisional ? ' sugeridas' : ''}</span>`}</div>
@@ -69,7 +69,7 @@
         <div class="course-detail-copy">
           <p class="course-detail-category">${escapeHtml(course.categoria || 'Capacitación')}</p>
           <h2 id="course-detail-title">${escapeHtml(course.nombre || 'Curso YES EMS')}</h2>
-          ${provisional ? '<p class="proposal-badge">Propuesta · Por confirmar</p>' : ''}
+          ${provisional ? '<p class="badge badge--warning proposal-badge">Propuesta · Por confirmar</p>' : ''}
           <section><h3>Acerca del curso</h3><p class="course-detail-description">${escapeHtml(overview)}</p></section>
           ${plus ? `<section class="course-detail-plus"><h3>El plus de tu capacitación</h3><p>${escapeHtml(plus)}</p></section>` : ''}
           <dl class="course-detail-facts"><div><dt>Duración${provisional ? ' sugerida' : ''}</dt><dd>${duration(course)}</dd></div>

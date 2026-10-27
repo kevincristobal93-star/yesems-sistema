@@ -179,7 +179,7 @@ function constanciaAction(item) {
 
 function renderEnrollment(item) {
   return `<article class="enrollment-card" id="inscripcion-${escapeHtml(item.id_inscripcion)}"><div><h3>${escapeHtml(item.curso_nombre)}</h3><p>${escapeHtml(item.curso_descripcion || 'Curso YES EMS')}</p><div class="enrollment-info"><span>Inscripción: ${escapeHtml(formatDate(item.fecha_inscripcion))}</span><span>Disponibilidad: ${escapeHtml(availabilityLabel(item))}</span></div></div>
-    <div class="enrollment-side"><span class="badge">${escapeHtml(InscripcionEstado.estado(item))}</span><strong class="constancia-status">${paymentLabel(item)}</strong><p class="payment-summary">Confirmado: ${amount(item.total_pagado)} de ${amount(item.monto_total)}</p><a class="payment-button" href="./pago.html?inscripcion=${encodeURIComponent(item.id_inscripcion)}">Ver pago</a><div class="constancia-actions">${constanciaAction(item)}</div><p class="panel-feedback" role="status" aria-live="polite"></p></div>
+    <div class="enrollment-side"><span class="badge ${InscripcionEstado.clase(item)}">${escapeHtml(InscripcionEstado.estado(item))}</span><strong class="constancia-status">${paymentLabel(item)}</strong><p class="payment-summary">Confirmado: ${amount(item.total_pagado)} de ${amount(item.monto_total)}</p><a class="payment-button" href="./pago.html?inscripcion=${encodeURIComponent(item.id_inscripcion)}">Ver pago</a><div class="constancia-actions">${constanciaAction(item)}</div><p class="panel-feedback" role="status" aria-live="polite"></p></div>
     ${PanelProgreso.render(item.progreso, item.estado)}</article>`;
 }
 

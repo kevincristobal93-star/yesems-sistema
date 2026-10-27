@@ -46,7 +46,7 @@
     const item = node('article', 'admin-aula-priority-card');
     const status = priority(course);
     const label = ['Crear primer módulo', 'Publicación pendiente', 'Agregar materiales', 'Con contenido publicado', 'Curso desactivado'][status];
-    const badge = node('span', `admin-aula-priority-badge status-${status}`, label);
+    const badge = node('span', `badge badge--${status === 3 ? 'success' : status === 4 ? 'danger' : 'warning'} admin-aula-priority-badge status-${status}`, label);
     const name = node('h3', '', course.nombre || 'Curso sin nombre');
     const counts = node('p', 'admin-aula-priority-counts',
       `${course.modulos || 0} módulos · ${course.publicados || 0} publicados · ${course.documentos || 0} documentos · ${course.videos || 0} videos`);

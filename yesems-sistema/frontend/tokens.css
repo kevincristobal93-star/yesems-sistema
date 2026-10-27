@@ -1,0 +1,88 @@
+/* Fuente única de valores visuales. Cargar antes de los estilos de cada página. */
+:root {
+  --navy: #0d3d59;
+  --blue: #176b87;
+  --blue-dark: #10546c;
+  --sky: #2495a7;
+  --gold: #f5b942;
+  --ink: #17233d;
+  --muted: #62708a;
+  --line: #dbe4ec;
+  --soft: #f3f7fa;
+  --danger: #b42318;
+  --green: #177447;
+  --white: #fff;
+  /* Tonos distintivos existentes del aula y las cabeceras. */
+  --navy-header: #0b304a;
+  --navy-flow: #082b45;
+  --navy-deep: #06243a;
+  --navy-night: #061f34;
+  --navy-ocean: #0a3446;
+  --ink-deep: #102c40;
+  --ink-ocean: #0c3449;
+  --teal: #0f5660;
+  --mint: #c5efa8;
+  --soft-mint: #f3f8f7;
+  --line-mint: #d7e5e4;
+  --success-soft: #eaf7ef;
+  --warning-soft: #fff4d6;
+  --danger-soft: #fff0ed;
+  --info-soft: #e8f3f9;
+  --warning-ink: #805900;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+  --shadow-sm: 0 2px 8px rgb(13 61 89 / 8%);
+  --shadow-md: 0 8px 24px rgb(13 61 89 / 10%);
+  --shadow-lg: 0 20px 48px rgb(13 61 89 / 16%);
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --ease: cubic-bezier(.22,1,.36,1);
+  --duration-fast: 160ms;
+  --duration-normal: 240ms;
+  --focus-color: #2684ff;
+  --focus-ring: 3px solid var(--focus-color);
+}
+
+/* !important protege el foco frente a outline:0 de hojas heredadas. */
+:is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+  outline: var(--focus-ring) !important;
+  outline-offset: 3px !important;
+}
+
+.badge:is(.badge--success, .badge--warning, .badge--danger, .badge--info) {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 10px;
+  border-radius: var(--radius-pill);
+  font-size: .75rem;
+  font-weight: 700;
+  line-height: 1.4;
+  max-width: 100%;
+}
+.badge:is(.badge--success, .badge--warning, .badge--danger, .badge--info)::before {
+  content: '';
+  display: inline-block;
+  position: static;
+  width: 6px;
+  height: 6px;
+  flex: 0 0 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+/* Los modificadores prevalecen sobre colores de badges específicos antiguos. */
+.badge.badge--success { color: var(--green) !important; background: var(--success-soft) !important; }
+.badge.badge--warning { color: var(--warning-ink) !important; background: var(--warning-soft) !important; }
+.badge.badge--danger { color: var(--danger) !important; background: var(--danger-soft) !important; }
+.badge.badge--info { color: var(--blue-dark) !important; background: var(--info-soft) !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --duration-fast: 0ms; --duration-normal: 0ms; }
+}

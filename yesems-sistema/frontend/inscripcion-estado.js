@@ -10,7 +10,14 @@
     if (pagos ? pagos.some(p => p.estado === 'pendiente') : item.tiene_pago_pendiente) return 'Pago en revisión';
     return 'Pago pendiente';
   }
-  const api = { estado };
+  function clase(item) {
+    const label = estado(item);
+    if (label === 'Inscripción cancelada') return 'badge--danger';
+    if (label === 'Inscripción confirmada' || label === 'Curso concluido') return 'badge--success';
+    if (label === 'Pago en revisión') return 'badge--info';
+    return 'badge--warning';
+  }
+  const api = { estado, clase };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.InscripcionEstado = api;
 })(typeof window !== 'undefined' ? window : globalThis);

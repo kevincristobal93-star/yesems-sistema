@@ -26,6 +26,7 @@ async function loadPayment() {
     if (!response.ok || !data.ok) throw new Error(data.mensaje || data.error || 'No se pudo cargar la inscripción.');
     enrollment = data.inscripcion;
     setText('#enrollment-status', InscripcionEstado.estado(enrollment));
+    document.querySelector('#enrollment-status').className = `badge ${InscripcionEstado.clase(enrollment)}`;
     setText('#course-name', enrollment.curso_nombre);
     setText('#course-description', enrollment.curso_descripcion);
     setText('#student-folio', enrollment.folio);
@@ -46,6 +47,7 @@ async function loadPayment() {
 }
 function showPending() {
   setText('#enrollment-status', 'Pago en revisión');
+  document.querySelector('#enrollment-status').className = 'badge badge--info';
   formMessage.classList.add('success');
   formMessage.textContent = 'Comprobante recibido. Tu inscripción aún no está confirmada: administración debe verificar el dinero recibido. Consulta el resultado en Mi panel.';
   form.querySelectorAll('input, select, button').forEach((element) => { element.disabled = true; });

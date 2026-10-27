@@ -1,38 +1,38 @@
 .admin-aula-priority {
-  margin: 24px 0 4px;
+  margin: var(--space-6) 0 var(--space-1);
   padding: clamp(22px, 3vw, 34px);
   border: 1px solid #d8e6eb;
-  border-radius: 18px;
+  border-radius: var(--radius-lg);
   background: #fff;
-  box-shadow: 0 14px 34px rgba(13, 61, 89, .07);
+  box-shadow: var(--shadow-lg);
 }
 .admin-aula-priority-heading { display: flex; gap: 20px; align-items: center; justify-content: space-between; }
-.admin-aula-priority-kicker { margin: 0 0 8px; color: #176b87; font: 800 .72rem Montserrat,sans-serif; letter-spacing: .11em; }
-.admin-aula-priority-heading h2 { margin: 0; color: #0d3d59; font-size: clamp(1.55rem,2.7vw,2.1rem); line-height: 1.2; }
+.admin-aula-priority-kicker { margin: 0 0 var(--space-2); color: var(--blue); font: 800 .72rem Montserrat,sans-serif; letter-spacing: .11em; }
+.admin-aula-priority-heading h2 { margin: 0; color: var(--navy); font-size: clamp(1.55rem,2.7vw,2.1rem); line-height: 1.2; }
 .admin-aula-priority-heading p:last-child { max-width: 660px; margin: 10px 0 0; color: #60748a; line-height: 1.55; }
 .admin-aula-manager {
   display: inline-flex; min-height: 44px; padding: 11px 18px; flex: none;
-  align-items: center; justify-content: center; border-radius: 10px;
-  color: #fff; background: #176b87; font: 700 .85rem Montserrat,sans-serif;
+  align-items: center; justify-content: center; border-radius: var(--radius-sm);
+  color: #fff; background: var(--blue); font: 700 .85rem Montserrat,sans-serif;
   text-align: center; text-decoration: none;
 }
-.admin-aula-manager:hover, .admin-aula-priority-action:hover { color: #fff; background: #0d3d59; }
-.admin-aula-manager:focus-visible, .admin-aula-priority-action:focus-visible, .admin-aula-priority-retry:focus-visible { outline: 3px solid #f5b942; outline-offset: 3px; }
-.admin-aula-priority-summary { margin: 22px 0 16px; padding: 10px 14px; border-radius: 8px; color: #365267; background: #f2f7f9; font-size: .86rem; font-weight: 700; }
+.admin-aula-manager:hover, .admin-aula-priority-action:hover { color: #fff; background: var(--navy); }
+.admin-aula-manager:focus-visible, .admin-aula-priority-action:focus-visible, .admin-aula-priority-retry:focus-visible { outline: 3px solid var(--gold); outline-offset: 3px; }
+.admin-aula-priority-summary { margin: 22px 0 var(--space-4); padding: 10px 14px; border-radius: var(--radius-sm); color: #365267; background: #f2f7f9; font-size: .86rem; font-weight: 700; }
 .admin-aula-priority-summary.is-error { color: #7b4d06; background: #fff5df; }
 .admin-aula-priority-list { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 14px; }
-.admin-aula-priority-card { display: flex; min-width: 0; gap: 10px; padding: 18px; flex-direction: column; border: 1px solid #dce8ee; border-radius: 12px; background: #fff; }
+.admin-aula-priority-card { display: flex; min-width: 0; gap: 10px; padding: 18px; flex-direction: column; border: 1px solid #dce8ee; border-radius: var(--radius-md); background: #fff; }
 .admin-aula-priority-card h3 { margin: 0; color: #12354b; font-size: 1.02rem; line-height: 1.35; }
-.admin-aula-priority-badge { align-self: flex-start; padding: 5px 10px; border-radius: 99px; color: #805700; background: #fff1d2; font-size: .7rem; font-weight: 700; }
+.admin-aula-priority-badge { align-self: flex-start; padding: 5px 10px; border-radius: var(--radius-pill); color: #805700; background: #fff1d2; font-size: .7rem; font-weight: 700; }
 .admin-aula-priority-badge.status-3 { color: #19633c; background: #e1f5e8; }
 .admin-aula-priority-badge.status-4 { color: #526576; background: #ecf0f3; }
 .admin-aula-priority-counts { margin: 0; color: #60748a; font-size: .78rem; line-height: 1.5; }
-.admin-aula-priority-action { align-self: flex-start; margin-top: auto; padding: 8px 11px; border: 1px solid #c7dce5; border-radius: 7px; color: #176b87; font-size: .79rem; font-weight: 700; text-decoration: none; }
-.admin-aula-priority-empty { grid-column: 1/-1; margin: 0; padding: 22px; border: 1px dashed #bed3dd; border-radius: 10px; color: #60748a; }
-.admin-aula-priority-retry { grid-column: 1/-1; justify-self: start; padding: 10px 16px; border: 1px solid #176b87; border-radius: 8px; color: #176b87; background: #fff; font: 700 .82rem Montserrat,sans-serif; cursor: pointer; }
-.admin-aula-priority-workflow { display: flex; gap: 8px; margin-top: 20px; padding-top: 17px; flex-wrap: wrap; border-top: 1px solid #e4edf1; }
-.admin-aula-priority-workflow span { padding: 7px 10px; border-radius: 7px; color: #48677a; background: #f2f7f9; font-size: .75rem; font-weight: 700; }
-.admin-aula-menu-priority { color: #fff !important; background: #14475e; box-shadow: inset 3px 0 #f5b942; }
+.admin-aula-priority-action { align-self: flex-start; margin-top: auto; padding: var(--space-2) 11px; border: 1px solid #c7dce5; border-radius: var(--radius-sm); color: var(--blue); font-size: .79rem; font-weight: 700; text-decoration: none; }
+.admin-aula-priority-empty { grid-column: 1/-1; margin: 0; padding: 22px; border: 1px dashed #bed3dd; border-radius: var(--radius-sm); color: #60748a; }
+.admin-aula-priority-retry { grid-column: 1/-1; justify-self: start; padding: 10px var(--space-4); border: 1px solid var(--blue); border-radius: var(--radius-sm); color: var(--blue); background: #fff; font: 700 .82rem Montserrat,sans-serif; cursor: pointer; }
+.admin-aula-priority-workflow { display: flex; gap: var(--space-2); margin-top: 20px; padding-top: 17px; flex-wrap: wrap; border-top: 1px solid #e4edf1; }
+.admin-aula-priority-workflow span { padding: 7px 10px; border-radius: var(--radius-sm); color: #48677a; background: #f2f7f9; font-size: .75rem; font-weight: 700; }
+.admin-aula-menu-priority { color: #fff !important; background: #14475e; box-shadow: inset 3px 0 var(--gold); }
 @media (max-width:1000px) { .admin-aula-priority-list { grid-template-columns: repeat(2,minmax(0,1fr)); } }
 @media (max-width:650px) {
   .admin-aula-priority { margin-top: 18px; padding: 20px; }

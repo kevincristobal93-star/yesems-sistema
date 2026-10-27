@@ -128,7 +128,7 @@ const PanelAula = (() => {
     const number = element('span', 'panel-aula-module-number', String(index + 1).padStart(2, '0'));
     const title = element('div');
     title.append(element('small', '', `MÓDULO ${index + 1}`), element('h4', '', module.titulo || 'Módulo'));
-    const badge = element('span', `panel-aula-module-badge ${module.completado ? 'is-done' : ''}`, module.completado ? 'Completado' : 'Por estudiar');
+    const badge = element('span', `badge badge--${module.completado ? 'success' : 'info'} panel-aula-module-badge ${module.completado ? 'is-done' : ''}`, module.completado ? 'Completado' : 'Por estudiar');
     heading.append(number, title, badge);
     card.append(heading);
     if (module.descripcion) card.append(element('p', 'panel-aula-module-description', module.descripcion));

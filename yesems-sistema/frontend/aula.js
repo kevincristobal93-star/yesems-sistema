@@ -443,7 +443,7 @@
         completion.onclick = () => setModuleCompleted(mod, !mod.completado); article.append(completion);
       }
       if (admin) {
-        const badge = document.createElement('span'); badge.className = 'badge'; badge.dataset.published = String(mod.publicado); badge.dataset.archived = String(Boolean(mod.archivado_at)); badge.textContent = mod.archivado_at ? 'Archivado' : mod.publicado ? 'Publicado' : 'Borrador'; article.prepend(badge);
+        const badge = document.createElement('span'); badge.className = `badge badge--${mod.archivado_at ? 'info' : mod.publicado ? 'success' : 'warning'}`; badge.dataset.published = String(mod.publicado); badge.dataset.archived = String(Boolean(mod.archivado_at)); badge.textContent = mod.archivado_at ? 'Archivado' : mod.publicado ? 'Publicado' : 'Borrador'; article.prepend(badge);
         const actions = document.createElement('div'); actions.className = 'actions'; article.append(actions);
         function button(label, action, unavailable = false) {
           const b = document.createElement('button'); b.type = 'button'; b.textContent = label; b.setAttribute('aria-label', `${label}: ${mod.titulo}`); b.dataset.unavailable = String(unavailable || !state.curso.activo); b.disabled = unavailable || !state.curso.activo; b.onclick = action; actions.append(b);
