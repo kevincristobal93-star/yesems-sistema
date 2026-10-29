@@ -11,3 +11,33 @@
 .admin-footer-bottom { display: flex; grid-column: 1 / -1; padding-top: 22px; margin-top: 20px; border-top: 1px solid rgba(186,198,214,.18); justify-content: space-between; color: #8d9db4; font-size: .78rem; }
 @media(max-width:850px){.admin-footer{grid-template-columns:repeat(2,1fr);margin-right:-20px;margin-bottom:-36px;margin-left:-20px}.admin-footer-bottom{gap:9px;align-items:flex-start;flex-direction:column}}
 @media(max-width:520px){.admin-footer{grid-template-columns:1fr;padding:38px 25px 20px}}
+
+/* Información institucional integrada al panel, no un bloque promocional. */
+body .admin-footer {
+  grid-template-columns:minmax(220px,1.3fr) minmax(130px,.8fr) minmax(130px,.8fr) minmax(200px,1fr);
+  gap:24px 32px;
+  margin:32px 0 0;
+  padding:28px 32px 20px;
+  border:1px solid var(--line);
+  border-top:3px solid var(--gold);
+  border-radius:var(--radius-lg);
+  background:#fff;
+  color:var(--muted);
+  box-shadow:var(--shadow-sm);
+}
+body .admin-footer section {min-width:0;gap:8px}
+body .admin-footer h3 {color:var(--navy);font-size:.88rem;margin:4px 0 8px;letter-spacing:0}
+body .admin-footer a,body .admin-footer p {color:var(--muted);line-height:1.65;overflow-wrap:anywhere}
+body .admin-footer a {width:fit-content;max-width:100%;padding:3px 0;text-underline-offset:4px}
+body .admin-footer a:hover {color:var(--blue-dark);text-decoration:underline}
+body .admin-footer .footer-company {grid-template-columns:64px minmax(0,1fr);gap:16px;align-items:center}
+body .admin-footer .footer-company img {display:block;width:64px;height:76px;object-fit:contain}
+body .admin-footer .footer-company p {max-width:270px;font-size:.84rem;color:var(--ink)}
+body .admin-footer-bottom {gap:12px 24px;flex-wrap:wrap;margin:0;padding-top:16px;border-color:var(--line);color:var(--muted);line-height:1.6}
+@media(max-width:1250px){body .admin-footer{grid-template-columns:repeat(2,minmax(0,1fr));gap:24px}}
+@media(max-width:600px){
+  body .admin-footer{grid-template-columns:minmax(0,1fr);padding:24px 20px;margin-top:24px;gap:20px}
+  body .admin-footer section+section{border-top:1px solid var(--line);padding-top:16px}
+  body .admin-footer a{min-height:36px;display:inline-flex;align-items:center}
+  body .admin-footer-bottom{flex-direction:column;align-items:flex-start;font-size:.75rem}
+}
