@@ -62,14 +62,16 @@ app.use(express.static(root));
       console.log(`OK ${page}: escritorio, móvil, Escape, foco y cambio de tamaño`);
     }
     assert.deepEqual(browser.errors,[]);
-    await browser.navigate(`${origin}/admin.html?vista=resumen`);
+    for (const page of ['admin.html', 'panel.html']) {
+    await browser.navigate(`${origin}/${page}?vista=resumen`);
     for(const width of [390,768,1100,1440]) {
       await browser.viewport(width,1000);
-      const footer=await browser.evaluate(`(()=>{const f=document.querySelector('.admin-footer'),r=f.getBoundingClientRect(),s=getComputedStyle(f);return {background:s.backgroundColor,radius:s.borderTopLeftRadius,left:r.left,right:r.right,width:innerWidth,overflow:document.documentElement.scrollWidth>innerWidth,columns:s.gridTemplateColumns.split(' ').length}})()`);
+      const footer=await browser.evaluate(`(()=>{const f=document.querySelector('.admin-footer, .site-footer'),r=f.getBoundingClientRect(),s=getComputedStyle(f),grid=f.querySelector('.footer-grid')||f;return {background:s.backgroundColor,radius:s.borderTopLeftRadius,left:r.left,right:r.right,width:innerWidth,overflow:document.documentElement.scrollWidth>innerWidth,columns:getComputedStyle(grid).gridTemplateColumns.split(' ').length}})()`);
       assert.equal(footer.background,'rgb(255, 255, 255)');
       assert.notEqual(footer.radius,'0px');assert.ok(footer.left>=0 && footer.right<=footer.width);
       assert.equal(footer.overflow,false);assert.equal(footer.columns,width<=600?1:width<=1250?2:4);
-      console.log(`OK información institucional ${width}px`);
+      console.log(`OK información institucional ${page} ${width}px`);
+    }
     }
   } finally {if(browser)await browser.close();await new Promise(resolve=>server.close(resolve))}
 })().catch(error=>{console.error(error);process.exitCode=1});
