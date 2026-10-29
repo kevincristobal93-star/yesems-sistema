@@ -52,17 +52,20 @@
           </div>
         </div>
 
-        <div class="filter-panel" role="search" aria-label="Buscar cursos">
+        <div class="filter-panel catalog-filters" role="search" aria-label="Buscar cursos">
           <label for="search"><span>Buscar por nombre o contenido</span><input id="search" type="search" placeholder="Ejemplo: impresión 3D" autocomplete="off" /></label>
           <label for="category"><span>Categoría</span><select id="category"><option value="">Todas las categorías</option></select></label>
+          <label for="modality"><span>Modalidad</span><select id="modality" disabled><option value="">Todas las modalidades</option></select></label>
         </div>
 
-        <div class="catalog-status"><p id="message" role="status" aria-live="polite">Cargando cursos disponibles…</p><small>Los lugares se actualizan con las inscripciones registradas.</small></div>
+        <div id="catalog-chips" class="catalog-chips"></div>
+        <div class="catalog-status"><p id="message" role="status" aria-live="polite">Cargando cursos disponibles…</p><small>Explora los cursos y consulta sus detalles antes de inscribirte.</small></div>
         <section id="courses" class="grid" aria-label="Cursos disponibles" aria-busy="true"></section>
       </section>
     </main>
 
     <footer><p><strong>YES EMS</strong> · Tu formación y seguimiento en un solo lugar.</p><a href="https://api.whatsapp.com/send/?phone=5215648666596" target="_blank" rel="noopener noreferrer">¿Necesitas ayuda? Contactar a YES EMS</a></footer>
+    <script src="./list-filters.js"></script>
     <script src="./catalogo-view.js"></script>
     <script src="./catalogo-alumno.js"></script>
   </body>

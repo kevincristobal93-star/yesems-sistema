@@ -1,6 +1,43 @@
 const { card, details, icon } = require('../../frontend/catalogo-view');
 const course = { id_curso: 7, nombre: 'Curso de prueba', descripcion: 'Plus: proyecto práctico', categoria: 'Tecnología', duracion_horas: 32, cupo: 12, precio: '0.00' };
 
+test('la portada utiliza la galería pública y escapa su título', () => {
+  const html = card({ ...course, imagenes_publicas: [null, { id_imagen: -1 }, { id_imagen: 9, titulo: 'Vista "especial"' }] });
+  expect(html).toContain('class="course-cover-photo"');
+  expect(html).toContain('/api/cursos/7/imagenes/9');
+  expect(html).toContain('loading="lazy"');
+  expect(html).toContain('Vista &quot;especial&quot;');
+  expect(card(course)).toContain('class="course-cover-initial"');
+  expect(card(course)).not.toContain('<img');
+});
+
+test.each([undefined, null, '', false, -1, 'abc', 15])('no inventa barra ni urgencia con disponibilidad inválida: %s', lugares_disponibles => {
+  const html = card({ ...course, lugares_disponibles });
+  expect(html).not.toContain('<meter');
+  expect(html).not.toContain('Últimos lugares');
+  expect(html).not.toContain('Nuevo');
+});
+
+test('barra real, sin urgencia cuando está lleno ni cuando el control está desactivado', () => {
+  const limited = { ...course, lugares_disponibles: 2, es_nuevo: true };
+  expect(card(limited)).toContain('<meter min="0" max="12" value="2">');
+  expect(card(limited)).toContain('Últimos lugares');
+  expect(card(limited)).toContain('Nuevo');
+  for (const extra of [{control_cupo:false}, {cupo_confirmado:false}, {oferta_provisional:true}, {cupo:null}]) {
+    expect(card({...limited,...extra})).not.toContain('<meter');
+    expect(card({...limited,...extra})).not.toContain('Últimos lugares');
+  }
+  expect(card({...limited,lugares_disponibles:0,cupo_lleno:true})).not.toContain('Últimos lugares');
+});
+
+test('estado vacío ilustrado distingue catálogo vacío de búsqueda sin coincidencias', () => {
+  const { emptyState } = require('../../frontend/catalogo-view');
+  expect(emptyState()).toContain('<svg');
+  expect(emptyState()).toContain('Todavía no hay cursos publicados');
+  expect(emptyState()).not.toContain('data-clear-catalog');
+  expect(emptyState(true)).toContain('data-clear-catalog');
+});
+
 test('sin control de cupo no muestra valores históricos ni disponibilidad pendiente', () => {
   const unlimited = { ...course, control_cupo: false, cupo_lleno: false, cupo_confirmado: false };
   expect(card(unlimited)).not.toContain('Cupo por confirmar');

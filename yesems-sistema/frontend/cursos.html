@@ -128,7 +128,7 @@
           <p id="course-count" class="course-count" aria-live="polite"></p>
         </div>
 
-        <div class="filters" aria-label="Filtros del catálogo">
+        <div class="filters catalog-filters" aria-label="Filtros del catálogo">
           <label class="search-field" for="search">
             <span class="sr-only">Buscar curso</span>
             <input id="search" type="search" placeholder="Buscar por nombre o descripción" />
@@ -139,8 +139,13 @@
               <option value="">Todas las categorías</option>
             </select>
           </label>
+          <label class="category-field" for="modality">
+            <span class="sr-only">Filtrar por modalidad</span>
+            <select id="modality" disabled><option value="">Todas las modalidades</option></select>
+          </label>
         </div>
 
+        <div id="catalog-chips" class="catalog-chips"></div>
         <p id="catalog-message" class="catalog-message" role="status" aria-live="polite">Cargando cursos...</p>
         <div id="course-grid" class="course-grid" aria-live="polite"></div>
       </section>
@@ -229,6 +234,7 @@
       </div>
     </footer>
     <script src="./acceso.js"></script>
+    <script src="./list-filters.js"></script>
     <script src="./catalogo-view.js"></script>
     <script src="./cursos.js"></script>
   </body>

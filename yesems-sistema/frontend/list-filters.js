@@ -6,6 +6,8 @@
       && (!filters.course || row.course === filters.course)
       && (!filters.state || row.state === filters.state)
       && (!filters.method || row.method === filters.method)
+      && (!filters.category || row.category === filters.category)
+      && (!filters.modality || (row.modalities || []).includes(filters.modality))
       && (!filters.from || Boolean(row.date && row.date >= filters.from))
       && (!filters.to || Boolean(row.date && row.date <= filters.to));
   }
@@ -51,6 +53,54 @@
     }
     instance.apply();
   }
-  const api={normal,matches,attach};
+  // Adaptador del catálogo: reutiliza los selectores existentes, sin crear otro formulario.
+  const modalities = course => [...new Set([
+    ...(Array.isArray(course.modalidades) ? course.modalidades : []), course.modalidad,
+  ].filter(value => typeof value === 'string' && value.trim() && value !== 'por_definir').map(value => value.trim()))];
+  function attachCatalog({ search, category, modality, chips, onChange }) {
+    const controls = { category, modality };
+    function sync() {
+      chips.querySelectorAll('[data-filter-chip]').forEach(button => {
+        button.setAttribute('aria-pressed', String(controls[button.dataset.filterChip].value === button.dataset.value));
+      });
+      onChange();
+    }
+    search.addEventListener('input', sync);
+    Object.values(controls).forEach(select => select.addEventListener('change', sync));
+    chips.addEventListener('click', event => {
+      const button = event.target.closest('[data-filter-chip]');
+      if (!button || !chips.contains(button)) return;
+      controls[button.dataset.filterChip].value = button.dataset.value;
+      controls[button.dataset.filterChip].dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    return {
+      update(items) {
+        chips.replaceChildren();
+        for (const [key, select] of Object.entries(controls)) {
+          const values = [...new Set(items.flatMap(item => key === 'category' ? [item.categoria].filter(Boolean) : modalities(item)))].sort((a,b) => a.localeCompare(b, 'es'));
+          const previous = select.value;
+          select.replaceChildren(new Option(key === 'category' ? 'Todas las categorías' : 'Todas las modalidades', ''));
+          values.forEach(value => select.add(new Option(value, value)));
+          select.value = values.includes(previous) ? previous : '';
+          select.disabled = !values.length;
+          if (!values.length) continue;
+          const group = document.createElement('div'); group.className = 'catalog-chip-group';
+          group.setAttribute('role', 'group'); group.setAttribute('aria-label', key === 'category' ? 'Categorías' : 'Modalidades');
+          const label = document.createElement('span'); label.className = 'catalog-chip-label'; label.textContent = key === 'category' ? 'Categoría' : 'Modalidad'; group.append(label);
+          for (const value of ['', ...values]) {
+            const button = document.createElement('button'); button.type = 'button'; button.className = 'catalog-chip';
+            button.dataset.filterChip = key; button.dataset.value = value; button.textContent = value || 'Todas'; group.append(button);
+          }
+          chips.append(group);
+        }
+        sync();
+      },
+      filter(items) {
+        return items.filter(item => matches({ search: `${item.nombre || ''} ${item.descripcion || ''} ${item.categoria || ''}`, category: item.categoria, modalities: modalities(item) }, { search: search.value, category: category.value, modality: modality.value }));
+      },
+      reset() { search.value = ''; category.value = ''; modality.value = ''; sync(); search.focus(); },
+    };
+  }
+  const api={normal,matches,attach,attachCatalog,modalities};
   if(typeof module!=='undefined' && module.exports)module.exports=api;else root.ListFilters=api;
 })(typeof window!=='undefined'?window:globalThis);

@@ -30,8 +30,6 @@ const PanelAula = (() => {
     content = element('div', 'panel-aula-courses');
     section.append(heading, content);
     document.querySelector('.welcome').after(section);
-    const menuLink = document.querySelector('.student-drawer nav a[href="#mis-inscripciones"]');
-    if (menuLink) { menuLink.href = '#mi-aula'; menuLink.textContent = 'Mi aula'; }
     section.addEventListener('click', handleClick);
     return section;
   }

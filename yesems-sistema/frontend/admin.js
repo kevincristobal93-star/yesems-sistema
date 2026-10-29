@@ -47,13 +47,7 @@ function setupPanelMotion() {
   }, { threshold: 0.08 });
   document.querySelectorAll('.metrics, .reports-section, .data-section').forEach((section) => revealObserver.observe(section));
 
-  const menuLinks = [...drawer.querySelectorAll('nav a')];
-  const sectionObserver = new IntersectionObserver((entries) => {
-    const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
-    if (!visible) return;
-    menuLinks.forEach((link) => link.classList.toggle('active', link.getAttribute('href') === `#${visible.target.id}`));
-  }, { rootMargin: '-25% 0px -60% 0px', threshold: 0.02 });
-  document.querySelectorAll('main section[id]').forEach((section) => sectionObserver.observe(section));
+  // La selección del menú depende de la vista, no de la posición de scroll.
 }
 
 if (!token || !admin) {

@@ -14,6 +14,8 @@ const loginMessage = document.querySelector('#quick-login-message');
 const loginSubmit = document.querySelector('#quick-login-submit');
 let selectedCourse = null;
 let courses = [];
+const catalogFilters = ListFilters.attachCatalog({ search, category, modality: document.querySelector('#modality'), chips: document.querySelector('#catalog-chips'), onChange: renderCourses });
+grid.addEventListener('click', event => { if (event.target.closest('[data-clear-catalog]')) catalogFilters.reset(); });
 
 const sessionToken = localStorage.getItem('yesems_token');
 const sessionUser = JSON.parse(localStorage.getItem('yesems_usuario') || 'null');
@@ -51,16 +53,11 @@ function setupStudentNavigation() {
 }
 
 function renderCourses() {
-  const query = search.value.trim().toLocaleLowerCase('es-MX');
-  const selectedCategory = category.value;
-  const filtered = courses.filter((course) => {
-    const text = `${course.nombre || ''} ${course.descripcion || ''}`.toLocaleLowerCase('es-MX');
-    return text.includes(query) && (!selectedCategory || course.categoria === selectedCategory);
-  });
+  const filtered = catalogFilters.filter(courses);
 
   count.textContent = `${filtered.length} ${filtered.length === 1 ? 'curso en catálogo' : 'cursos en catálogo'}`;
-  message.textContent = filtered.length ? '' : 'No encontramos cursos que coincidan con tu búsqueda.';
-  grid.innerHTML = filtered.map((course) => CatalogoView.card(course)).join('');
+  message.textContent = filtered.length ? '' : courses.length ? 'No encontramos cursos que coincidan con tu búsqueda.' : 'No hay cursos publicados por el momento.';
+  grid.innerHTML = filtered.length ? filtered.map((course) => CatalogoView.card(course)).join('') : CatalogoView.emptyState(courses.length > 0);
 }
 
 function openRegistration(course) {
@@ -171,9 +168,7 @@ async function loadCourses() {
     if (!response.ok || !data.ok) throw new Error(data.mensaje || 'No se pudo cargar el catálogo.');
 
     courses = data.cursos || [];
-    const categories = [...new Set(courses.map((course) => course.categoria).filter(Boolean))].sort();
-    category.insertAdjacentHTML('beforeend', categories.map((item) => `<option value="${CatalogoView.escapeHtml(item)}">${CatalogoView.escapeHtml(item)}</option>`).join(''));
-    renderCourses();
+    catalogFilters.update(courses);
   } catch (error) {
     message.textContent = error instanceof TypeError
       ? 'No fue posible conectar con el servidor. Verifica que la API esté disponible.'
@@ -182,8 +177,6 @@ async function loadCourses() {
   }
 }
 
-search.addEventListener('input', renderCourses);
-category.addEventListener('change', renderCourses);
 document.querySelector('#current-year').textContent = new Date().getFullYear();
 setupStudentNavigation();
 loadCourses();

@@ -1,5 +1,9 @@
 // Respaldo cifrado y recuperación controlada. Nunca carga .env automáticamente.
 const fs = require('node:fs');
+// Neon: configurar BACKUP_DATABASE_URL en el entorno privado del proceso.
+// Usar la conexión directa (Connection pooling desactivado, sin -pooler)
+// del proyecto y conservar sslmode=require. No pegar la URL en comandos,
+// commits ni registros. Este script no carga .env y no migra datos antiguos.
 const fsp = require('node:fs/promises');
 const path = require('node:path');
 const os = require('node:os');

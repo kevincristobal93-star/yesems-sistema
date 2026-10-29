@@ -1,5 +1,20 @@
 const {matches,normal}=require('../../frontend/list-filters');
 const row={search:'José Pérez YESEMS-2026-00007 Láser referencia ABC',course:'Láser',state:'pendiente',method:'efectivo',date:'2026-10-06'};
+
+test('categoría y modalidad se combinan con búsqueda sin alterar los filtros existentes', () => {
+  const catalog = { search: 'Diseño láser', category: 'Tecnología', modalities: ['Virtual', 'Presencial'] };
+  expect(matches(catalog, {search:'laser',category:'Tecnología',modality:'Virtual'})).toBe(true);
+  expect(matches(catalog, {category:'Artes'})).toBe(false);
+  expect(matches(catalog, {modality:'Mixta'})).toBe(false);
+  expect(matches({...catalog,modalities:[]}, {modality:'Virtual'})).toBe(false);
+});
+
+test('las modalidades solo se obtienen de campos explícitos, sin suponerlas por descripción', () => {
+  const { modalities } = require('../../frontend/list-filters');
+  expect(modalities({descripcion:'Curso virtual'})).toEqual([]);
+  expect(modalities({modalidad:'por_definir'})).toEqual([]);
+  expect(modalities({modalidad:'Virtual',modalidades:['Virtual','Presencial',null]})).toEqual(['Virtual','Presencial']);
+});
 test('búsqueda por varios términos ignora acentos y mayúsculas',()=>{
   expect(normal(' JOSÉ ')).toBe('jose');expect(matches(row,{search:'perez laser 00007'})).toBe(true);
   expect(matches(row,{search:'otro alumno'})).toBe(false);

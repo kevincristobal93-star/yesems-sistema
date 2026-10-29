@@ -9,6 +9,8 @@ const message = document.querySelector('#message');
 const search = document.querySelector('#search');
 const category = document.querySelector('#category');
 let courses = [];
+const catalogFilters = ListFilters.attachCatalog({ search, category, modality: document.querySelector('#modality'), chips: document.querySelector('#catalog-chips'), onChange: render });
+grid.addEventListener('click', event => { if (event.target.closest('[data-clear-catalog]')) catalogFilters.reset(); });
 
 function closeSession() {
   localStorage.removeItem('yesems_token');
@@ -30,18 +32,14 @@ CatalogoView.bindDetails(grid, () => courses, (course) => {
 });
 
 function render() {
-  const query = search.value.trim().toLocaleLowerCase('es-MX');
-  const filtered = courses.filter((course) => {
-    const content = `${course.nombre || ''} ${course.descripcion || ''}`.toLocaleLowerCase('es-MX');
-    return content.includes(query) && (!category.value || course.categoria === category.value);
-  });
+  const filtered = catalogFilters.filter(courses);
 
   message.textContent = filtered.length
     ? `${filtered.length} ${filtered.length === 1 ? 'curso encontrado' : 'cursos encontrados'}`
-    : 'No encontramos cursos con esos filtros.';
+    : courses.length ? 'No encontramos cursos con esos filtros.' : 'No hay cursos publicados por el momento.';
   grid.innerHTML = filtered.length
     ? filtered.map((course) => CatalogoView.card(course, true)).join('')
-    : '<div class="catalog-empty"><strong>No hay coincidencias.</strong><p>Prueba con otra palabra o selecciona todas las categorías.</p></div>';
+    : CatalogoView.emptyState(courses.length > 0);
 }
 
 async function request(path) {
@@ -62,12 +60,9 @@ async function load() {
     const enrolled = new Set((account.inscripciones || []).filter((item) => item.estado !== 'cancelada').map((item) => String(item.id_curso)));
     courses = (catalog.cursos || []).map((course) => ({ ...course, ya_inscrito: enrolled.has(String(course.id_curso)) }));
 
-    [...new Set(courses.map((item) => item.categoria).filter(Boolean))].sort().forEach((item) => {
-      category.insertAdjacentHTML('beforeend', `<option value="${CatalogoView.escapeHtml(item)}">${CatalogoView.escapeHtml(item)}</option>`);
-    });
     document.querySelector('#available-count').textContent = courses.filter((course) => !course.oferta_provisional && !course.cupo_lleno && !course.ya_inscrito).length;
     document.querySelector('#enrolled-count').textContent = enrolled.size;
-    render();
+    catalogFilters.update(courses);
   } catch (error) {
     message.textContent = error instanceof TypeError ? 'No se pudo conectar con el servidor. Intenta nuevamente.' : error.message;
     grid.innerHTML = '<div class="catalog-empty"><strong>No pudimos cargar el catálogo.</strong><p>Actualiza la página en unos momentos.</p></div>';
@@ -76,8 +71,6 @@ async function load() {
   }
 }
 
-search.addEventListener('input', render);
-category.addEventListener('change', render);
 document.querySelector('#logout').addEventListener('click', closeSession);
 setupAccount();
 load();

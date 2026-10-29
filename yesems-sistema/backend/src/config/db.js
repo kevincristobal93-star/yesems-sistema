@@ -14,15 +14,23 @@ const poolConfig = process.env.DATABASE_URL
       port: process.env.DB_PORT || 5432,
     };
 
-const pool = new Pool(poolConfig);
+const pool = new Pool({
+  ...poolConfig,
+  max: 5,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
+});
 
 pool.on('connect', () => {
-  console.log('✅ Conectado a PostgreSQL:', process.env.DB_NAME);
+  console.log('Conectado a PostgreSQL.');
 });
 
 pool.on('error', (err) => {
-  console.error('❌ Error inesperado en el pool de PostgreSQL:', err);
-  process.exit(-1);
+  // Neon puede cerrar conexiones inactivas. pg retira el cliente afectado;
+  // las siguientes solicitudes pueden abrir una conexión nueva.
+  // No registrar el objeto original: puede contener datos de conexión.
+  const code = /^[A-Z0-9_]{2,32}$/.test(err?.code || '') ? err.code : 'UNKNOWN';
+  console.error('Conexión inactiva de PostgreSQL interrumpida:', code);
 });
 
 module.exports = pool;
