@@ -4,7 +4,7 @@
     <link rel="stylesheet" href="./tokens.css">
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1.0" />
-    <meta name="description" content="Catálogo privado de cursos para alumnos de YES EMS" />
+    <meta name="description" content="Catálogo de formación y capacitación para docentes de YES EMS" />
     <title>YES EMS | Cursos disponibles</title>
   <link rel="icon" type="image/png" href="./assets/yesems-logo.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -15,14 +15,15 @@
     <link rel="stylesheet" href="./catalogo-detalle.css" />
     <link rel="stylesheet" href="./catalogo-referencia.css" />
     <link rel="stylesheet" href="./system-header.css" />
+    <link rel="stylesheet" href="./catalogo-docente.css" />
   </head>
   <body>
     <header class="student-header system-topbar system-topbar--student">
       <a class="brand system-brand" href="./panel.html" aria-label="YES EMS, ir a mi panel">
         <img src="./assets/yesems-logo.png" alt="YES EMS" width="1254" height="1254" />
-        <span class="system-brand-copy"><strong>YES EMS</strong><small>Espacio del alumno</small></span>
+        <span class="system-brand-copy"><strong>YES EMS</strong><small>Formación docente</small></span>
       </a>
-      <nav class="system-actions" aria-label="Navegación del alumno">
+      <nav class="system-actions" aria-label="Navegación del docente">
         <a class="system-action--primary system-keep-mobile" href="./panel.html">Mi panel</a>
         <a href="./configuracion.html">Mi cuenta</a>
         <button id="logout" type="button">Cerrar sesión</button>
@@ -33,19 +34,19 @@
       <section class="student-hero" aria-labelledby="catalog-title">
         <div class="hero-copy">
           <p class="eyebrow">Cursos disponibles</p>
-          <h1 id="catalog-title">Elige tu próxima capacitación.</h1>
-          <p>Consulta información, disponibilidad y precio antes de iniciar una nueva inscripción.</p>
-          <a href="./panel.html#mis-inscripciones">Revisar mis inscripciones <span aria-hidden="true">→</span></a>
+          <h1 id="catalog-title">Tu siguiente paso como docente.</h1>
+          <p>Explora los contenidos, compara opciones y elige tu próxima capacitación.</p>
+          <a href="./panel.html?vista=aula">Ir a mi aula <span aria-hidden="true">→</span></a>
         </div>
         <aside class="account-summary" aria-label="Sesión actual">
           <span id="student-initial" aria-hidden="true">A</span>
-          <div><small>Sesión activa</small><strong id="student-name">Alumno YES EMS</strong><p id="student-email"></p></div>
+          <div><small>Mi espacio docente</small><strong id="student-name">Docente YES EMS</strong><p id="student-email"></p></div>
         </aside>
       </section>
 
       <section class="catalog-section" aria-labelledby="available-title">
         <div class="section-heading">
-          <div><p class="eyebrow">Oferta académica</p><h2 id="available-title">Cursos para inscribirte</h2></div>
+          <div><p class="eyebrow">Catálogo de formación</p><h2 id="available-title">Encuentra tu próximo curso</h2></div>
           <div class="catalog-metrics" aria-label="Resumen del catálogo">
             <span><strong id="available-count">—</strong> con inscripción disponible</span>
             <span><strong id="enrolled-count">—</strong> ya inscritos</span>
@@ -59,6 +60,15 @@
         </div>
 
         <div id="catalog-chips" class="catalog-chips"></div>
+        <div class="catalog-toolbar">
+          <div class="catalog-scope" role="group" aria-label="Filtrar por inscripción">
+            <button type="button" data-scope="all" aria-pressed="true">Todos los cursos</button>
+            <button type="button" data-scope="available" aria-pressed="false">Para inscribirme</button>
+            <button type="button" data-scope="enrolled" aria-pressed="false">Mis cursos</button>
+          </div>
+          <label for="sort">Ordenar por <select id="sort"><option value="name">Nombre A–Z</option><option value="price-low">Menor precio</option><option value="price-high">Mayor precio</option><option value="duration">Menor duración</option></select></label>
+          <button type="button" id="reset-filters">Limpiar filtros</button>
+        </div>
         <div class="catalog-status"><p id="message" role="status" aria-live="polite">Cargando cursos disponibles…</p><small>Explora los cursos y consulta sus detalles antes de inscribirte.</small></div>
         <section id="courses" class="grid" aria-label="Cursos disponibles" aria-busy="true"></section>
       </section>

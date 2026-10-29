@@ -1,0 +1,31 @@
+/* Capa del catálogo privado: contenido primero, controles accesibles. */
+body main{max-width:1440px;padding:28px clamp(18px,3vw,40px) 56px}
+body .student-hero{grid-template-columns:minmax(0,1.6fr) minmax(240px,1fr);padding:32px 36px;gap:32px;box-shadow:var(--shadow-sm);background:linear-gradient(120deg,#082b40,#126779)}
+body .student-hero h1{font-size:clamp(1.8rem,3vw,2.8rem);line-height:1.15;max-width:620px}
+body .student-hero .hero-copy>p:not(.eyebrow){margin:14px 0 18px;line-height:1.6;font-size:.95rem}
+body .account-summary{padding:18px;gap:12px;border-radius:var(--radius-md);box-shadow:none}
+body .account-summary>span{flex:0 0 44px;width:44px;height:44px}
+body .account-summary strong{font-size:.86rem;line-height:1.5;overflow-wrap:anywhere;text-transform:none}
+body .catalog-section{padding-top:32px}
+body .section-heading h2{font-size:clamp(1.4rem,2.4vw,2rem)}
+body .catalog-metrics span{min-width:120px;padding:12px;background:#fff}
+body .filter-panel{margin-top:22px;padding:18px;box-shadow:none}
+.catalog-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;margin:18px 0}
+.catalog-scope{display:flex;flex-wrap:wrap;gap:6px}
+.catalog-toolbar button,.catalog-toolbar select{min-height:44px;padding:10px 13px;border:1px solid var(--line);border-radius:var(--radius-sm);background:white;color:var(--navy);font:600 .8rem 'Open Sans',sans-serif;cursor:pointer}
+.catalog-toolbar label{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:.8rem}
+.catalog-scope button[aria-pressed="true"]{background:var(--navy);border-color:var(--navy);color:white}
+.catalog-toolbar button:hover{border-color:var(--blue)}
+body .catalog-status{min-height:40px;margin-bottom:14px;font-size:.85rem}
+body .catalog-status small{max-width:370px;text-align:right}
+body .grid{gap:22px}
+body .card.catalog-tile{box-shadow:var(--shadow-sm)}
+body .card .course-cover{height:auto;aspect-ratio:16/9}
+body .card .course-more-button{min-height:48px}
+.catalog-loading{grid-column:1/-1;padding:48px 24px;background:white;border:1px solid var(--line);border-radius:var(--radius-lg);text-align:center;color:var(--muted)}
+.catalog-loading::before{content:'';display:block;width:32px;height:32px;border:3px solid var(--line);border-top-color:var(--blue);border-radius:50%;margin:0 auto 16px;animation:catalog-spin 1s linear infinite}
+@keyframes catalog-spin{to{transform:rotate(360deg)}}
+body .catalog-empty button{min-height:44px;padding:12px 20px;border:0;border-radius:var(--radius-sm);background:var(--blue);color:#fff;font:700 .85rem Montserrat,sans-serif;cursor:pointer}
+@media(max-width:900px){body .student-hero{grid-template-columns:1fr;padding:26px;gap:20px}body .account-summary{max-width:none}body .section-heading{gap:16px}body .catalog-status small{display:none}}
+@media(max-width:600px){body main{padding-top:18px}body .student-hero{padding:22px}body .account-summary p{font-size:.75rem}body .catalog-toolbar{align-items:stretch}.catalog-scope{width:100%}.catalog-scope button{flex:1;padding:10px 8px}.catalog-toolbar label{flex:1;flex-wrap:wrap}.catalog-toolbar select{max-width:100%}body .system-actions>#logout{display:inline-flex}body .catalog-status{padding:8px 0}body .catalog-metrics{width:100%}}
+@media(prefers-reduced-motion:reduce){.catalog-loading::before{animation:none}}
