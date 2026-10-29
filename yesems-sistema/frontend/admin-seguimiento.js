@@ -192,7 +192,7 @@
       ? 'Este plan ya tiene conclusiones validadas y está protegido para conservar sus requisitos.'
       : course.plan_publicado
         ? 'El plan está listo para registrar cumplimiento. Para cambiar actividades o el requisito, primero reabre el plan; esto solo es posible antes de validar una conclusión.'
-        : 'Define el porcentaje requerido y todas las sesiones o actividades. Al publicar el plan podrás registrar el cumplimiento de los alumnos.';
+        : 'Define el porcentaje requerido y todas las sesiones o actividades. Al publicar el plan podrás registrar el cumplimiento de los docentes.';
     renderActivities();
     renderStudents();
     syncControls();
@@ -226,7 +226,7 @@
     requirements.append(node('p', `Requisito del curso: ${progress.porcentaje_minimo == null ? 'por definir' : `${progress.porcentaje_minimo}% de cumplimiento`}. Estado de inscripción: ${progress.estado}.`));
     if (progress.conclusion_validada) {
       requirements.append(node('p', progress.puede_solicitar_constancia
-        ? 'Conclusión validada. El alumno cumple los requisitos para solicitar su constancia.'
+        ? 'Conclusión validada. El docente cumple los requisitos para solicitar su constancia.'
         : 'Conclusión registrada. Revisa los requisitos actuales antes de tramitar una constancia.'));
     } else if (progress.puede_concluir) {
       requirements.append(node('p', 'Cumple los requisitos. Falta tu validación final para concluir el curso.'));
@@ -345,7 +345,7 @@
     get('tracking-attendance').replaceChildren();
     syncControls();
     setBusy(true);
-    status('Cargando avance del alumno...', false, true);
+    status('Cargando avance del docente...', false, true);
     try {
       const data = await request(`/seguimiento/inscripciones/${id}`);
       state.progress = data.progreso;
@@ -427,14 +427,14 @@
     mutate(`/cursos/${state.course.id_curso}/publicar`, 'POST', undefined, 'Plan publicado. Ya puedes registrar el cumplimiento.');
   });
   get('tracking-reopen').addEventListener('click', () => {
-    if (state.busy || !state.course || !window.confirm('¿Reabrir el plan? Mientras esté en borrador no se podrán validar conclusiones ni emitir nuevas constancias. Cambiar el plan recalculará el avance de sus alumnos.')) return;
+    if (state.busy || !state.course || !window.confirm('¿Reabrir el plan? Mientras esté en borrador no se podrán validar conclusiones ni emitir nuevas constancias. Cambiar el plan recalculará el avance de sus docentes.')) return;
     mutate(`/cursos/${state.course.id_curso}/reabrir`, 'POST', undefined, 'Plan abierto para edición. Publícalo de nuevo al terminar.');
   });
   get('tracking-conclude').addEventListener('click', async () => {
     if (state.busy || !state.progress?.puede_concluir || currentAttendanceDirty()) return;
     const inscription = state.inscriptions.find((item) => String(item.id_inscripcion) === String(state.studentId));
-    if (!window.confirm(`¿Validar la conclusión de ${studentName(inscription)}? Tiene ${state.progress.cumplidas} de ${state.progress.total} actividades cumplidas (${state.progress.porcentaje}%) y el pago completo confirmado. El plan quedará protegido y el alumno podrá solicitar su constancia.`)) return;
-    await mutate(`/inscripciones/${state.studentId}/concluir`, 'POST', undefined, 'Conclusión validada. El alumno ya puede solicitar su constancia.', true);
+    if (!window.confirm(`¿Validar la conclusión de ${studentName(inscription)}? Tiene ${state.progress.cumplidas} de ${state.progress.total} actividades cumplidas (${state.progress.porcentaje}%) y el pago completo confirmado. El plan quedará protegido y el docente podrá solicitar su constancia.`)) return;
+    await mutate(`/inscripciones/${state.studentId}/concluir`, 'POST', undefined, 'Conclusión validada. El docente ya puede solicitar su constancia.', true);
     loadDashboard();
     loadCertificates();
   });

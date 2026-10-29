@@ -366,14 +366,14 @@ ensureJourney();
 if (!token || !user) window.location.replace('./cursos.html');
 else {
   setupPanelMotion();
-  const fullName = `${user.nombre || ''} ${user.apellido || ''}`.trim() || 'Alumno';
-  document.querySelector('#user-name').textContent = user.nombre || 'alumno';
+  const fullName = `${user.nombre || ''} ${user.apellido || ''}`.trim() || 'Docente';
+  document.querySelector('#user-name').textContent = user.nombre || 'docente';
   document.querySelector('#student-folio').textContent = user.folio || 'Pendiente de completar';
   document.querySelector('#profile-name').textContent = fullName;
   document.querySelector('#profile-avatar').textContent = fullName.charAt(0).toUpperCase();
   document.querySelector('#profile-email').textContent = user.email || 'No disponible';
   document.querySelector('#profile-folio').textContent = user.folio || 'Pendiente';
-  document.querySelector('#profile-role').textContent = user.rol || 'Alumno';
+  document.querySelector('#profile-role').textContent = ['cliente', 'alumno'].includes(user.rol) ? 'Docente' : (user.rol || 'Docente');
   document.querySelector('#header-avatar').textContent = fullName.charAt(0).toUpperCase();
   document.querySelector('#header-name').textContent = user.nombre || 'Mi cuenta';
   document.querySelector('#drawer-avatar').textContent = fullName.charAt(0).toUpperCase();

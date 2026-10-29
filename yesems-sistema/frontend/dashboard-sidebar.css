@@ -1,0 +1,45 @@
+/* Navegación compartida: escritorio persistente / móvil desplegable. */
+.sidebar-layout { --sidebar-width: 252px; }
+.sidebar-layout #admin-menu,.sidebar-layout #student-drawer {
+  inset:0 auto 0 0; width:min(var(--sidebar-width),88vw); height:100dvh;
+  box-sizing:border-box; padding:24px 16px; overflow-y:auto;
+  color:#dce8ef; background:linear-gradient(165deg,#03283f,#061725);
+  border-right:1px solid #234052; box-shadow:var(--shadow-lg); z-index:110;
+  transition:transform .25s var(--ease); visibility:hidden;
+}
+.sidebar-layout #admin-menu.open,.sidebar-layout #student-drawer.open {visibility:visible;transform:translateX(0)}
+.sidebar-layout .sidebar-brand {display:flex;align-items:center;gap:10px;margin-bottom:24px;color:#fff;text-decoration:none}
+.sidebar-brand img {width:42px;height:48px;object-fit:contain}
+.sidebar-brand span {display:grid;gap:4px;font:800 1rem Montserrat,sans-serif}
+.sidebar-brand small {color:var(--gold);font-size:.65rem;letter-spacing:.13em;text-transform:uppercase}
+.sidebar-layout .sidebar-group {margin:20px 10px 6px;color:#9bb4c5;font:800 .65rem Montserrat,sans-serif;letter-spacing:.12em;text-transform:uppercase}
+.sidebar-layout #admin-menu nav,.sidebar-layout #student-drawer nav {display:flex;flex-direction:column;gap:5px;margin:0}
+.sidebar-layout #admin-menu nav a,.sidebar-layout #student-drawer nav a {display:flex;align-items:center;gap:12px;min-height:46px;padding:12px;border-radius:var(--radius-sm);color:#c5d5e0;text-decoration:none;font:600 .82rem/1.5 Montserrat,sans-serif;box-sizing:border-box;transition:background .2s var(--ease),color .2s var(--ease)}
+.sidebar-layout #admin-menu nav a:hover,.sidebar-layout #student-drawer nav a:hover {background:#153c51;color:#fff}
+.sidebar-layout #admin-menu nav a.active,.sidebar-layout #student-drawer nav a.active {background:var(--gold);color:#09273b;box-shadow:0 5px 20px #0002}
+.sidebar-layout nav .sidebar-icon {width:19px;height:19px;flex-shrink:0;fill:none;stroke:currentColor;stroke-width:1.7}
+.sidebar-layout #admin-menu nav svg {width:19px;height:19px;flex-shrink:0}
+.sidebar-layout .drawer-logout {margin-top:28px!important;flex-shrink:0;min-height:44px}
+.sidebar-layout .drawer-profile {margin:0 0 12px;padding:16px 0;font-size:.8rem}
+.sidebar-layout .drawer-profile>div {min-width:0;overflow-wrap:anywhere}
+.sidebar-layout #menu-overlay,.sidebar-layout #student-menu-overlay {z-index:109}
+.sidebar-layout main section[id] {scroll-margin-top:110px}
+.sidebar-layout main>* {min-width:0}
+.sidebar-layout .admin-footer {margin-left:0;margin-right:0}
+.sidebar-layout .table-wrap {max-width:100%;overflow-x:auto}
+.sidebar-layout .drawer-top,.sidebar-layout .drawer-heading {margin-bottom:16px}
+.sidebar-layout #admin-menu .drawer-top>img,.sidebar-layout #admin-menu>.admin-tag,.sidebar-layout #admin-menu>p,.sidebar-layout #student-drawer .drawer-heading>strong {display:none}
+.sidebar-layout .drawer-top,.sidebar-layout .drawer-heading {justify-content:flex-end}
+@media(min-width:1100px){
+  body.sidebar-layout {padding-left:var(--sidebar-width)}
+  .sidebar-layout #admin-menu,.sidebar-layout #student-drawer {visibility:visible;transform:none;box-shadow:none}
+  .sidebar-layout #menu-button,.sidebar-layout #student-menu-button,.sidebar-layout .drawer-top,.sidebar-layout .drawer-heading {display:none!important}
+  .sidebar-layout .system-topbar {width:100%;box-sizing:border-box;padding:16px 32px}
+  .sidebar-layout main.dashboard,.sidebar-layout main.page-content {width:100%;max-width:1500px;box-sizing:border-box;padding:32px;margin:0 auto}
+  .sidebar-layout #menu-overlay,.sidebar-layout #student-menu-overlay {display:none!important}
+}
+@media(max-width:1099px){
+  .sidebar-layout #admin-menu,.sidebar-layout #student-drawer {transform:translateX(-105%)}
+  body.sidebar-layout.sidebar-open {overflow:hidden}
+}
+@media(prefers-reduced-motion:reduce){.sidebar-layout #admin-menu,.sidebar-layout #student-drawer,.sidebar-layout nav a {transition:none!important}}

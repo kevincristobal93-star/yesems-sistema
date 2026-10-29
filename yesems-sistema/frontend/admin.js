@@ -131,7 +131,7 @@ async function loadAvailabilityManagement() {
       const info = availabilityText(availability);
       const details = [availability.dia_semana, info.time, ...info.dates, availability.informacion_adicional].filter(Boolean).map(escapeHtml).join(' · ');
       return `<article class="availability-card"><div><h4>${escapeHtml(availability.curso_nombre || 'Curso')}</h4><p>${details || 'Disponibilidad por confirmar.'}${availability.notas ? `<br>${escapeHtml(availability.notas)}` : ''}</p><div class="availability-tags"><span>${info.mode}</span>${availability.enlace ? '<span>Enlace configurado</span>' : ''}</div></div><div class="availability-actions"><button type="button" data-edit-availability="${availability.id_horario}">Editar</button><button type="button" data-delete-availability="${availability.id_horario}">Eliminar</button></div></article>`;
-    }).join('') : '<p class="empty-state">Aún no se ha definido disponibilidad. Puedes crear una y comunicar los detalles al alumno.</p>';
+    }).join('') : '<p class="empty-state">Aún no se ha definido disponibilidad. Puedes crear una y comunicar los detalles al docente.</p>';
   } catch (error) {
     availabilityMessage.hidden = false;
     availabilityMessage.textContent = error.message;
@@ -378,7 +378,7 @@ document.querySelector('#payment-table').addEventListener('click', async (event)
     return;
   }
   const button = event.target.closest('[data-payment]');
-  if (!button || !window.confirm(button.dataset.state === 'completado' ? '¿Revisaste el comprobante y cotejaste el monto con el pago recibido en YES EMS? Confirma solo si ambos coinciden.' : '¿Deseas cancelar este pago? Informa al alumno qué debe corregir.')) return;
+  if (!button || !window.confirm(button.dataset.state === 'completado' ? '¿Revisaste el comprobante y cotejaste el monto con el pago recibido en YES EMS? Confirma solo si ambos coinciden.' : '¿Deseas cancelar este pago? Informa al docente qué debe corregir.')) return;
   button.disabled = true;
   try {
     await request(`/administradores/pagos/${button.dataset.payment}/validar`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ estado: button.dataset.state }) });
@@ -410,7 +410,7 @@ document.querySelector('#certificate-table').addEventListener('click', async (ev
 
 document.querySelector('#inscription-table').addEventListener('click', async (event) => {
   const button = event.target.closest('[data-cancel-inscription]');
-  if (!button || !window.confirm('¿Cancelar esta inscripción? El alumno no será eliminado; se conservará su historial.')) return;
+  if (!button || !window.confirm('¿Cancelar esta inscripción? El docente no será eliminado; se conservará su historial.')) return;
   button.disabled = true;
   try {
     await request(`/administradores/inscripciones/${button.dataset.cancelInscription}/cancelar`, { method: 'PATCH' });
