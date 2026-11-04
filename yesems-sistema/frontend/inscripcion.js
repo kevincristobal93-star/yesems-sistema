@@ -93,8 +93,16 @@ async function loadCourse() {
 
 function availabilityLabel(item) {
   const modality = { en_linea: 'En línea', presencial: 'Presencial', hibrida: 'Híbrida', por_definir: 'Por definir' }[item.modalidad] || 'Por definir';
+  const dateLabel = (value) => {
+    if (!value) return '';
+    const date = new Date(`${String(value).slice(0, 10)}T00:00:00`);
+    return Number.isNaN(date.getTime()) ? '' : new Intl.DateTimeFormat('es-MX', { day: 'numeric', month: 'short', year: 'numeric' }).format(date);
+  };
+  const start = dateLabel(item.fecha_inicio);
+  const end = dateLabel(item.fecha_fin);
+  const dates = start && end ? (start === end ? start : `${start} al ${end}`) : start || end;
   const time = item.hora_inicio && item.hora_fin ? ` · ${String(item.hora_inicio).slice(0, 5)} – ${String(item.hora_fin).slice(0, 5)}` : '';
-  return [modality, item.dia_semana, time, item.informacion_adicional].filter(Boolean).join(' · ');
+  return [dates, item.dia_semana, time, modality, item.informacion_adicional].filter(Boolean).join(' · ');
 }
 
 async function loadAvailabilities() {
