@@ -4,7 +4,7 @@
     <link rel="stylesheet" href="./tokens.css">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Accede al portal docente de YES EMS para consultar tus cursos, pagos y constancias.">
+    <meta name="description" content="Accede al portal docente de YES EMS para consultar tus cursos, solicitudes, pagos y constancias.">
     <meta name="robots" content="noindex, nofollow">
     <title>Portal docente | YES EMS</title>
     <link rel="icon" type="image/png" href="./assets/yesems-logo.png">
@@ -14,22 +14,105 @@
     <link rel="stylesheet" href="./styles.css">
     <link rel="stylesheet" href="./portal-docente.css">
   </head>
+
   <body class="teacher-portal">
-    <main class="portal-shell">
-      <section class="portal-card" aria-labelledby="portal-title">
-        <a class="portal-brand" href="https://servicioseducativosyesems.com" aria-label="Volver al sitio de YES EMS">
-          <img src="./assets/yesems-logo.png" alt="YES EMS" width="1254" height="1254">
+    <main class="portal-layout">
+      <section class="portal-brand-panel" aria-labelledby="welcome-title">
+        <a class="portal-logo" href="https://servicioseducativosyesems.com" aria-label="YES EMS, sitio público">
+          <img src="./assets/yesems-logo.png" alt="YES EMS, Centro de Capacitación y Servicios Educativos" width="1254" height="1254">
         </a>
-        <p class="eyebrow">Plataforma YES EMS</p>
-        <h1 id="portal-title">Portal docente</h1>
-        <p class="portal-description">Inicia sesión para revisar tus cursos, solicitudes, pagos y constancias desde un solo lugar.</p>
-        <button class="primary-button" id="open-access" type="button">Iniciar sesión</button>
-        <p class="portal-help">¿Aún no tienes cuenta? <a href="./cursos.html">Consulta los cursos disponibles</a>.</p>
-        <a class="public-site-link" href="https://servicioseducativosyesems.com">Volver al sitio público</a>
+
+        <div class="brand-copy">
+          <p class="portal-eyebrow">Centro de Capacitación y Servicios Educativos</p>
+          <h1 id="welcome-title">Tu formación, en un solo lugar.</h1>
+          <p class="brand-description">
+            Bienvenido al portal docente de YES EMS. Consulta y da seguimiento a tu disponibilidad del servicio.
+          </p>
+
+          <ul class="benefit-list" aria-label="Beneficios del portal">
+            <li>
+              <span class="benefit-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21V5.5Zm0 0A2.5 2.5 0 0 1 6.5 8H20M8 12h8m-8 4h6"/></svg>
+              </span>
+              <span><strong>Mis cursos</strong><small>Consulta tus cursos y su disponibilidad.</small></span>
+            </li>
+            <li>
+              <span class="benefit-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 5h16v14H4zM4 9h16m-12 4h4m-4 3h7"/></svg>
+              </span>
+              <span><strong>Solicitudes y pagos</strong><small>Revisa el estado y seguimiento de tus solicitudes.</small></span>
+            </li>
+            <li>
+              <span class="benefit-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M6 3h12v18l-6-3-6 3V3Zm3 5h6m-6 4h6"/></svg>
+              </span>
+              <span><strong>Constancias</strong><small>Encuentra tus documentos y avances.</small></span>
+            </li>
+          </ul>
+        </div>
+
+        <p class="brand-footer">YES EMS · Formación que impulsa</p>
       </section>
-      <p class="portal-footer">YES EMS · Centro de Capacitación y Servicios Educativos</p>
+
+      <section class="portal-form-panel" aria-labelledby="portal-title">
+        <div class="login-card">
+          <p class="card-eyebrow">Acceso a tu cuenta</p>
+          <h2 id="portal-title">Portal docente</h2>
+          <p class="login-intro">Ingresa con el correo y la contraseña de tu cuenta YES EMS.</p>
+
+          <form id="login-form" class="portal-login-form" novalidate>
+            <label for="email">Correo electrónico</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autocomplete="username"
+              inputmode="email"
+              placeholder="nombre@ejemplo.com"
+              maxlength="150"
+              required
+            >
+
+            <label for="password">Contraseña</label>
+            <div class="password-control">
+              <input
+                id="password"
+                name="password"
+                type="password"
+                autocomplete="current-password"
+                placeholder="Escribe tu contraseña"
+                minlength="8"
+                maxlength="72"
+                required
+              >
+              <button
+                id="toggle-password"
+                class="password-toggle"
+                type="button"
+                aria-label="Mostrar contraseña"
+                aria-controls="password"
+              >Ver</button>
+            </div>
+
+            <p id="form-message" class="form-message" role="status" aria-live="polite"></p>
+
+            <button id="submit-button" class="login-button" type="submit">
+              Iniciar sesión
+            </button>
+          </form>
+
+          <nav class="secondary-links" aria-label="Ayuda y enlaces">
+            <a class="forgot-link" href="./index.html">¿Olvidaste tu contraseña?</a>
+            <a class="catalog-link" href="./cursos.html">Consultar cursos disponibles</a>
+          </nav>
+
+          <a class="public-site-link" href="https://servicioseducativosyesems.com">
+            Volver al sitio público
+          </a>
+        </div>
+      </section>
     </main>
-    <script src="./acceso.js"></script>
-    <script src="./portal-docente.js"></script>
+
+    <script src="./app.js"></script>
   </body>
 </html>
