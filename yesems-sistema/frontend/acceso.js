@@ -1,7 +1,7 @@
 /* Acceso compartido: no simula verificaciones ni incluye claves privadas. */
 (() => {
   const api = 'https://yesems-sistema-1.onrender.com/api';
-  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = './acceso.css?v=2'; document.head.append(css);
+  const css = document.createElement('link'); css.rel = 'stylesheet'; css.href = './acceso.css?v=3'; document.head.append(css);
   const dialog = document.createElement('dialog');
   dialog.id = 'verified-access'; dialog.setAttribute('aria-labelledby', 'verified-title');
   dialog.innerHTML = `<button type="button" class="access-close" aria-label="Cerrar">×</button>
@@ -9,6 +9,16 @@
     <p class="access-eyebrow">BIENVENIDO A YES EMS</p><h2 id="verified-title">Iniciar sesión</h2>
     <p class="access-intro" id="access-intro">Tus cursos y constancias, en un solo lugar.</p>
     <p id="access-course"></p>
+    <section id="access-method-choice" class="access-choice" aria-label="Método de acceso" hidden>
+      <button type="button" id="access-choose-google">Continuar con Google</button>
+      <button type="button" id="access-choose-email">Continuar con correo</button>
+    </section>
+    <section id="access-email-choice" class="access-choice" aria-label="Tipo de acceso por correo" hidden>
+      <p>¿Ya tienes una cuenta?</p>
+      <button type="button" id="access-email-existing">Sí, iniciar sesión</button>
+      <button type="button" id="access-email-new">No, crear cuenta</button>
+      <button type="button" class="access-back" id="access-email-back">Volver a elegir método</button>
+    </section>
     <ol id="access-steps" class="access-steps" hidden aria-label="Pasos para crear tu cuenta"><li>Verifica tu correo</li><li>Completa tu perfil</li><li>Crea tu contraseña</li></ol>
     <form id="access-login-form" hidden>
       <label>Correo electrónico<input id="access-login-email" type="email" autocomplete="username" required maxlength="150" placeholder="tu@correo.com"></label>
@@ -29,8 +39,9 @@
       <p class="access-note">La contraseña de Google se recupera directamente con Google.</p><a href="https://accounts.google.com/signin/recovery" target="_blank" rel="noopener noreferrer">Recuperar mi cuenta de Google</a>
       <button type="button" id="access-recovery-back">Volver a iniciar sesión</button>
     </section>
-    <div id="access-identify">
+    <div id="access-identify" hidden>
     <div class="access-provider"><div id="access-google"></div><p id="access-google-note" class="access-note"></p></div>
+    <button type="button" class="access-back" id="access-google-back" hidden>Volver a elegir método</button>
     <div class="access-divider">o con tu correo electrónico</div>
     <section id="access-registration" hidden aria-label="Datos de la nueva cuenta">
     <p class="access-note">Completa los datos de tu nueva cuenta de YES EMS.</p>
@@ -89,10 +100,47 @@
   };
   let course; let sentEmail; let busy = false; let version = 0; let sdk; let mailEnabled = false;
   let setupToken = null; let setupFromGoogle = false;
+  function methodChoice() {
+    clearSetup();
+    get('access-method-choice').hidden=false;get('access-email-choice').hidden=true;
+    get('access-identify').hidden=true;get('access-recovery').hidden=true;get('access-login-help').hidden=true;
+    get('access-steps').hidden=true;get('access-message').textContent='';
+    get('verified-title').textContent='Entrar al Portal docente';
+    get('access-intro').textContent='Elige cómo quieres acceder a tus cursos, solicitudes, pagos y constancias.';
+    dialog.dataset.mode='choice';dialog.scrollTop=0;
+  }
+  function emailChoice() {
+    get('access-method-choice').hidden=true;get('access-email-choice').hidden=false;
+    get('access-identify').hidden=true;get('access-message').textContent='';
+    get('verified-title').textContent='Acceso con correo';
+    get('access-intro').textContent='Indica si ya tienes una cuenta YES EMS o si vas a crearla.';
+    dialog.dataset.mode='email-choice';dialog.scrollTop=0;
+  }
+  function googleMode() {
+    get('access-method-choice').hidden=true;get('access-email-choice').hidden=true;
+    get('access-identify').hidden=false;get('access-login-form').hidden=true;
+    get('access-identify').querySelector('.access-provider').hidden=false;
+    get('access-email-form').hidden=true;get('access-code-form').hidden=true;get('access-registration').hidden=true;
+    get('access-recovery').hidden=true;get('access-login-help').hidden=true;
+    get('access-identify').querySelector('.access-divider').hidden=true;
+    get('access-google-back').hidden=false;
+    get('verified-title').textContent='Continuar con Google';
+    get('access-intro').textContent='Autoriza tu cuenta de Google para entrar al Portal docente.';
+    get('access-message').textContent='';dialog.dataset.mode='google';
+  }
+  get('access-choose-google').onclick=googleMode;
+  get('access-choose-email').onclick=emailChoice;
+  get('access-email-back').onclick=methodChoice;
+  get('access-email-existing').onclick=()=>mode(false);
+  get('access-email-new').onclick=()=>mode(true);
+  get('access-google-back').onclick=methodChoice;
   function clearSetup() {
     setupToken = null; setupFromGoogle = false;
     get('access-setup-form').reset(); get('access-setup-form').hidden = true;
     get('access-identify').hidden = false;
+    get('access-method-choice').hidden = true;get('access-email-choice').hidden = true;
+    get('access-identify').querySelector('.access-provider').hidden=false;get('access-google-back').hidden=true;
+    get('access-identify').querySelector('.access-divider').hidden = false;
     dialog.querySelector('.access-switch').hidden = false;
     get('access-registration').querySelectorAll('input').forEach(input => { input.required = false; });
   }
@@ -100,6 +148,10 @@
   function mode(register) {
     if (busy) return;
     clearSetup();
+    get('access-method-choice').hidden=true;get('access-email-choice').hidden=true;
+    get('access-identify').hidden=false;get('access-identify').querySelector('.access-provider').hidden=true;
+    get('access-google-back').hidden=true;
+    get('access-identify').querySelector('.access-divider').hidden=true;
     get('access-login-form').hidden=register;get('access-email-form').hidden=!register;get('access-recovery').hidden=true;
     get('access-message').textContent='';get('access-steps').hidden=!register;
     if(register)step(1);
@@ -243,7 +295,9 @@
   dialog.addEventListener('close',()=>{version++;clearSetup();get('access-code').value='';get('access-login-password').value='';get('access-recovery-reset').reset();});
   window.YesemsAccess={open:async(selected=null,register=false)=>{
     if(dialog.open || busy)return;
-    mode(register||Boolean(document.querySelector('#registration-form')));
+    if(Boolean(document.querySelector('#registration-form'))) mode(true);
+    else if(register) emailChoice();
+    else methodChoice();
     course=selected;sentEmail=null;mailEnabled=false;version++;const current=version;
     get('access-course').textContent=course?.nombre ? 'Curso: '+course.nombre : '';
     get('access-code-form').hidden=true;get('access-code').value='';get('access-message').textContent='Consultando opciones de acceso…';
