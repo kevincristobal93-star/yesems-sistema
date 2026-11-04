@@ -5,6 +5,9 @@ const { descargarComprobante } = require('../services/constancia-download.servic
 const { withEnrollmentLock } = require('../models/seguimiento.model');
 const { positiveId, httpError, sendError } = require('../utils/http-error');
 const fs = require('fs/promises');
+const crypto = require('crypto');
+const mercadoPago = require('../services/mercado-pago.service');
+const mercadoPagoModel = require('../models/mercado-pago.model');
 
 const METODOS_VALIDOS = ['efectivo', 'transferencia'];
 const ESTADOS_VALIDOS = ['pendiente', 'completado', 'cancelado'];
@@ -22,7 +25,8 @@ const obtenerPagoPropio = async (req, res) => {
               u.folio,
               COALESCE(json_agg(json_build_object(
                 'id_pago', p.id_pago, 'monto', p.monto, 'metodo_pago', p.metodo_pago,
-                'referencia', p.referencia, 'comprobante_url', p.comprobante_url, 'estado', p.estado, 'fecha_pago', p.fecha_pago
+                'referencia', p.referencia, 'comprobante_url', p.comprobante_url, 'estado', p.estado, 'fecha_pago', p.fecha_pago,
+                'mp_checkout_url', p.mp_checkout_url, 'mp_status', p.mp_status, 'mp_payment_id', p.mp_payment_id
               ) ORDER BY p.fecha_pago) FILTER (WHERE p.id_pago IS NOT NULL), '[]') AS pagos
        FROM inscripciones i
        JOIN cursos c ON c.id_curso = i.id_curso
@@ -39,6 +43,64 @@ const obtenerPagoPropio = async (req, res) => {
   } catch (error) {
     console.error('Error al obtener pago propio:', error);
     sendError(res, error);
+  }
+};
+
+const crearCheckoutMercadoPago = async (req, res) => {
+  let paymentId = null;
+  try {
+    const { id_inscripcion } = req.body;
+    positiveId(id_inscripcion);
+    if (!mercadoPago.getConfiguration()) throw httpError(503, 'El pago en línea aún no está habilitado. Contacta a YES EMS.');
+    const externalReference = `yesems-${crypto.randomUUID()}`;
+    const attempt = await mercadoPagoModel.prepararPago({
+      idInscripcion: id_inscripcion,
+      idUsuario: req.admin.id_usuario,
+      externalReference,
+    });
+    if (attempt.checkoutUrl) return res.json({ ok: true, checkout_url: attempt.checkoutUrl, existente: true });
+    paymentId = attempt.payment.id_pago;
+    const preference = await mercadoPago.createPreference({
+      paymentId,
+      enrollmentId: id_inscripcion,
+      amount: attempt.amount,
+      courseName: attempt.courseName,
+      email: attempt.email,
+      externalReference,
+    });
+    await mercadoPagoModel.guardarPreferencia({ idPago: paymentId, preferenceId: preference.id, checkoutUrl: preference.checkoutUrl });
+    res.status(201).json({ ok: true, checkout_url: preference.checkoutUrl });
+  } catch (error) {
+    if (paymentId) await mercadoPagoModel.cancelarPreparacion(paymentId).catch(() => {});
+    sendError(res, error);
+  }
+};
+
+const webhookMercadoPago = async (req, res) => {
+  try {
+    const type = req.query.type || req.query.topic || req.body?.type;
+    if (type !== 'payment') return res.sendStatus(200);
+    const paymentId = String(req.query['data.id'] || req.body?.data?.id || '');
+    if (!/^\d{1,30}$/.test(paymentId)) return res.sendStatus(400);
+    const config = mercadoPago.getConfiguration();
+    if (!config) return res.sendStatus(503);
+    const signatureValid = mercadoPago.verifyWebhookSignature({
+      signature: req.headers['x-signature'],
+      requestId: req.headers['x-request-id'],
+      dataId: paymentId,
+      secret: config.webhookSecret,
+    });
+    if (!signatureValid) return res.sendStatus(401);
+
+    const payment = await mercadoPago.getPayment(paymentId);
+    if (String(payment.id) !== paymentId) return res.sendStatus(400);
+    const result = await mercadoPagoModel.procesarPagoVerificado(payment);
+    if (!result.matched) return res.sendStatus(200);
+    if (result.mismatch) console.error('Mercado Pago requiere revisión manual para pago de inscripción.');
+    return res.sendStatus(200);
+  } catch (error) {
+    console.error('No se pudo procesar una notificación de Mercado Pago:', error.statusCode || error.code || 'ERROR');
+    return res.sendStatus(500);
   }
 };
 
@@ -217,6 +279,8 @@ const resumenPorInscripcion = async (req, res) => {
 };
 
 module.exports = {
+  crearCheckoutMercadoPago,
+  webhookMercadoPago,
   obtenerPagoPropio,
   crearPagoPropio,
   descargarComprobantePropio,

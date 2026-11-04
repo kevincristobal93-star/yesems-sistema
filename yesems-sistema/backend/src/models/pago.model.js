@@ -84,6 +84,10 @@ const crearPago = async (datos) => {
 const actualizarEstadoPago = async (id, estado) => {
   if (!['completado', 'cancelado'].includes(estado)) throw httpError(400, 'Solo puedes confirmar o rechazar un pago pendiente');
   return cambiarPago(id, async (client, idInscripcion) => {
+    const payment = (await client.query('SELECT metodo_pago, mp_status FROM pagos WHERE id_pago=$1 FOR UPDATE', [id])).rows[0];
+    if (payment?.metodo_pago === 'mercado_pago' && estado === 'completado' && payment.mp_status !== 'approved') {
+      throw httpError(409, 'Los pagos de Mercado Pago solo se confirman después de verificar la notificación del proveedor.');
+    }
     const result = await client.query("UPDATE pagos SET estado = $1 WHERE id_pago = $2 AND estado = 'pendiente' RETURNING *", [estado, id]);
     if (!result.rowCount) throw httpError(409, 'El pago ya fue revisado');
     await sincronizarConfirmacion(client, idInscripcion);

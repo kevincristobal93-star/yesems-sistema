@@ -335,7 +335,16 @@ async function loadPendingPayments() {
     const payments = data.pagos || [];
     document.querySelector('#pending-payment-count').textContent = `${payments.length} pendientes`;
     paymentMessage.hidden = true;
-    document.querySelector('#payment-table').innerHTML = payments.length ? payments.map((payment) => `<tr><td>${escapeHtml(payment.usuario_nombre)} ${escapeHtml(payment.usuario_apellido)}<br><small>${escapeHtml(payment.folio || '')}</small></td><td>${escapeHtml(payment.curso_nombre)}</td><td>${money.format(Number(payment.monto))}</td><td>${escapeHtml(payment.metodo_pago)}<br><small>${escapeHtml(payment.referencia || 'Sin referencia')}</small>${payment.comprobante_url ? `<br><button class="receipt-button" data-payment-receipt="${payment.id_pago}">Ver comprobante</button>` : '<br><small>Sin archivo adjunto</small>'}</td><td>${new Date(payment.fecha_pago).toLocaleDateString('es-MX')}</td><td class="action-group"><button class="table-action approve" data-payment="${payment.id_pago}" data-state="completado">Aprobar</button><button class="table-action cancel" data-payment="${payment.id_pago}" data-state="cancelado">Cancelar</button></td></tr>`).join('') : '<tr><td colspan="6">No hay pagos pendientes de validación.</td></tr>';
+    document.querySelector('#payment-table').innerHTML = payments.length ? payments.map((payment) => {
+      const onlinePayment = payment.metodo_pago === 'mercado_pago';
+      const details = onlinePayment
+        ? `<small>Estado de Mercado Pago: ${escapeHtml(payment.mp_status || 'en proceso')}. La confirmación se recibe automáticamente.</small>`
+        : `<small>${escapeHtml(payment.referencia || 'Sin referencia')}</small>${payment.comprobante_url ? `<br><button class="receipt-button" data-payment-receipt="${payment.id_pago}">Ver comprobante</button>` : '<br><small>Sin archivo adjunto</small>'}`;
+      const actions = onlinePayment
+        ? '<small>Esperando verificación segura del proveedor</small>'
+        : `<button class="table-action approve" data-payment="${payment.id_pago}" data-state="completado">Aprobar</button><button class="table-action cancel" data-payment="${payment.id_pago}" data-state="cancelado">Cancelar</button>`;
+      return `<tr><td>${escapeHtml(payment.usuario_nombre)} ${escapeHtml(payment.usuario_apellido)}<br><small>${escapeHtml(payment.folio || '')}</small></td><td>${escapeHtml(payment.curso_nombre)}</td><td>${money.format(Number(payment.monto))}</td><td>${escapeHtml(payment.metodo_pago)}<br>${details}</td><td>${new Date(payment.fecha_pago).toLocaleDateString('es-MX')}</td><td class="action-group">${actions}</td></tr>`;
+    }).join('') : '<tr><td colspan="6">No hay pagos pendientes de validación.</td></tr>';
     ListFilters.attach(document.querySelector('#payment-table'), payments, {method:true,map:(item)=>({search:[item.usuario_nombre,item.usuario_apellido,item.curso_nombre,item.alumno_folio,item.alumno_email,item.folio,item.referencia,item.id_inscripcion].filter(Boolean).join(' '),course:item.curso_nombre||'',state:item.estado||'pendiente',method:item.metodo_pago||'',date:String(item.fecha_inscripcion||item.fecha_pago||item.fecha_emision||'').slice(0,10)})});
   } catch (error) { paymentMessage.textContent = error.message; }
 }

@@ -66,6 +66,7 @@ async function runStartupMigrations() {
   await pool.query(await fs.readFile(path.resolve(__dirname, '../../database/migrations/014_course_gallery.sql'), 'utf8'));
   await pool.query(await fs.readFile(path.resolve(__dirname, '../../database/migrations/015_classroom_material_organization.sql'), 'utf8'));
   await pool.query(await fs.readFile(path.resolve(__dirname, '../../database/migrations/016_student_profile_photo.sql'), 'utf8'));
+  await pool.query(await fs.readFile(path.resolve(__dirname, '../../database/migrations/017_mercado_pago.sql'), 'utf8'));
   await seedCatalog();
   await bootstrapInitialAdmin();
 }

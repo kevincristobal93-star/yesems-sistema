@@ -7,6 +7,14 @@ const submitButton = document.querySelector('#submit-button');
 document.querySelector('#footer-year').textContent = new Date().getFullYear();
 let enrollment = null;
 
+function isMercadoPagoUrl(value) {
+  const checkout = new URL(value);
+  const host = checkout.hostname.toLowerCase();
+  const validHost = host === 'mercadopago.com' || host.endsWith('.mercadopago.com')
+    || host === 'mercadopago.com.mx' || host.endsWith('.mercadopago.com.mx');
+  return checkout.protocol === 'https:' && validHost ? checkout : null;
+}
+
 if (!token || !inscriptionId || !/^\d+$/.test(inscriptionId)) {
   window.location.replace('./cursos.html');
 } else { loadPayment(); }
@@ -46,13 +54,33 @@ async function loadPayment() {
   } catch (error) { pageMessage.textContent = error instanceof TypeError ? 'No se pudo conectar con el servidor.' : error.message; }
 }
 function showPending() {
-  setText('#enrollment-status', 'Pago en revisión');
+  const pendingPayment = enrollment.pagos.find((payment) => payment.estado === 'pendiente');
+  const isMercadoPago = pendingPayment?.metodo_pago === 'mercado_pago';
+  setText('#enrollment-status', isMercadoPago ? 'Pago pendiente en Mercado Pago' : 'Pago en revisión');
   document.querySelector('#enrollment-status').className = 'badge badge--info';
   formMessage.classList.add('success');
-  formMessage.textContent = 'Comprobante recibido. Tu inscripción aún no está confirmada: administración debe verificar el dinero recibido. Consulta el resultado en Mi panel.';
+  formMessage.textContent = isMercadoPago
+    ? 'El pago todavía no está confirmado. YES EMS habilitará tu inscripción cuando Mercado Pago notifique y el servidor verifique el pago.'
+    : 'Comprobante recibido. Tu inscripción aún no está confirmada: administración debe verificar el dinero recibido. Consulta el resultado en Mi panel.';
+  document.querySelector('#mercado-pago-resume')?.remove();
+  if (isMercadoPago && pendingPayment.mp_checkout_url) {
+    try {
+      const checkout = isMercadoPagoUrl(pendingPayment.mp_checkout_url);
+      if (checkout) {
+        const link = document.createElement('a');
+        link.id = 'mercado-pago-resume';
+        link.className = 'whatsapp-link';
+        link.href = checkout.href;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        link.textContent = 'Continuar pago en Mercado Pago';
+        form.after(link);
+      }
+    } catch { /* Ignore invalid provider URLs. */ }
+  }
   form.querySelectorAll('input, select, button').forEach((element) => { element.disabled = true; });
-  submitButton.textContent = 'Pago enviado a revisión';
-  submitButton.setAttribute('aria-label', 'Pago enviado a revisión');
+  submitButton.textContent = isMercadoPago ? 'Pago en proceso' : 'Pago enviado a revisión';
+  submitButton.setAttribute('aria-label', submitButton.textContent);
 }
 const form = document.querySelector('#payment-form');
 const cashInstructions=document.createElement('section');
@@ -67,17 +95,53 @@ form.before(transferInstructions);
 const methodSelect=document.querySelector('#method');
 methodSelect.querySelector('[value="efectivo"]').textContent='Efectivo en YES EMS';
 methodSelect.value='efectivo';
-methodSelect.addEventListener('change',()=>{cashInstructions.hidden=methodSelect.value!=='efectivo';transferInstructions.hidden=methodSelect.value!=='transferencia';});
 submitButton.textContent='Enviar comprobante a revisión';
 const receiptField = document.createElement('div');
 receiptField.className = 'receipt-field';
 receiptField.innerHTML = '<label for="receipt">Comprobante de pago</label><input id="receipt" type="file" accept="application/pdf,image/jpeg,image/png" required /><p class="field-help">Adjunta el recibo de efectivo de YES EMS o tu comprobante bancario. PDF, JPG o PNG legible · máximo 5 MB. Obligatorio en ambos métodos.</p>';
 formMessage.before(receiptField);
 const receiptInput = document.querySelector('#receipt');
+const referenceLabel = document.querySelector('label[for="reference"]');
+function updatePaymentMethod() {
+  const method = methodSelect.value;
+  const isMercadoPago = method === 'mercado_pago';
+  cashInstructions.hidden = method !== 'efectivo';
+  transferInstructions.hidden = method !== 'transferencia';
+  receiptField.hidden = isMercadoPago;
+  receiptInput.required = !isMercadoPago;
+  referenceLabel.hidden = isMercadoPago;
+  document.querySelector('#reference').hidden = isMercadoPago;
+  submitButton.textContent = isMercadoPago ? 'Pagar con Mercado Pago' : 'Enviar comprobante a revisión';
+  if (isMercadoPago) formMessage.textContent = 'Se abrirá el checkout seguro de Mercado Pago. La inscripción solo se confirma al verificar el pago.';
+  else if (!formMessage.classList.contains('success')) formMessage.textContent = '';
+}
+methodSelect.addEventListener('change', updatePaymentMethod);
+updatePaymentMethod();
 form.addEventListener('submit', async (event) => {
   event.preventDefault(); formMessage.textContent = ''; formMessage.classList.remove('success');
+  const method = methodSelect.value;
+  if (method === 'mercado_pago') {
+    submitButton.disabled = true;
+    submitButton.textContent = 'Conectando con Mercado Pago…';
+    try {
+      const response = await fetch(`${API_URL}/pagos/mio/mercado-pago`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id_inscripcion: inscriptionId }),
+      });
+      const data = await response.json();
+      if (!response.ok || !data.ok) throw new Error(data.mensaje || 'No se pudo iniciar el pago en línea.');
+      const checkout = isMercadoPagoUrl(data.checkout_url);
+      if (!checkout) throw new Error('Mercado Pago devolvió una dirección de pago no válida.');
+      window.location.assign(checkout.href);
+    } catch (error) {
+      formMessage.textContent = error instanceof TypeError ? 'No se pudo conectar con el servidor.' : error.message;
+      submitButton.disabled = false;
+      submitButton.textContent = 'Pagar con Mercado Pago';
+    }
+    return;
+  }
   if (!form.checkValidity()) { formMessage.textContent = 'Selecciona un método y adjunta tu comprobante.'; form.reportValidity(); return; }
-  const method = document.querySelector('#method').value;
   if (!['efectivo','transferencia'].includes(method)) { formMessage.textContent = 'Solo se acepta efectivo o transferencia.'; return; }
   const receipt = receiptInput.files[0];
   if (!receipt) { formMessage.textContent = 'Adjunta tu comprobante de pago para continuar.'; return; }
