@@ -110,6 +110,8 @@
 #verified-access[data-mode="register"] #access-register-mode::after{color:#fff}
 #verified-access[data-mode="register"] #access-login-mode{background:transparent!important}
 #verified-access .access-switch button:hover{filter:brightness(.96)}
+#verified-access .access-switch p button{background:var(--access-navy)!important}
+#verified-access .access-switch p button::after{color:#fff!important}
 #verified-access[aria-busy="true"] button[type=submit]{position:relative;color:transparent}
 #verified-access[aria-busy="true"] button[type=submit]::after{content:"";position:absolute;left:calc(50% - 9px);top:calc(50% - 9px);width:18px;height:18px;border:2px solid #ffffff70;border-top-color:#fff;border-radius:50%;animation:access-spin .7s linear infinite}
 #verified-access[data-mode="choice"] #access-login-form,#verified-access[data-mode="email-choice"] #access-login-form,#verified-access[data-mode="google"] #access-login-form,#verified-access[data-mode="login"] #access-login-form,#verified-access[data-mode="register"] #access-email-form{animation:access-form-in .16s ease-out both}
