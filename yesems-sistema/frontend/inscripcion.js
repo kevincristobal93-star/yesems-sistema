@@ -219,6 +219,11 @@ document.querySelector('#save-later').addEventListener('click', async () => {
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
   if (submitting || saving) return;
+  if (profileMode) {
+    if (!form.checkValidity()) { form.reportValidity(); return; }
+    if (await saveProfile()) window.location.replace('./panel.html?perfil=guardado');
+    return;
+  }
   if (!personalStep.hidden) { await showConfirmationStep(); return; }
   if (!form.checkValidity()) {
     showPersonalStep();
