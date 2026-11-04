@@ -37,7 +37,7 @@
   overflow: hidden;
   padding: clamp(30px, 5vw, 76px);
   color: #fff;
-  background: linear-gradient(145deg, #10435e, #176b87 55%, #258fa3);
+  background: var(--portal-blue);
 }
 
 .portal-brand-panel::after {
@@ -46,9 +46,9 @@
   bottom: -250px;
   width: 620px;
   height: 620px;
-  border: 1px solid rgb(255 255 255 / 12%);
+  border: 0;
   border-radius: 50%;
-  box-shadow: 0 0 0 44px rgb(255 255 255 / 4%), 0 0 0 88px rgb(255 255 255 / 3%);
+  box-shadow: none;
   content: "";
   pointer-events: none;
 }
