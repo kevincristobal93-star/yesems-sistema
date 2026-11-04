@@ -9,7 +9,7 @@ const money = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN
 const escapeHtml = PanelProgreso.escapeHtml;
 let sessionExpired = false;
 let loadingPanel = false;
-let completionPromptShown = false;
+let completionPromptShown = new URLSearchParams(location.search).get('perfil') === 'guardado';
 
 function ensureJourney() {
   if (!document.querySelector('link[href="./professional-flow.css"]')) {
@@ -22,7 +22,12 @@ function ensureJourney() {
   document.querySelector('.quick-summary').after(section);
 }
 
-function renderCompletion(items) {
+function hasPersonalProfile(profile) {
+  return Boolean(profile?.nombre?.trim() && profile?.apellido?.trim() && profile?.telefono?.trim()
+    && profile?.fecha_nacimiento && profile?.curp?.trim());
+}
+
+function renderCompletion(items, profile) {
   let banner=document.querySelector('#complete-enrollment-banner');
   if(!banner){
     const css=document.createElement('link');css.rel='stylesheet';css.href='./inscripcion-pendiente.css';document.head.append(css);
@@ -35,17 +40,39 @@ function renderCompletion(items) {
   const matching=active.find(item=>String(item.id_curso)===validCourse);
   const pending=matching || active.find(item=>!paymentComplete(item) && !item.tiene_pago_pendiente);
   const needsCourse=validCourse && !matching;
-  if(!needsCourse && active.length && (!pending || paymentComplete(pending) || pending.tiene_pago_pendiente)){banner.hidden=true;return;}
+  const needsProfile=!hasPersonalProfile(profile);
+  if(!needsProfile && !needsCourse && active.length && (!pending || paymentComplete(pending) || pending.tiene_pago_pendiente)){banner.hidden=true;return;}
   banner.hidden=false;
-  const href=needsCourse?`./inscripcion.html?curso=${encodeURIComponent(validCourse)}`:pending?`./pago.html?inscripcion=${encodeURIComponent(pending.id_inscripcion)}`:'./catalogo-alumno.html';
+  const needsPayment=pending && !paymentComplete(pending) && !pending.tiene_pago_pendiente;
+  const href=pending?`./pago.html?inscripcion=${encodeURIComponent(pending.id_inscripcion)}`
+    :needsProfile?'./inscripcion.html?modo=perfil'
+      :needsCourse?`./inscripcion.html?curso=${encodeURIComponent(validCourse)}`:'./catalogo-alumno.html';
   const detail=needsCourse || !pending?'Datos pendientes: tener una cuenta no significa estar inscrito. Completa o revisa tu ficha, confirma el curso y continúa al pago.':'Tu inscripción está pendiente de pago. Paga en efectivo o transferencia y sube tu comprobante; administración confirmará cuando reciba el importe completo.';
   const content=`<p class="eyebrow">SIGUIENTE PASO</p><h2>Completa tu inscripción</h2><p>${detail}</p><a class="payment-button" href="${href}">${pending && !needsCourse?'Continuar con mi pago':'Continuar inscripción'}</a>`;
   banner.innerHTML=content;
+  if(needsProfile && !needsPayment){
+    banner.querySelector('h2').textContent='Completa tus datos personales';
+    banner.querySelector('p:not(.eyebrow)').textContent='Completa tu ficha una sola vez. Al guardarla volverás a Mis cursos para continuar.';
+    banner.querySelector('a').textContent='Completar mis datos';
+  } else if(!needsCourse && !pending){
+    banner.querySelector('h2').textContent='Solicita un curso';
+    banner.querySelector('p:not(.eyebrow)').textContent='Tu ficha está lista. Explora el catálogo para elegir un curso.';
+    banner.querySelector('a').textContent='Ver cursos';
+  }
   if(completionPromptShown)return;
   completionPromptShown=true;
   const dialog=document.createElement('dialog');dialog.className='enrollment-prompt';dialog.setAttribute('aria-labelledby','completion-title');
   dialog.innerHTML=content.replace('<h2>','<h2 id="completion-title">')+'<button type="button">Completar después</button>';
   document.body.append(dialog);
+  if(needsProfile && !needsPayment){
+    dialog.querySelector('h2').textContent='Completa tus datos personales';
+    dialog.querySelector('p:not(.eyebrow)').textContent='Completa tu ficha una sola vez. Al guardarla volverás a Mis cursos para continuar.';
+    dialog.querySelector('a').textContent='Completar mis datos';
+  } else if(!needsCourse && !pending){
+    dialog.querySelector('h2').textContent='Solicita un curso';
+    dialog.querySelector('p:not(.eyebrow)').textContent='Tu ficha está lista. Explora el catálogo para elegir un curso.';
+    dialog.querySelector('a').textContent='Ver cursos';
+  }
   dialog.querySelector('button').onclick=()=>dialog.close();
   dialog.addEventListener('close',()=>dialog.remove());dialog.showModal();
 }
@@ -281,12 +308,15 @@ async function loadPanel() {
   panelMessage.textContent = 'Consultando tus inscripciones y el avance registrado…';
   const openDetails = new Set([...list.querySelectorAll('.enrollment-card')].filter((card) => card.querySelector('details[open]')).map((card) => card.id));
   try {
-    const data = await apiRequest('/inscripciones/mias');
+    const [data, profileData] = await Promise.all([
+      apiRequest('/inscripciones/mias'),
+      apiRequest('/usuarios/mio'),
+    ]);
     if (!Array.isArray(data.inscripciones)) throw new Error('La información de las inscripciones no está disponible. Intenta actualizar.');
     const items = data.inscripciones;
     renderDeadlineAlerts(items);
     renderJourney(items);
-    renderCompletion(items);
+    renderCompletion(items, profileData.usuario);
     document.querySelector('#summary-courses').textContent = items.length;
     document.querySelector('#summary-payments').textContent = items.filter((item) => item.estado !== 'cancelada' && !paymentComplete(item)).length;
     document.querySelector('#summary-certificates').textContent = items.filter((item) => item.estado_constancia === 'autorizada').length;

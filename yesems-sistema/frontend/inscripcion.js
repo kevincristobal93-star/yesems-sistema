@@ -2,6 +2,7 @@ const API_URL = 'https://yesems-sistema-1.onrender.com/api';
 const token = localStorage.getItem('yesems_token');
 const user = JSON.parse(localStorage.getItem('yesems_usuario') || 'null');
 const courseId = new URLSearchParams(window.location.search).get('curso');
+const profileMode = new URLSearchParams(window.location.search).get('modo') === 'perfil';
 const message = document.querySelector('#form-message');
 const submitButton = document.querySelector('#submit-button');
 const availabilityField = document.querySelector('#availability-field');
@@ -15,11 +16,27 @@ let saving = false;
 let profileLoaded = false;
 document.querySelector('#footer-year').textContent = new Date().getFullYear();
 
-if (!courseId || !/^\d+$/.test(courseId)) {
-  window.location.replace('./cursos.html');
-} else if (!token || !user) {
+if (!token || !user) {
   const destination = courseId ? `./index.html?curso=${encodeURIComponent(courseId)}` : './index.html';
   window.location.replace(destination);
+} else if (profileMode) {
+  document.body.classList.add('profile-only-mode');
+  document.title = 'YES EMS | Completa tus datos personales';
+  document.querySelector('.page-heading h1').textContent = 'Completa tus datos personales.';
+  document.querySelector('.page-heading > p:last-child').textContent = 'Guarda tu ficha una sola vez. Después volverás a Mis cursos para continuar.';
+  document.querySelector('.steps').hidden = true;
+  document.querySelector('#confirmation-step').hidden = true;
+  document.querySelector('#availability-field').hidden = true;
+  document.querySelector('.course-summary').hidden = true;
+  document.querySelector('#personal-step h2').textContent = 'Tu ficha de docente';
+  document.querySelector('#personal-step .card-intro').textContent = 'Necesitamos estos datos para identificarte y preparar tus solicitudes de capacitación.';
+  document.querySelector('.folio-note').hidden = true;
+  document.querySelector('#continue-button').textContent = 'Guardar datos y volver a Mis cursos';
+  document.querySelector('#save-later').hidden = true;
+  document.querySelector('#save-status').textContent = 'Tus datos se guardarán en tu cuenta. No se creará una inscripción en este paso.';
+  loadProfile();
+} else if (!courseId || !/^\d+$/.test(courseId)) {
+  window.location.replace('./cursos.html');
 } else {
   document.querySelector('#user-name').textContent = `${user.nombre} ${user.apellido}`;
   loadCourse();
@@ -31,6 +48,10 @@ async function loadProfile() {
     const response = await fetch(`${API_URL}/usuarios/mio`, {headers:{Authorization:`Bearer ${token}`}});
     const data = await response.json();
     if (!response.ok || !data.ok) throw new Error('No se pudieron recuperar tus datos. Puedes completarlos abajo.');
+    if (!profileMode && (!data.usuario.nombre || !data.usuario.apellido || !data.usuario.telefono || !data.usuario.fecha_nacimiento || !data.usuario.curp)) {
+      window.location.replace('./inscripcion.html?modo=perfil');
+      return;
+    }
     profileLoaded = true;
     document.querySelector('#profile-email').textContent = data.usuario.email || '';
     for (const [field,key] of [['nombre','nombre'],['apellido','apellido'],['telefono','telefono'],['fecha-nacimiento','fecha_nacimiento'],['curp','curp']]) {
@@ -161,7 +182,11 @@ async function showConfirmationStep() {
   confirmationStep.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
-document.querySelector('#continue-button').addEventListener('click', showConfirmationStep);
+document.querySelector('#continue-button').addEventListener('click', async () => {
+  if (!profileMode) { await showConfirmationStep(); return; }
+  if (!form.checkValidity()) { form.reportValidity(); return; }
+  if (await saveProfile()) window.location.replace('./panel.html?perfil=guardado');
+});
 backButton.addEventListener('click', showPersonalStep);
 
 async function saveProfile() {
