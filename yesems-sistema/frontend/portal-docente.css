@@ -1,0 +1,45 @@
+.teacher-portal {
+  min-height: 100vh;
+  background:
+    radial-gradient(ellipse at 85% 8%, rgb(36 149 167 / 16%), transparent 36rem),
+    var(--soft);
+}
+
+.portal-shell {
+  display: grid;
+  min-height: 100vh;
+  align-content: center;
+  justify-items: center;
+  gap: var(--space-6);
+  padding: var(--space-8) var(--space-4);
+}
+
+.portal-card {
+  width: min(100%, 520px);
+  padding: clamp(28px, 6vw, 56px);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--white);
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+}
+
+.portal-brand {
+  display: inline-flex;
+  width: 92px;
+  margin-bottom: var(--space-6);
+}
+
+.portal-brand img { display: block; width: 100%; height: auto; }
+.portal-card .eyebrow { margin-bottom: var(--space-2); }
+.portal-card h1 { margin-inline: auto; color: var(--navy); font-size: clamp(2rem, 7vw, 2.7rem); }
+.portal-description { margin: var(--space-4) 0 var(--space-6); color: var(--muted); line-height: 1.7; }
+.portal-card .primary-button { max-width: 320px; box-shadow: var(--shadow-sm); }
+.portal-help { margin: var(--space-6) 0 0; color: var(--muted); font-size: .9rem; line-height: 1.6; }
+.public-site-link { display: inline-block; margin-top: var(--space-4); font-size: .9rem; }
+.portal-footer { margin: 0; color: var(--muted); font-size: .82rem; text-align: center; }
+
+@media (max-width: 480px) {
+  .portal-shell { padding-inline: var(--space-3); }
+  .portal-card { padding: 28px 22px; }
+}
