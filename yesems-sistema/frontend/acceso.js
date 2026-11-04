@@ -259,7 +259,7 @@
   }};
   const legacy = document.querySelector('#registration-form');
   const existing = legacy || document.querySelector('#login-form');
-  if(existing) {
+  if(existing && !document.body.hasAttribute('data-access-inline')) {
     existing.hidden=true;
     const button=document.createElement('button');button.type='button';button.className='primary-button';button.textContent=legacy?'Crear mi cuenta':'Elegir cómo iniciar sesión';
     const id=new URLSearchParams(location.search).get('curso');

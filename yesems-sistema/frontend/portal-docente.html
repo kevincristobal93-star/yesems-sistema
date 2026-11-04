@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="./portal-docente.css">
   </head>
 
-  <body class="teacher-portal">
+  <body class="teacher-portal" data-access-inline="true">
     <main class="portal-layout">
       <section class="portal-brand-panel" aria-labelledby="welcome-title">
         <a class="portal-logo" href="https://servicioseducativosyesems.com" aria-label="YES EMS, sitio público">
@@ -101,6 +101,12 @@
             </button>
           </form>
 
+          <div class="login-divider" aria-hidden="true"><span>o</span></div>
+          <button id="google-access-button" class="google-button" type="button">
+            <span class="google-mark" aria-hidden="true">G</span>
+            Continuar con Google
+          </button>
+
           <nav class="secondary-links" aria-label="Ayuda y enlaces">
             <a class="forgot-link" href="./index.html">¿Olvidaste tu contraseña?</a>
             <a class="catalog-link" href="./cursos.html">Consultar cursos disponibles</a>
@@ -113,6 +119,8 @@
       </section>
     </main>
 
+    <script src="./acceso.js"></script>
     <script src="./app.js"></script>
+    <script src="./portal-docente.js"></script>
   </body>
 </html>
