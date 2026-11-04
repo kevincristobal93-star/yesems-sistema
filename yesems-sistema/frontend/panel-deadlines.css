@@ -1,0 +1,11 @@
+.deadline-alerts { display: grid; gap: 12px; margin-top: 18px; }
+.deadline-alert { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 5px 18px; padding: 15px 18px; border: 1px solid #f0d58a; border-left: 4px solid var(--gold); border-radius: var(--radius-sm); background: #fff9e8; color: var(--navy); }
+.deadline-alert strong { font-size: .88rem; }
+.deadline-alert span { color: var(--muted); font-size: .82rem; }
+.deadline-alert a { grid-column: 2; grid-row: 1 / 4; align-self: center; color: var(--blue); font-size: .8rem; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.deadline-alert--urgent { border-color: #efb3a8; border-left-color: var(--danger); background: #fff4f1; }
+.deadline-alert--urgent a { color: var(--danger); }
+@media (max-width: 600px) {
+  .deadline-alert { grid-template-columns: minmax(0, 1fr); }
+  .deadline-alert a { grid-column: 1; grid-row: auto; }
+}

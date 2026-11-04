@@ -82,7 +82,7 @@
     constancias: ['Constancias', '#constancias'],
     respaldos: ['Respaldos y recuperación', '#respaldos'],
   } : {
-    resumen: ['Mi resumen', '.welcome,.quick-summary,.student-journey,.featured-section,.activity-section,#complete-enrollment-banner'],
+    resumen: ['Mi resumen', '.welcome,.quick-summary,.student-journey,.featured-section,.activity-section,#complete-enrollment-banner,#course-deadline-alerts'],
     aula: ['Mi aula virtual', '#mi-aula'],
     cursos: ['Mis cursos', '#teacher-catalog'],
     inscripciones: ['Inscripciones, pagos y constancias', '#mis-inscripciones'],

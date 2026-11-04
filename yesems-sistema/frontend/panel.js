@@ -92,9 +92,63 @@ function amount(value) {
 function availabilityLabel(item) {
   if (!item.id_horario) return 'Disponibilidad por confirmar';
   const mode = { en_linea: 'En línea', presencial: 'Presencial', hibrida: 'Híbrida', por_definir: 'Por definir' }[item.disponibilidad_modalidad] || 'Por definir';
+  const start = formatDate(item.disponibilidad_fecha_inicio);
+  const end = formatDate(item.disponibilidad_fecha_fin);
+  const dateRange = start !== 'Fecha no disponible' && end !== 'Fecha no disponible'
+    ? (start === end ? start : `${start} al ${end}`)
+    : start !== 'Fecha no disponible' ? start : end !== 'Fecha no disponible' ? end : '';
   const time = item.disponibilidad_hora_inicio && item.disponibilidad_hora_fin
     ? `${String(item.disponibilidad_hora_inicio).slice(0, 5)} – ${String(item.disponibilidad_hora_fin).slice(0, 5)}` : '';
-  return [mode, item.disponibilidad_dia, time, item.disponibilidad_informacion].filter(Boolean).join(' · ');
+  return [dateRange, item.disponibilidad_dia, time, mode, item.disponibilidad_informacion].filter(Boolean).join(' · ');
+}
+
+function renderDeadlineAlerts(items) {
+  let container = document.querySelector('#course-deadline-alerts');
+  if (!container) {
+    container = document.createElement('section');
+    container.id = 'course-deadline-alerts';
+    container.className = 'deadline-alerts dashboard-view-hidden';
+    container.setAttribute('aria-label', 'Avisos de calendario');
+    container.setAttribute('aria-live', 'polite');
+    document.querySelector('.quick-summary').after(container);
+  }
+  const now = new Date();
+  const today = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+  const alerts = items.flatMap((item) => {
+    if (item.estado === 'cancelada' || item.estado === 'completada' || !paymentComplete(item) || !item.disponibilidad_fecha_fin) return [];
+    const match = String(item.disponibilidad_fecha_fin).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    if (!match) return [];
+    const end = Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+    const remaining = Math.ceil((end - today) / 86400000);
+    if (remaining < 0 || remaining > 4) return [];
+    const label = remaining === 0 ? 'El plazo de tu curso termina hoy.'
+      : remaining === 1 ? 'El plazo de tu curso termina mañana.'
+      : remaining === 2 ? 'Quedan 2 días para terminar tu curso.'
+      : remaining === 4 ? 'Quedan 4 días para terminar tu curso.'
+      : `Quedan ${remaining} días para terminar tu curso.`;
+    return [{ id: item.id_inscripcion, nombre: item.curso_nombre, remaining, label }];
+  }).sort((a, b) => a.remaining - b.remaining);
+  container.replaceChildren();
+  container.hidden = !alerts.length;
+  if (!alerts.length) return;
+  container.classList.remove('dashboard-view-hidden');
+  for (const alert of alerts) {
+    const article = document.createElement('article');
+    article.className = alert.remaining <= 2 ? 'deadline-alert deadline-alert--urgent' : 'deadline-alert';
+    article.setAttribute('role', 'status');
+    const title = document.createElement('strong');
+    title.textContent = alert.label;
+    const course = document.createElement('span');
+    course.textContent = alert.nombre;
+    const instruction = document.createElement('span');
+    instruction.className = 'deadline-alert-instruction';
+    instruction.textContent = 'Entra al aula y registra tu avance de hoy.';
+    const link = document.createElement('a');
+    link.href = `#inscripcion-${encodeURIComponent(alert.id)}`;
+    link.textContent = 'Ver mi curso';
+    article.append(title, course, instruction, link);
+    container.append(article);
+  }
 }
 
 function renderFeaturedCourse(item) {
@@ -230,6 +284,7 @@ async function loadPanel() {
     const data = await apiRequest('/inscripciones/mias');
     if (!Array.isArray(data.inscripciones)) throw new Error('La información de las inscripciones no está disponible. Intenta actualizar.');
     const items = data.inscripciones;
+    renderDeadlineAlerts(items);
     renderJourney(items);
     renderCompletion(items);
     document.querySelector('#summary-courses').textContent = items.length;
