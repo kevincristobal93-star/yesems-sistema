@@ -100,6 +100,16 @@
 #verified-access .access-admin:hover{color:#28384d}
 #verified-access #access-message{margin:8px 0;padding:9px 11px;border-radius:9px;background:#fff7df;color:#594711;font-size:12px;line-height:1.45}
 #verified-access :is(button,a,input):focus-visible{outline:3px solid var(--access-yellow);outline-offset:2px}
+#verified-access .access-switch p button{font-size:0!important;color:transparent!important}
+#verified-access #access-login-mode::after{content:"Iniciar sesión";font:600 13px/1.2 'Open Sans',Inter,Arial,sans-serif;color:#526173}
+#verified-access #access-register-mode::after{content:"Crear cuenta";font:600 13px/1.2 'Open Sans',Inter,Arial,sans-serif;color:#526173}
+#verified-access[data-mode="choice"] #access-login-mode,#verified-access[data-mode="email-choice"] #access-login-mode,#verified-access[data-mode="google"] #access-login-mode,#verified-access[data-mode="login"] #access-login-mode{background:var(--access-navy)!important}
+#verified-access[data-mode="choice"] #access-login-mode::after,#verified-access[data-mode="email-choice"] #access-login-mode::after,#verified-access[data-mode="google"] #access-login-mode::after,#verified-access[data-mode="login"] #access-login-mode::after{color:#fff}
+#verified-access[data-mode="choice"] #access-register-mode,#verified-access[data-mode="email-choice"] #access-register-mode,#verified-access[data-mode="google"] #access-register-mode,#verified-access[data-mode="login"] #access-register-mode{background:transparent!important}
+#verified-access[data-mode="register"] #access-register-mode{background:var(--access-navy)!important}
+#verified-access[data-mode="register"] #access-register-mode::after{color:#fff}
+#verified-access[data-mode="register"] #access-login-mode{background:transparent!important}
+#verified-access .access-switch button:hover{filter:brightness(.96)}
 #verified-access[aria-busy="true"] button[type=submit]{position:relative;color:transparent}
 #verified-access[aria-busy="true"] button[type=submit]::after{content:"";position:absolute;left:calc(50% - 9px);top:calc(50% - 9px);width:18px;height:18px;border:2px solid #ffffff70;border-top-color:#fff;border-radius:50%;animation:access-spin .7s linear infinite}
 #verified-access[data-mode="choice"] #access-login-form,#verified-access[data-mode="email-choice"] #access-login-form,#verified-access[data-mode="google"] #access-login-form,#verified-access[data-mode="login"] #access-login-form,#verified-access[data-mode="register"] #access-email-form{animation:access-form-in .16s ease-out both}
