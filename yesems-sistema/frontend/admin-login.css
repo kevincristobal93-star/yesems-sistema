@@ -1,0 +1,129 @@
+.admin-access {
+  min-height: 100vh;
+  background: #fff;
+}
+
+.admin-access .access-page {
+  min-height: 100vh;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+}
+
+.admin-access .welcome-panel {
+  padding: clamp(30px, 5vw, 76px);
+  background: linear-gradient(145deg, #10435e, #176b87 55%, #258fa3);
+}
+
+.admin-access .welcome-panel::after {
+  right: -180px;
+  bottom: -250px;
+  width: 620px;
+  height: 620px;
+  border-width: 48px;
+}
+
+.admin-access .brand {
+  z-index: 1;
+  width: 128px;
+  filter: drop-shadow(0 5px 10px rgb(0 0 0 / 12%));
+}
+
+.admin-access .brand img { display: block; }
+
+.admin-access .welcome-copy {
+  width: min(100%, 640px);
+  margin-block: clamp(24px, 5vh, 58px);
+}
+
+.admin-access .welcome-copy h1 {
+  font-size: clamp(2.5rem, 4.15vw, 4.2rem);
+  line-height: 1.08;
+}
+
+.admin-access .welcome-copy > p:last-child {
+  max-width: 540px;
+  margin-top: 18px;
+  font-size: 1.02rem;
+  line-height: 1.65;
+}
+
+.admin-access .form-panel {
+  padding: clamp(28px, 5vw, 82px);
+  background: #fff;
+}
+
+.admin-access .form-container { width: min(100%, 560px); }
+.admin-access .form-container h2 { font-size: clamp(2.2rem, 3vw, 3rem); }
+.admin-access .form-intro { margin: 12px 0 26px; font-size: 1rem; }
+.admin-access label { margin: 18px 0 8px; }
+
+.admin-access input {
+  height: 52px;
+  border-color: #cbd6e4;
+  border-radius: 10px;
+}
+
+.admin-access .primary-button {
+  height: 52px;
+  margin-top: 6px;
+  border-radius: 10px;
+  background: var(--blue);
+  font-size: .92rem;
+  transition: background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+}
+
+.admin-access .primary-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background: var(--blue-dark);
+  box-shadow: 0 7px 16px rgb(13 61 89 / 18%);
+}
+
+.admin-access :is(a, button, input):focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 3px;
+}
+
+@media (max-height: 760px) and (min-width: 851px) {
+  .admin-access .welcome-panel { padding-block: 22px; }
+  .admin-access .brand { width: 96px; }
+  .admin-access .welcome-copy { margin-block: 16px; }
+  .admin-access .welcome-copy h1 { font-size: clamp(2.1rem, 3.3vw, 3.2rem); }
+  .admin-access .welcome-copy > p:last-child { margin-top: 10px; font-size: .9rem; }
+  .admin-access .form-panel { padding-block: 18px; }
+  .admin-access .form-intro { margin-bottom: 16px; }
+  .admin-access label { margin-top: 10px; }
+  .admin-access input { height: 44px; }
+  .admin-access .primary-button { height: 46px; }
+}
+
+@media (max-width: 850px) {
+  .admin-access .access-page { grid-template-columns: 1fr; }
+  .admin-access .welcome-panel { min-height: auto; padding: 26px clamp(22px, 6vw, 54px); }
+  .admin-access .brand { width: 96px; }
+  .admin-access .welcome-copy { margin: 24px 0; }
+  .admin-access .welcome-copy h1 { font-size: clamp(2rem, 6vw, 3rem); }
+  .admin-access .welcome-copy > p:last-child { margin-top: 12px; font-size: .92rem; }
+  .admin-access .welcome-footer { display: none; }
+  .admin-access .form-panel { padding: 34px 24px; }
+  .admin-access .form-container { width: min(100%, 540px); }
+}
+
+@media (max-width: 520px) {
+  .admin-access .welcome-panel { padding: 20px 18px; }
+  .admin-access .brand { width: 80px; }
+  .admin-access .welcome-copy { margin: 18px 0; }
+  .admin-access .welcome-copy h1 { font-size: clamp(1.85rem, 8vw, 2.35rem); }
+  .admin-access .welcome-copy > p:last-child { font-size: .84rem; }
+  .admin-access .form-panel { padding: 24px 18px 30px; }
+  .admin-access .form-container h2 { font-size: 2rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-access *,
+  .admin-access *::before,
+  .admin-access *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
