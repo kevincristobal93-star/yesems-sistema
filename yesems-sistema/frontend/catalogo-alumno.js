@@ -1,34 +1,40 @@
+window.initTeacherCatalog = function (root = document) {
+if (root.dataset?.catalogInitialized) return;
+if (root.dataset) root.dataset.catalogInitialized = 'true';
 const API_URL = 'https://yesems-sistema-1.onrender.com/api';
 const token = localStorage.getItem('yesems_token');
 let user = null;
 try { user = JSON.parse(localStorage.getItem('yesems_usuario') || 'null'); } catch { /* Sesión local inválida. */ }
 
-if (!token || !user) window.location.replace('./cursos.html');
+if (!token || !user) {
+  window.location.replace('./cursos.html');
+  return;
+}
 
-const grid = document.querySelector('#courses');
-const message = document.querySelector('#message');
-const search = document.querySelector('#search');
-const category = document.querySelector('#category');
+const grid = root.querySelector('#courses');
+const message = root.querySelector('#message');
+const search = root.querySelector('#search');
+const category = root.querySelector('#category');
 let courses = [];
 let scope = 'all';
 let loading = false;
 let loaded = false;
-const sort = document.querySelector('#sort');
-const catalogFilters = ListFilters.attachCatalog({ search, category, modality: document.querySelector('#modality'), chips: document.querySelector('#catalog-chips'), onChange: render });
+const sort = root.querySelector('#sort');
+const catalogFilters = ListFilters.attachCatalog({ search, category, modality: root.querySelector('#modality'), chips: root.querySelector('#catalog-chips'), onChange: render });
 function resetFilters() {
   scope='all';sort.value='name';
-  document.querySelectorAll('[data-scope]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.scope===scope)));
+  root.querySelectorAll('[data-scope]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.scope===scope)));
   catalogFilters.reset();
 }
 grid.addEventListener('click', event => {
   if (event.target.closest('[data-clear-catalog]')) resetFilters();
   if (event.target.closest('[data-retry-catalog]')) load();
 });
-document.querySelector('#reset-filters').addEventListener('click',resetFilters);
+root.querySelector('#reset-filters').addEventListener('click',resetFilters);
 sort.addEventListener('change',render);
-document.querySelectorAll('[data-scope]').forEach(button=>button.addEventListener('click',()=>{
+root.querySelectorAll('[data-scope]').forEach(button=>button.addEventListener('click',()=>{
   scope=button.dataset.scope;
-  document.querySelectorAll('[data-scope]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+  root.querySelectorAll('[data-scope]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
   render();
 }));
 
@@ -39,12 +45,13 @@ function closeSession() {
 }
 
 function setupAccount() {
+  if (!root.querySelector('#student-name')) return;
   const name = (user?.nombre || '').trim();
   const surname = (user?.apellido || '').trim();
   const fullName = (surname && !name.toLocaleLowerCase('es').endsWith(surname.toLocaleLowerCase('es')) ? `${name} ${surname}` : name || surname).trim() || 'Docente YES EMS';
-  document.querySelector('#student-name').textContent = fullName;
-  document.querySelector('#student-email').textContent = user?.email || '';
-  document.querySelector('#student-initial').textContent = fullName.charAt(0).toUpperCase() || 'A';
+  root.querySelector('#student-name').textContent = fullName;
+  root.querySelector('#student-email').textContent = user?.email || '';
+  root.querySelector('#student-initial').textContent = fullName.charAt(0).toUpperCase() || 'A';
 }
 
 CatalogoView.bindDetails(grid, () => courses, (course) => {
@@ -95,15 +102,15 @@ async function load() {
     const enrolled = new Set((account.inscripciones || []).filter((item) => item.estado !== 'cancelada').map((item) => String(item.id_curso)));
     courses = (catalog.cursos || []).map((course) => ({ ...course, ya_inscrito: enrolled.has(String(course.id_curso)) }));
 
-    document.querySelector('#available-count').textContent = courses.filter((course) => course.activo !== false && !course.oferta_provisional && !course.cupo_lleno && !course.ya_inscrito).length;
-    document.querySelector('#enrolled-count').textContent = enrolled.size;
+    root.querySelector('#available-count').textContent = courses.filter((course) => course.activo !== false && !course.oferta_provisional && !course.cupo_lleno && !course.ya_inscrito).length;
+    root.querySelector('#enrolled-count').textContent = enrolled.size;
     loaded=true;
     catalogFilters.update(courses);
   } catch (error) {
     message.textContent = error instanceof TypeError ? 'No se pudo conectar con el servidor. Intenta nuevamente.' : error.message;
     if(error.name==='TimeoutError') message.textContent='El servidor está tardando en responder. Vuelve a intentarlo.';
     grid.innerHTML = '<div class="catalog-empty"><strong>No pudimos cargar el catálogo.</strong><p>Tus inscripciones no se han modificado. Puedes intentarlo de nuevo.</p><button type="button" data-retry-catalog>Reintentar</button></div>';
-    document.querySelector('#available-count').textContent='—';document.querySelector('#enrolled-count').textContent='—';
+    root.querySelector('#available-count').textContent='—';root.querySelector('#enrolled-count').textContent='—';
   } finally {
     loading=false;
     grid.setAttribute('aria-busy', 'false');
@@ -111,6 +118,8 @@ async function load() {
   }
 }
 
-document.querySelector('#logout').addEventListener('click', closeSession);
+root.querySelector('#logout')?.addEventListener('click', closeSession);
 setupAccount();
 load();
+};
+if (document.querySelector('#courses')) window.initTeacherCatalog();

@@ -19,6 +19,10 @@
     if (aula) aula.href = '#aula-prioridad';
   }
   if (!admin) {
+    document.querySelectorAll('a[href="./catalogo-alumno.html"]').forEach(link => {
+      link.href = './panel.html?vista=cursos';
+      if (nav.contains(link)) link.textContent = 'Mis cursos';
+    });
     const aula = document.createElement('a'); aula.href='#mi-aula'; aula.textContent='Aula virtual y materiales';nav.append(aula);
     const courses = nav.querySelector('a[href="#mis-inscripciones"]');
     if(courses) courses.textContent='Inscripciones, pagos y constancias';
@@ -32,7 +36,7 @@
     ['Sistema', ['#respaldos']],
   ] : [
     ['General', ['./panel.html']],
-    ['Contenidos', ['#mi-aula','./catalogo-alumno.html']],
+    ['Contenidos', ['#mi-aula','./panel.html?vista=cursos']],
     ['Mi formación', ['#mis-inscripciones']],
     ['Mi cuenta', ['./configuracion.html']],
   ];
@@ -80,6 +84,7 @@
   } : {
     resumen: ['Mi resumen', '.welcome,.quick-summary,.student-journey,.featured-section,.activity-section,#complete-enrollment-banner'],
     aula: ['Mi aula virtual', '#mi-aula'],
+    cursos: ['Mis cursos', '#teacher-catalog'],
     inscripciones: ['Inscripciones, pagos y constancias', '#mis-inscripciones'],
     perfil: ['Mi perfil', '.dashboard-grid'],
   };
@@ -94,7 +99,7 @@
   }
   for (const link of links) {
     const href=link.getAttribute('href');
-    const key=href.startsWith('#') ? (aliases[href.slice(1)] || href.slice(1)) : (!admin && href==='./panel.html' ? 'resumen' : null);
+    const key=href.startsWith('#') ? (aliases[href.slice(1)] || href.slice(1)) : (!admin && href==='./panel.html' ? 'resumen' : !admin && href==='./panel.html?vista=cursos' ? 'cursos' : null);
     if (key && views[key]) {linkViews.set(link,key);link.href=routeURL(key).href;}
   }
   if(!admin){

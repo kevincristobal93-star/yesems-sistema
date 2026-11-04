@@ -20,8 +20,10 @@ app.use(express.static(root));
     for(const page of ['admin','panel']){
       await browser.viewport(1440,1000);await browser.navigate(`${origin}/${page}.html`);
       const state=()=>browser.evaluate(`(()=>{const d=document.querySelector('aside');return {hidden:d.getAttribute('aria-hidden'),inert:d.inert,left:d.getBoundingClientRect().left,main:document.querySelector('main').getBoundingClientRect().left,overflow:document.documentElement.scrollWidth>innerWidth,groups:d.querySelectorAll('.sidebar-group').length}})()`);
+      await browser.waitFor("getComputedStyle(document.body).paddingLeft==='252px'", 'estilos de escritorio cargados');
       let s=await state();if(s.overflow) console.log(await browser.evaluate(`[...document.querySelectorAll('body *')].filter(e=>e.getBoundingClientRect().right>innerWidth+1).slice(0,12).map(e=>[e.tagName,e.className,e.getBoundingClientRect().right])`));assert.equal(s.hidden,'false');assert.equal(s.left,0);assert.ok(s.main>=252);assert.equal(s.overflow,false);assert.ok(s.groups>=3);
       await browser.viewport(390,844);
+      await browser.waitFor("getComputedStyle(document.body).paddingLeft==='0px'", 'estilos de móvil cargados');
       s=await state();assert.equal(s.inert,true);assert.equal(s.hidden,'true');assert.equal(s.overflow,false);
       const menu=page==='admin'?'#menu-button':'#student-menu-button';
       await browser.click(menu);s=await state();assert.equal(s.inert,false);assert.equal(s.hidden,'false');

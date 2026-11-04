@@ -1,0 +1,34 @@
+/* Estilos aislados: el catálogo no altera el perfil, el aula ni el pie del panel. */
+#teacher-catalog { min-width: 0; }
+#teacher-catalog .catalog-section { padding: 0; }
+#teacher-catalog .section-heading { flex-wrap: wrap; gap: 18px; }
+#teacher-catalog .catalog-metrics { display: flex; flex-wrap: wrap; gap: 10px; }
+#teacher-catalog .catalog-metrics span { padding: 12px 16px; border: 1px solid var(--line); border-radius: var(--radius-md); background: white; color: var(--muted); font-size: .8rem; }
+#teacher-catalog .catalog-metrics strong { display: block; color: var(--navy); font-size: 1.3rem; }
+#teacher-catalog .filter-panel { padding: 18px; margin: 22px 0; border: 1px solid var(--line); border-radius: var(--radius-md); background: white; }
+#teacher-catalog label span { display: block; margin-bottom: 8px; font-size: .8rem; }
+#teacher-catalog input, #teacher-catalog select, #teacher-catalog .catalog-toolbar button, #teacher-catalog > button {
+  min-height: 44px; max-width: 100%; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: white; color: var(--navy); font: inherit;
+}
+#teacher-catalog input { width: 100%; min-width: 0; }
+#teacher-catalog button { cursor: pointer; }
+#teacher-catalog .catalog-toolbar, #teacher-catalog .catalog-scope { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+#teacher-catalog .catalog-toolbar { justify-content: space-between; margin: 20px 0; }
+#teacher-catalog .catalog-toolbar label { font-size: .8rem; }
+#teacher-catalog .catalog-scope button[aria-pressed=true] { color: white; background: var(--navy); border-color: var(--navy); }
+#teacher-catalog .catalog-status { color: var(--muted); margin: 18px 0; }
+#teacher-catalog .catalog-status p { font-weight: 700; }
+#teacher-catalog .grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 22px; }
+#teacher-catalog .card { display: flex; min-width: 0; padding: 0 25px 25px; flex-direction: column; background: white; border: 1px solid var(--line); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+#teacher-catalog .card h2 { font-size: 1.2rem; line-height: 1.4; margin: 0; overflow-wrap: anywhere; }
+#teacher-catalog .category { color: var(--blue); font-size: .75rem; font-weight: 700; }
+#teacher-catalog .description { color: var(--muted); line-height: 1.65; font-size: .9rem; }
+#teacher-catalog .data { display: grid; gap: 8px; margin: auto 0 18px; padding-top: 16px; color: var(--muted); font-size: .85rem; }
+#teacher-catalog .student-enrolled-badge { color: var(--green); font-weight: 700; }
+#teacher-catalog .catalog-loading { grid-column: 1 / -1; padding: 32px; text-align: center; }
+@media (max-width: 1250px) { #teacher-catalog .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 650px) {
+  #teacher-catalog .grid, #teacher-catalog .filter-panel.catalog-filters { grid-template-columns: minmax(0, 1fr); }
+  #teacher-catalog .catalog-scope { width: 100%; }
+  #teacher-catalog .catalog-scope button { flex: 1; font-size: .8rem; }
+}
