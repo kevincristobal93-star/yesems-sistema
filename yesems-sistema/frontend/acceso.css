@@ -56,3 +56,54 @@
 #verified-access .access-choice button:hover{border-color:#176c83;box-shadow:var(--shadow-sm)}
 @media(prefers-reduced-motion:reduce){#verified-access button[type=submit]{transition:none}}
 @media(max-width:420px){#verified-access{padding:28px var(--space-6) 18px}#verified-access h2{font-size:27px}#verified-access .access-logo{width:48px;height:48px}#verified-access .access-intro{margin-bottom:20px}}
+
+/* Rediseño visual del acceso; conserva los IDs y los handlers de acceso.js. */
+:root{--access-navy:#1b3a6b;--access-yellow:#ffc72c;--access-ink:#172943;--access-muted:#65758a;--access-line:#d9e0e8;--access-surface:#f4f6f8}
+#verified-access{width:min(440px,calc(100vw - 32px));max-height:min(620px,calc(100dvh - 24px));padding:24px 28px 20px;border:1px solid var(--access-line);border-radius:14px;overflow-y:auto;scrollbar-width:thin;overscroll-behavior:contain;color:var(--access-ink);font-family:'Open Sans',Inter,Arial,sans-serif;animation:access-in .18s ease-out}
+#verified-access .access-close{top:12px;right:12px;display:grid;place-items:center;width:40px;height:40px;padding:0;border-radius:10px;color:#526173;font-size:26px;line-height:1;transition:background .16s ease,color .16s ease}
+#verified-access .access-close:hover{background:#f0f3f6;color:var(--access-navy)}
+#verified-access .access-logo{width:42px;height:42px;margin:0 auto 8px}
+#verified-access .access-eyebrow{display:none}
+#verified-access h2{font-family:Montserrat,'Open Sans',sans-serif;font-size:24px;line-height:1.25;letter-spacing:-.45px;color:var(--access-navy);margin:0 44px 4px}
+#verified-access .access-intro{font-size:13px;line-height:1.45;margin:0 auto 16px;max-width:360px;color:var(--access-muted)}
+#verified-access #access-course{margin:0 0 8px;font-size:12px}
+#verified-access .access-steps{margin:12px 0;padding:0;font-size:10px;gap:6px}
+#verified-access .access-steps li{padding:7px 3px;border-bottom-width:2px;text-align:center}
+#verified-access label{font-size:12px;color:#27384e}
+#verified-access input{height:46px;padding:10px 12px;margin:5px 0 12px;border:1px solid #cbd4df;border-radius:11px;background:#fff;font-size:14px}
+#verified-access input:focus{outline:3px solid color-mix(in srgb,var(--access-yellow) 58%,transparent);outline-offset:1px;border-color:var(--access-navy)}
+#verified-access .access-divider{gap:12px;margin:13px 0;color:#6b7788;font-size:12px}
+#verified-access .access-divider:before,#verified-access .access-divider:after{background:var(--access-line)}
+#verified-access .access-provider{margin:0 0 12px;padding:0}
+#verified-access #access-google{min-height:46px;justify-content:center}
+#verified-access .access-switch{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;margin:0 0 16px;border:1px solid var(--access-line);border-radius:11px;background:var(--access-surface)}
+#verified-access .access-switch p{display:block!important;min-width:0;margin:0;padding:0;border:0;font-size:0;line-height:1}
+#verified-access .access-switch button{display:block;width:100%;min-height:40px;margin:0;padding:8px 5px;border:1px solid transparent;border-radius:8px;background:transparent;color:#526173;font:600 12px 'Open Sans',Inter,Arial,sans-serif;text-decoration:none;white-space:nowrap;cursor:pointer}
+#verified-access[data-mode="choice"] #access-login-prompt button,#verified-access[data-mode="email-choice"] #access-login-prompt button,#verified-access[data-mode="login"] #access-login-prompt button{background:var(--access-navy);color:#fff}
+#verified-access[data-mode="choice"] #access-register-prompt button,#verified-access[data-mode="email-choice"] #access-register-prompt button,#verified-access[data-mode="register"] #access-register-prompt button{background:var(--access-navy);color:#fff}
+#verified-access #access-method-choice,#verified-access #access-email-choice,#verified-access #access-google-back{display:none!important}
+#verified-access[data-mode="choice"] #access-identify,#verified-access[data-mode="email-choice"] #access-identify{display:block!important}
+#verified-access[data-mode="choice"] #access-login-form,#verified-access[data-mode="email-choice"] #access-login-form{display:block!important}
+#verified-access[data-mode="choice"] #access-email-form,#verified-access[data-mode="email-choice"] #access-email-form,#verified-access[data-mode="choice"] #access-code-form,#verified-access[data-mode="email-choice"] #access-code-form{display:none!important}
+#verified-access[data-mode="choice"] .access-provider,#verified-access[data-mode="login"] .access-provider,#verified-access[data-mode="register"] .access-provider{display:block!important}
+#verified-access[data-mode="choice"] .access-divider,#verified-access[data-mode="login"] .access-divider,#verified-access[data-mode="register"] .access-divider{display:flex!important}
+#verified-access:is([data-mode="choice"],[data-mode="email-choice"],[data-mode="login"],[data-mode="register"],[data-mode="google"]) .access-switch p{display:block!important}
+#verified-access:is([data-mode="choice"],[data-mode="email-choice"],[data-mode="google"]) #access-login-form{display:block!important}
+#verified-access:is([data-mode="choice"],[data-mode="email-choice"],[data-mode="google"]) #access-email-form,#verified-access:is([data-mode="choice"],[data-mode="email-choice"],[data-mode="google"]) #access-code-form{display:none!important}
+#verified-access:is([data-mode="choice"],[data-mode="email-choice"],[data-mode="google"],[data-mode="login"],[data-mode="register"]) .access-provider{display:block!important}
+#verified-access button[type=submit]{min-height:48px;margin:8px 0 4px;padding:12px 16px;border:0;border-radius:10px;background:var(--access-navy);color:#fff;font:700 14px 'Open Sans',Inter,Arial,sans-serif;transition:background .16s ease,box-shadow .16s ease,transform .16s ease}
+#verified-access button[type=submit]:not(:disabled):hover{background:#142e56;box-shadow:0 5px 14px #1b3a6b24;transform:translateY(-1px)}
+#verified-access button[type=submit]:disabled{opacity:.55;cursor:not-allowed}
+#verified-access #access-recover,#verified-access #access-other{display:inline-block;width:auto;min-height:36px;margin:2px 6px 0 0;padding:6px 2px;border:0;background:transparent;color:#526173;font-size:12px;text-decoration:underline;text-underline-offset:3px}
+#verified-access #access-recover:hover,#verified-access #access-other:hover{color:var(--access-navy)}
+#verified-access .access-admin{margin:12px 0 0;padding-top:12px;border-top:1px solid #edf0f3;color:#778392;font-size:11px;text-decoration:none;transition:color .15s ease}
+#verified-access .access-admin:hover{color:#28384d}
+#verified-access #access-message{margin:8px 0;padding:9px 11px;border-radius:9px;background:#fff7df;color:#594711;font-size:12px;line-height:1.45}
+#verified-access :is(button,a,input):focus-visible{outline:3px solid var(--access-yellow);outline-offset:2px}
+#verified-access[aria-busy="true"] button[type=submit]{position:relative;color:transparent}
+#verified-access[aria-busy="true"] button[type=submit]::after{content:"";position:absolute;left:calc(50% - 9px);top:calc(50% - 9px);width:18px;height:18px;border:2px solid #ffffff70;border-top-color:#fff;border-radius:50%;animation:access-spin .7s linear infinite}
+#verified-access[data-mode="choice"] #access-login-form,#verified-access[data-mode="email-choice"] #access-login-form,#verified-access[data-mode="google"] #access-login-form,#verified-access[data-mode="login"] #access-login-form,#verified-access[data-mode="register"] #access-email-form{animation:access-form-in .16s ease-out both}
+@keyframes access-form-in{from{opacity:.65;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@keyframes access-spin{to{transform:rotate(360deg)}}
+@media(max-width:480px){#verified-access{width:calc(100vw - 32px);max-height:calc(100dvh - 24px);padding:20px 20px 16px}#verified-access .access-logo{width:38px;height:38px}#verified-access h2{font-size:22px}#verified-access .access-intro{margin-bottom:12px}#verified-access .access-steps{margin:8px 0}}
+@media(prefers-reduced-motion:reduce){#verified-access,#verified-access *{animation-duration:.01ms!important;scroll-behavior:auto!important;transition-duration:.01ms!important}}

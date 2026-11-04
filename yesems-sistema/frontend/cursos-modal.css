@@ -1,0 +1,21 @@
+:root{--course-modal-blue:#1b3a6b;--course-modal-yellow:#ffc72c;--course-modal-line:#d9e0e8;--course-modal-muted:#65758a}
+.registration-dialog{width:min(440px,calc(100vw - 32px));max-height:min(620px,calc(100dvh - 24px));border:1px solid var(--course-modal-line);border-radius:14px;box-shadow:0 20px 60px #071b3230;scrollbar-width:thin;overscroll-behavior:contain}
+.quick-registration-form{padding:24px 28px 20px;font-family:'Open Sans',Inter,Arial,sans-serif}
+.dialog-close{top:12px;right:12px;width:40px;height:40px;border-radius:10px;font-size:1.7rem}
+.dialog-brand{width:42px;height:42px;margin:0 auto 8px}
+.quick-registration-form h2{margin:0 44px 4px;color:var(--course-modal-blue);font-family:Montserrat,'Open Sans',sans-serif;font-size:1.5rem;letter-spacing:-.3px}
+.dialog-intro{margin:0 auto 12px;color:var(--course-modal-muted);font-size:.82rem;line-height:1.45}
+.dialog-course-name{min-height:0;margin:0 0 8px;font-size:.75rem}
+.quick-registration-form label{margin:12px 0 5px;color:#27384e;font-size:.78rem}
+.quick-registration-form input{height:46px;padding:10px 12px;border:1px solid #cbd4df;border-radius:11px;background:#fff;font-size:.9rem}
+.quick-registration-form input:focus{outline:3px solid #ffc72c94;outline-offset:1px;border-color:var(--course-modal-blue)}
+.quick-registration-submit{min-height:48px;margin-top:8px;padding:12px 16px;border-radius:10px;background:var(--course-modal-blue);box-shadow:none;font-family:'Open Sans',Inter,Arial,sans-serif;font-size:.9rem;transition:background .16s ease,box-shadow .16s ease,transform .16s ease}
+.quick-registration-submit:hover{background:#142e56;box-shadow:0 5px 14px #1b3a6b24;transform:translateY(-1px)}
+.quick-registration-submit:disabled{opacity:.55}
+.quick-registration-message{margin:8px 0 0;font-size:.78rem}
+.dialog-login{margin:14px 0 0;font-size:.8rem}
+.admin-access{margin:10px 0 0;color:#778392;font-size:.72rem}
+.admin-access a{color:inherit;text-decoration:none}.admin-access a:hover{color:#28384d}
+.registration-dialog :is(button,a,input):focus-visible{outline:3px solid var(--course-modal-yellow);outline-offset:2px}
+@media(max-width:480px){.registration-dialog{width:calc(100vw - 32px);max-height:calc(100dvh - 24px)}.quick-registration-form{padding:20px 20px 16px}.quick-registration-form h2{font-size:1.35rem}}
+@media(prefers-reduced-motion:reduce){.registration-dialog,.registration-dialog *{animation-duration:.01ms!important;transition-duration:.01ms!important}}
