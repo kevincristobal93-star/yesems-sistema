@@ -241,9 +241,9 @@
   dialog.querySelector('.access-close').onclick=()=>{if(!busy)dialog.close();};
   dialog.addEventListener('cancel',event=>{if(busy)event.preventDefault();});
   dialog.addEventListener('close',()=>{version++;clearSetup();get('access-code').value='';get('access-login-password').value='';get('access-recovery-reset').reset();});
-  window.YesemsAccess={open:async(selected=null)=>{
+  window.YesemsAccess={open:async(selected=null,register=false)=>{
     if(dialog.open || busy)return;
-    mode(Boolean(document.querySelector('#registration-form')));
+    mode(register||Boolean(document.querySelector('#registration-form')));
     course=selected;sentEmail=null;mailEnabled=false;version++;const current=version;
     get('access-course').textContent=course?.nombre ? 'Curso: '+course.nombre : '';
     get('access-code-form').hidden=true;get('access-code').value='';get('access-message').textContent='Consultando opciones de acceso…';

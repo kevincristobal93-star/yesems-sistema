@@ -1,13 +1,18 @@
 (() => {
   const googleButton = document.querySelector('#google-access-button');
-  if (!googleButton) return;
+  const createAccountButton = document.querySelector('#create-account-button');
+  const message = document.querySelector('#portal-message');
+  if (!googleButton || !createAccountButton) return;
 
-  googleButton.addEventListener('click', () => {
+  const openAccess = register => {
     if (window.YesemsAccess) {
-      window.YesemsAccess.open();
-      return;
+      message.textContent = '';
+      window.YesemsAccess.open(null, register);
+    } else {
+      message.textContent = 'No se pudo cargar el acceso. Recarga la página e inténtalo de nuevo.';
     }
-    const message = document.querySelector('#form-message');
-    if (message) message.textContent = 'No se pudo cargar el acceso con Google. Recarga la página e inténtalo de nuevo.';
-  });
+  };
+
+  googleButton.addEventListener('click', () => openAccess(false));
+  createAccountButton.addEventListener('click', () => openAccess(true));
 })();

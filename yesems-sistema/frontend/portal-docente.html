@@ -15,7 +15,7 @@
     <link rel="stylesheet" href="./portal-docente.css">
   </head>
 
-  <body class="teacher-portal" data-access-inline="true">
+  <body class="teacher-portal">
     <main class="portal-layout">
       <section class="portal-brand-panel" aria-labelledby="welcome-title">
         <a class="portal-logo" href="https://servicioseducativosyesems.com" aria-label="YES EMS, sitio público">
@@ -58,57 +58,18 @@
         <div class="login-card">
           <p class="card-eyebrow">Acceso a tu cuenta</p>
           <h2 id="portal-title">Portal docente</h2>
-          <p class="login-intro">Ingresa con el correo y la contraseña de tu cuenta YES EMS.</p>
+          <p class="login-intro">Accede a tus cursos y servicios, o crea tu cuenta para comenzar.</p>
 
-          <form id="login-form" class="portal-login-form" novalidate>
-            <label for="email">Correo electrónico</label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autocomplete="username"
-              inputmode="email"
-              placeholder="nombre@ejemplo.com"
-              maxlength="150"
-              required
-            >
-
-            <label for="password">Contraseña</label>
-            <div class="password-control">
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autocomplete="current-password"
-                placeholder="Escribe tu contraseña"
-                minlength="8"
-                maxlength="72"
-                required
-              >
-              <button
-                id="toggle-password"
-                class="password-toggle"
-                type="button"
-                aria-label="Mostrar contraseña"
-                aria-controls="password"
-              >Ver</button>
-            </div>
-
-            <p id="form-message" class="form-message" role="status" aria-live="polite"></p>
-
-            <button id="submit-button" class="login-button" type="submit">
-              Iniciar sesión
-            </button>
-          </form>
-
-          <div class="login-divider" aria-hidden="true"><span>o</span></div>
           <button id="google-access-button" class="google-button" type="button">
             <span class="google-mark" aria-hidden="true">G</span>
             Continuar con Google
           </button>
+          <button id="create-account-button" class="create-account-button" type="button">
+            Crear cuenta con correo
+          </button>
+          <p id="portal-message" class="portal-message" role="status" aria-live="polite"></p>
 
           <nav class="secondary-links" aria-label="Ayuda y enlaces">
-            <a class="forgot-link" href="./index.html">¿Olvidaste tu contraseña?</a>
             <a class="catalog-link" href="./cursos.html">Consultar cursos disponibles</a>
           </nav>
 
@@ -120,7 +81,6 @@
     </main>
 
     <script src="./acceso.js"></script>
-    <script src="./app.js"></script>
     <script src="./portal-docente.js"></script>
   </body>
 </html>
