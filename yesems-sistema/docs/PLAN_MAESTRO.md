@@ -1,9 +1,9 @@
 # Plan maestro — Atención educativa YES EMS
 
-**Estado:** propuesta para revisión. No autoriza cambios de código ni migraciones.
+**Estado:** Fase 1 autorizada por el usuario; S1-01 implementada. Las siguientes tareas siguen pendientes de aprobación individual.
 **Fuente de verdad:** este documento; se actualizará si una fase aprobada descubre que el código o las decisiones ya cambiaron.
 **Auditoría inicial:** 25 de noviembre de 2026.
-**Alcance inmediato:** documentar el estado y el plan; detenerse hasta recibir aprobación.
+**Alcance inmediato:** ejecutar una tarea aprobada a la vez; pedir aprobación antes de continuar a la siguiente.
 
 ## 1. Decisión de arquitectura propuesta
 
