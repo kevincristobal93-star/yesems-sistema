@@ -4,7 +4,7 @@ const adminController = require('../controllers/administrador.controller');
 const verificarAdministrador = require('../middlewares/admin.middleware');
 
 // Rutas públicas (no requieren token)
-router.post('/login', adminController.login);
+router.post('/login', require('../middlewares/admin-login-limit.middleware'), adminController.login);
 router.post('/registrar', verificarAdministrador, adminController.registrarAdmin);
 router.get('/resumen', verificarAdministrador, adminController.obtenerResumen);
 router.get('/reportes', verificarAdministrador, adminController.obtenerReportes);
