@@ -13,6 +13,36 @@
   const isImageDocument = doc => imageExtensions.has(String(doc.extension || '').toLowerCase()) && doc.tipo_material === 'imagen' && !doc.principal_id;
   const materialTypes = [['pdf', 'PDF principal'], ['organizador', 'Organizador gráfico'], ['ejercicio', 'Ejercicio o actividad'], ['imagen', 'Imagen de galería'], ['documento', 'Otro material']];
   const materialLabel = tipo => materialTypes.find(([value]) => value === tipo)?.[1] || 'Material de estudio';
+  function youtubeVideoId(rawUrl) {
+    try {
+      const url = new URL(rawUrl);
+      if (!['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be'].includes(url.hostname)) return null;
+      const parts = url.pathname.split('/').filter(Boolean);
+      const id = url.hostname === 'youtu.be' ? parts[0]
+        : ['embed', 'shorts', 'live', 'v'].includes(parts[0]) ? parts[1] : url.searchParams.get('v');
+      return id && /^[\w-]{11}$/.test(id) ? id : null;
+    } catch { return null; }
+  }
+  function renderVideoPreview(video, host) {
+    const videoId = youtubeVideoId(video.url);
+    if (!videoId) {
+      const link = document.createElement('a'); link.href = video.url; link.target = '_blank';
+      link.rel = 'noopener noreferrer'; link.textContent = 'Abrir recurso de video ↗'; host.append(link); return;
+    }
+    const link = document.createElement('a'); link.className = 'youtube-preview-link';
+    link.href = video.url; link.target = '_blank'; link.rel = 'noopener noreferrer';
+    link.setAttribute('aria-label', `Ver en YouTube: ${video.titulo}`);
+    const image = document.createElement('img'); image.className = 'youtube-preview-image';
+    image.src = `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`;
+    image.alt = `Portada del video: ${video.titulo}`; image.loading = 'lazy';
+    image.onerror = () => {
+      if (image.dataset.fallback) { image.hidden = true; play.hidden = true; link.classList.add('youtube-preview-link--unavailable'); return; }
+      image.dataset.fallback = 'true'; image.src = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`;
+    };
+    const play = document.createElement('span'); play.className = 'youtube-preview-play';
+    play.setAttribute('aria-hidden', 'true'); play.textContent = '▶';
+    link.append(image, play); host.append(link);
+  }
   function clearGalleryImage() {
     galleryAbort?.abort(); galleryAbort = null;
     if (galleryUrl) URL.revokeObjectURL(galleryUrl);
@@ -409,6 +439,9 @@
       if (admin) {
         const videoSection = document.createElement('section'); videoSection.className = 'admin-videos';
         const title = document.createElement('h3'); title.textContent = `Videos de apoyo · ${(mod.videos || []).length}`; videoSection.append(title);
+        const guidance = document.createElement('p'); guidance.className = 'video-policy-note';
+        guidance.textContent = 'El alumno verá la portada y abrirá el video en YouTube. La reproducción no se registra ni bloquea el avance del curso.';
+        videoSection.append(guidance);
         for (const video of mod.videos || []) {
           const card = document.createElement('div'); card.className = 'admin-video-card';
           const label = document.createElement('strong'); label.textContent = video.titulo; card.append(label);
@@ -424,10 +457,10 @@
           const item = document.createElement('li'); item.className = 'video-card';
           const type = document.createElement('span'); type.className = 'material-type'; type.textContent = 'Video de apoyo';
           const title = document.createElement('strong'); title.textContent = video.titulo;
-          const link = document.createElement('a'); link.href = video.url; link.target = '_blank'; link.rel = 'noopener noreferrer'; link.referrerPolicy = 'no-referrer'; link.textContent = 'Ver video ↗';
           item.append(type, title);
           if (video.descripcion) { const description = document.createElement('p'); description.textContent = video.descripcion; item.append(description); }
-          item.append(link);
+          const playerHost = document.createElement('div'); playerHost.className = 'video-player-host';
+          renderVideoPreview(video, playerHost); item.append(playerHost);
           const parent = documentNodes.get(video.principal_id);
           if (parent) {
             let supports = parent.querySelector('.support-list');

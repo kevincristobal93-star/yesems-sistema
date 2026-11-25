@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="900" viewBox="0 0 1440 900" role="img" aria-labelledby="title desc">
+  <title id="title">Boceto del curso por módulos para docente</title>
+  <desc id="desc">Propuesta visual de una pantalla de aprendizaje con progreso, módulos secuenciales, video y presentación.</desc>
+  <defs>
+    <linearGradient id="bg" x2="1" y2="1"><stop stop-color="#eef4f8"/><stop offset="1" stop-color="#f7f9fc"/></linearGradient>
+    <linearGradient id="hero" x2="1" y2="1"><stop stop-color="#103b60"/><stop offset="1" stop-color="#176d82"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#17314b" flood-opacity=".10"/></filter>
+    <style>
+      text{font-family:Inter,'Segoe UI',Arial,sans-serif;fill:#152b43}.muted{fill:#718198}.small{font-size:13px}.label{font-size:12px;font-weight:700;letter-spacing:1.3px}.bold{font-weight:700}.white{fill:#fff}.blue{fill:#176d82}.yellow{fill:#ffc72c}
+    </style>
+  </defs>
+  <rect width="1440" height="900" fill="url(#bg)"/>
+  <rect width="1440" height="84" fill="#fff"/>
+  <path d="M0 83.5H1440" stroke="#dce5ec"/>
+  <circle cx="72" cy="42" r="25" fill="#123c67"/><text x="72" y="47" text-anchor="middle" class="white bold" font-size="12">YES</text>
+  <text x="110" y="39" class="bold" font-size="20">YES EMS</text><text x="110" y="59" class="muted small">Portal docente</text>
+  <text x="900" y="49" class="muted" font-size="14">Mis cursos</text><text x="1015" y="49" class="muted" font-size="14">Mi avance</text>
+  <circle cx="1335" cy="42" r="18" fill="#fff2c9"/><text x="1335" y="47" text-anchor="middle" class="bold" font-size="13">D</text><text x="1363" y="47" class="bold small">Docente</text>
+  <text x="55" y="125" class="muted small">MIS CURSOS　/　OFIMÁTICA　/　EXCEL PARA DOCENTES</text>
+  <text x="55" y="169" class="bold" font-size="30">Excel para docentes</text><text x="55" y="195" class="muted" font-size="15">Avanza tema por tema. Tu progreso se guarda automáticamente.</text>
+  <rect x="1165" y="126" width="220" height="52" rx="14" fill="#fff" stroke="#d8e2ea"/><text x="1190" y="148" class="label blue">PROGRESO DEL CURSO</text><text x="1190" y="166" class="bold" font-size="15">2 de 6 módulos · 33%</text>
+  <rect x="55" y="225" width="330" height="620" rx="20" fill="#fff" filter="url(#shadow)"/>
+  <text x="82" y="264" class="label muted">RUTA DE APRENDIZAJE</text>
+  <rect x="82" y="282" width="276" height="8" rx="4" fill="#e7edf2"/><rect x="82" y="282" width="92" height="8" rx="4" fill="#176d82"/>
+  <circle cx="101" cy="332" r="17" fill="#dff4ec"/><text x="101" y="337" text-anchor="middle" class="bold" font-size="12" fill="#16845c">✓</text>
+  <text x="132" y="328" class="bold" font-size="14">1. Primeros pasos</text><text x="132" y="349" class="muted small">Completado · 8 min</text>
+  <path d="M101 350v28" stroke="#d9e3eb" stroke-width="2"/>
+  <circle cx="101" cy="405" r="17" fill="#176d82"/><text x="101" y="410" text-anchor="middle" class="white bold" font-size="12">2</text>
+  <text x="132" y="401" class="bold" font-size="14">2. Fórmulas básicas</text><text x="132" y="422" class="blue small">En curso · 12 min</text>
+  <rect x="82" y="440" width="276" height="46" rx="12" fill="#edf5f7"/><text x="102" y="468" class="blue bold small">VIDEO　·　PRESENTACIÓN　·　REPASO</text>
+  <circle cx="101" cy="524" r="17" fill="#f0f3f6"/><text x="101" y="529" text-anchor="middle" class="muted bold" font-size="12">3</text><text x="132" y="520" class="muted bold" font-size="14">3. Tablas y formato</text><text x="132" y="541" class="muted small">Bloqueado · completa el módulo 2</text>
+  <circle cx="101" cy="589" r="17" fill="#f0f3f6"/><text x="101" y="594" text-anchor="middle" class="muted bold" font-size="12">4</text><text x="132" y="585" class="muted bold" font-size="14">4. Gráficas</text><text x="132" y="606" class="muted small">Bloqueado</text>
+  <circle cx="101" cy="654" r="17" fill="#f0f3f6"/><text x="101" y="659" text-anchor="middle" class="muted bold" font-size="12">5</text><text x="132" y="650" class="muted bold" font-size="14">5. Examen final</text><text x="132" y="671" class="muted small">Se habilita al terminar la ruta</text>
+  <rect x="82" y="728" width="276" height="82" rx="14" fill="#fff9e8"/><text x="102" y="757" class="bold" font-size="13">Tu constancia</text><text x="102" y="779" class="muted small">Disponible al aprobar el examen</text>
+  <rect x="410" y="225" width="975" height="620" rx="20" fill="#fff" filter="url(#shadow)"/>
+  <rect x="438" y="252" width="919" height="390" rx="16" fill="url(#hero)"/>
+  <circle cx="897" cy="435" r="44" fill="#fff" fill-opacity=".95"/><path d="M888 412v46l38-23z" fill="#176d82"/>
+  <rect x="464" y="274" width="189" height="28" rx="14" fill="#fff" fill-opacity=".15"/><text x="480" y="293" class="white label">LECCIÓN EN VIDEO</text>
+  <text x="897" y="585" text-anchor="middle" class="white" font-size="15">Video de YouTube integrado · 08:42</text>
+  <text x="463" y="683" class="label blue">MÓDULO 2 · TEMA 1</text><text x="463" y="720" class="bold" font-size="25">Fórmulas para empezar</text>
+  <text x="463" y="749" class="muted" font-size="14">Aprende a usar operaciones básicas y referencias de celdas en una hoja de cálculo.</text>
+  <rect x="463" y="775" width="334" height="48" rx="12" fill="#f7f9fb" stroke="#dce5ec"/><rect x="479" y="787" width="32" height="26" rx="6" fill="#e54b4b"/><text x="495" y="805" text-anchor="middle" class="white bold" font-size="11">PDF</text><text x="523" y="794" class="bold small">Presentación: Fórmulas básicas</text><text x="523" y="811" class="muted" font-size="11">Abrir o descargar · 2.4 MB</text>
+  <rect x="1112" y="775" width="245" height="48" rx="12" fill="#173f6e"/><text x="1234" y="805" text-anchor="middle" class="white bold" font-size="14">Marcar tema completo →</text>
+</svg>
